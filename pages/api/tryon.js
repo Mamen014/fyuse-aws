@@ -4,33 +4,28 @@ import jwt from "jsonwebtoken";
 import { v4 as uuidv4 } from "uuid";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { BedrockRuntimeClient, InvokeModelCommand } from "@aws-sdk/client-bedrock-runtime";
-import {
-  SecretsManagerClient,
-  GetSecretValueCommand,
-} from "@aws-sdk/client-secrets-manager";
+import { getSecret } from "./secrets.js"; // Import from secrets.js
 
-const secret_name = "APIcredentials";
+async function init() {
+  try {
+    const secrets = await getSecret();
+    
+    console.log("Retrieved secrets:", secrets); // Debugging (Remove in production)
+    
+    const kolorsKey = secrets.KOLORS_ACCESS_KEY_ID;
+    const awsKey = secrets.AWS_ACCESS_KEY_ID;
 
-const client = new SecretsManagerClient({
-  region: "ap-southeast-2",
-});
+    console.log("KOLORS_ACCESS_KEY_ID:", kolorsKey);
+    console.log("AWS_ACCESS_KEY_ID:", awsKey);
 
-let response;
-
-try {
-  response = await client.send(
-    new GetSecretValueCommand({
-      SecretId: secret_name,
-      VersionStage: "AWSCURRENT", // VersionStage defaults to AWSCURRENT if unspecified
-    })
-  );
-} catch (error) {
-  // For a list of exceptions thrown, see
-  // https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html
-  throw error;
+    // Now you can use these credentials in your app logic
+  } catch (error) {
+    console.error("Failed to load secrets:", error);
+  }
 }
 
-const secret = response.SecretString;
+init(); // Run the function to load secrets
+
 
 const POLL_INTERVAL_MS = 3000; // 3 seconds between checks
 const MAX_WAIT_TIME_MS = 120000; // 2 minutes max wait

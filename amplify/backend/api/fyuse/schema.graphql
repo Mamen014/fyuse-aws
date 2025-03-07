@@ -1,0 +1,29 @@
+type User @model @auth(rules: [{ allow: owner }]) {
+  id: ID!
+  name: String!
+  email: String! @unique
+  images: [UserImage] @hasMany
+}
+
+type UserImage @model {
+  id: ID!
+  url: String!
+  bodyShape: String
+  skinTone: String
+  user: User @belongsTo
+}
+
+type Apparel @model {
+  id: ID!
+  name: String!
+  category: String
+  imageUrl: String!
+  generatedImages: [GeneratedImage] @hasMany
+}
+
+type GeneratedImage @model {
+  id: ID!
+  userImage: UserImage @belongsTo
+  apparel: Apparel @belongsTo
+  generatedUrl: String!
+}

@@ -1,0 +1,68 @@
+{
+    "Resources": {
+      "AmplifyApp": {
+        "Type": "AWS::Amplify::App",
+        "Properties": {
+          "Name": "fyuse",
+          "Repository": "https://github.com/Mamen014/fyuse"
+        }
+      },
+      "S3FyuseImages": {
+        "Type": "AWS::S3::Bucket",
+        "Properties": {
+          "BucketName": "fyuse-images"
+        }
+      },
+      "IAMRoleNextJSS3Access": {
+        "Type": "AWS::IAM::Role",
+        "Properties": {
+          "RoleName": "NextJS-S3-Access",
+          "AssumeRolePolicyDocument": {
+            "Version": "2012-10-17",
+            "Statement": [
+              {
+                "Effect": "Allow",
+                "Principal": { "Service": "ec2.amazonaws.com" },
+                "Action": "sts:AssumeRole"
+              }
+            ]
+          }
+        }
+      },
+      "IAMPolicyNextJSS3Access": {
+        "Type": "AWS::IAM::Policy",
+        "Properties": {
+          "PolicyName": "NextJS-S3-Access-Policy",
+          "PolicyDocument": {
+            "Version": "2012-10-17",
+            "Statement": [
+              {
+                "Effect": "Allow",
+                "Action": "*",
+                "Resource": "*"
+              }
+            ]
+          },
+          "Roles": [ "NextJS-S3-Access" ]
+        }
+      },
+      "Route53HostedZone": {
+        "Type": "AWS::Route53::HostedZone",
+        "Properties": {
+          "Name": "fyuse.org"
+        }
+      },
+      "Route53Record": {
+        "Type": "AWS::Route53::RecordSet",
+        "Properties": {
+          "HostedZoneId": { "Ref": "Route53HostedZone" },
+          "Name": "www.fyuse.org",
+          "Type": "CNAME",
+          "TTL": "300",
+          "ResourceRecords": [
+            { "Fn::GetAtt": [ "AmplifyApp", "DefaultDomain" ] }
+          ]
+        }
+      }
+    }
+  }

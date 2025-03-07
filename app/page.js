@@ -190,10 +190,10 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="container mx-auto px-4 py-8 bg-background text-center text-muted-foreground">
-        <p>&copy; 2023 Fyuse. All rights reserved.</p>
+        <p>&copy; 2025 Fyuse. All rights reserved.</p>
         <div className="mt-4 flex justify-center space-x-4">
           <a href="#" className="text-primary hover:text-primary/90">
-            Facebook
+            Instagram
           </a>
           <a href="#" className="text-primary hover:text-primary/90">
             Twitter
