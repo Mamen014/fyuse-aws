@@ -1,13 +1,11 @@
-import AWS from "aws-sdk";
+import { SecretsManagerClient, GetSecretValueCommand } from "@aws-sdk/client-secrets-manager";
 
 /** Fetch secrets from AWS Secrets Manager */
 async function getSecrets() {
-  const secretsManager = new AWS.SecretsManager({ region: "ap-southeast-2" });
+  const client = new SecretsManagerClient({ region: "ap-southeast-2" });
 
   try {
-    const data = await secretsManager
-      .getSecretValue({ SecretId: "APIcredentials" })
-      .promise();
+    const data = await client.send(new GetSecretValueCommand({ SecretId: "APIcredentials" }));
     return JSON.parse(data.SecretString);
   } catch (err) {
     console.error("Error fetching secrets", err);
