@@ -69,22 +69,22 @@ async function uploadToS3AndGetUrl(buffer, filename, folder) {
   else if (lowerName.endsWith(".webp")) contentType = "image/webp";
 
   const client = new S3Client({
-    region: process.env.AWS_REGION,
+    region: process.env.AMPLIFY_REGION,
     credentials: {
-      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+      accessKeyId: process.env.AMPLIFY_ACCESS_KEY_ID,
+      secretAccessKey: process.env.AMPLIFY_SECRET_ACCESS_KEY,
     },
   });
 
   const command = new PutObjectCommand({
-    Bucket: process.env.AWS_S3_BUCKET_NAME,
+    Bucket: process.env.AMPLIFY_S3_BUCKET_NAME,
     Key: key,
     Body: buffer,
     ContentType: contentType,
   });
 
   await client.send(command);
-  return `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
+  return `https://${process.env.AMPLIFY_S3_BUCKET_NAME}.s3.${process.env.AMPLIFY_REGION}.amazonaws.com/${key}`;
 }
 
 async function validateImageUrl(url) {
@@ -199,8 +199,8 @@ Matching Description: [A short description summarizing the analysis]
   const bedrockClient = new BedrockRuntimeClient({
     region: "us-east-1", // Using the region where Nova Lite is available
     credentials: {
-      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+      accessKeyId: process.env.AMPLIFY_ACCESS_KEY_ID,
+      secretAccessKey: process.env.AMPLIFY_SECRET_ACCESS_KEY,
     },
   });
 
@@ -256,8 +256,8 @@ export default async function tryonHandler(req, res) {
 
   try {
     if (
-      !process.env.AWS_ACCESS_KEY_ID ||
-      !process.env.AWS_SECRET_ACCESS_KEY ||
+      !process.env.AMPLIFY_ACCESS_KEY_ID ||
+      !process.env.AMPLIFY_SECRET_ACCESS_KEY ||
       !process.env.KOLORS_ACCESS_KEY_ID ||
       !process.env.KOLORS_ACCESS_KEY_SECRET
     ) {
