@@ -4,7 +4,31 @@ import jwt from "jsonwebtoken";
 import { v4 as uuidv4 } from "uuid";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { BedrockRuntimeClient, InvokeModelCommand } from "@aws-sdk/client-bedrock-runtime";
-import { getSecret } from "./secrets.js";
+import getSecrets from './secrets';  // Import secrets.js for AWS Secrets Manager
+import dotenv from "dotenv";
+// Load environment variables from .env
+dotenv.config();
+
+async function initializeSecrets() {
+    try {
+        const secrets = await getSecrets(process.env.SECRET_NAME); // Fetch secrets from AWS Secrets Manager
+
+        // Set environment variables dynamically
+        process.env.KOLORS_ACCESS_KEY_ID = secrets.KOLORS_ACCESS_KEY_ID || process.env.KOLORS_ACCESS_KEY_ID;
+        process.env.KOLORS_ACCESS_KEY_SECRET = secrets.KOLORS_ACCESS_KEY_SECRET || process.env.KOLORS_ACCESS_KEY_SECRET;
+        process.env.AWS_ACCESS_KEY_ID = secrets.AWS_ACCESS_KEY_ID || process.env.AWS_ACCESS_KEY_ID;
+        process.env.AWS_SECRET_ACCESS_KEY = secrets.AWS_SECRET_ACCESS_KEY || process.env.AWS_SECRET_ACCESS_KEY;
+        process.env.AWS_REGION = secrets.AWS_REGION || process.env.AWS_REGION;
+        process.env.AWS_S3_BUCKET_NAME = secrets.AWS_S3_BUCKET_NAME || process.env.AWS_S3_BUCKET_NAME;
+
+        console.log("✅ Secrets successfully loaded!");
+    } catch (error) {
+        console.error("❌ Error loading secrets:", error);
+    }
+}
+
+// Call the function to load secrets
+initializeSecrets();
 
 async function init() {
   try {
@@ -12,13 +36,6 @@ async function init() {
 
     console.log("Retrieved secrets:", secrets); // Debugging (Remove in production)
 
-    // ✅ Make sure secrets are in process.env
-    process.env.KOLORS_ACCESS_KEY_ID = secrets.KOLORS_ACCESS_KEY_ID;
-    process.env.KOLORS_ACCESS_KEY_SECRET = secrets.KOLORS_ACCESS_KEY_SECRET;
-    process.env.AWS_ACCESS_KEY_ID = secrets.AWS_ACCESS_KEY_ID;
-    process.env.AWS_SECRET_ACCESS_KEY = secrets.AWS_SECRET_ACCESS_KEY;
-    process.env.AWS_REGION = secrets.AWS_REGION;
-    process.env.AWS_S3_BUCKET_NAME = secrets.AWS_S3_BUCKET_NAME;
   } catch (error) {
     console.error("Failed to load secrets:", error);
     process.exit(1); // Stop execution if secrets fail to load
