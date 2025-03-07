@@ -4,27 +4,28 @@ import jwt from "jsonwebtoken";
 import { v4 as uuidv4 } from "uuid";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { BedrockRuntimeClient, InvokeModelCommand } from "@aws-sdk/client-bedrock-runtime";
-import { getSecret } from "./secrets.js"; // Import from secrets.js
+import { getSecret } from "./secrets.js";
 
 async function init() {
   try {
     const secrets = await getSecret();
-    
+
     console.log("Retrieved secrets:", secrets); // Debugging (Remove in production)
-    
-    const kolorsKey = secrets.KOLORS_ACCESS_KEY_ID;
-    const awsKey = secrets.AWS_ACCESS_KEY_ID;
 
-    console.log("KOLORS_ACCESS_KEY_ID:", kolorsKey);
-    console.log("AWS_ACCESS_KEY_ID:", awsKey);
-
-    // Now you can use these credentials in your app logic
+    // ✅ Make sure secrets are in process.env
+    process.env.KOLORS_ACCESS_KEY_ID = secrets.KOLORS_ACCESS_KEY_ID;
+    process.env.KOLORS_ACCESS_KEY_SECRET = secrets.KOLORS_ACCESS_KEY_SECRET;
+    process.env.AWS_ACCESS_KEY_ID = secrets.AWS_ACCESS_KEY_ID;
+    process.env.AWS_SECRET_ACCESS_KEY = secrets.AWS_SECRET_ACCESS_KEY;
+    process.env.AWS_REGION = secrets.AWS_REGION;
+    process.env.AWS_S3_BUCKET_NAME = secrets.AWS_S3_BUCKET_NAME;
   } catch (error) {
     console.error("Failed to load secrets:", error);
+    process.exit(1); // Stop execution if secrets fail to load
   }
 }
 
-init(); // Run the function to load secrets
+await init(); // Ensure secrets load before running anything else
 
 
 const POLL_INTERVAL_MS = 3000; // 3 seconds between checks
