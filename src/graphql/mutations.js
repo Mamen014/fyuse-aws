@@ -1,203 +1,332 @@
 /* eslint-disable */
 // this is an auto generated file. This will be overwritten
 
-export const createBlog = /* GraphQL */ `
-  mutation CreateBlog(
-    $input: CreateBlogInput!
-    $condition: ModelBlogConditionInput
+export const createUser = /* GraphQL */ `
+  mutation CreateUser(
+    $input: CreateUserInput!
+    $condition: ModelUserConditionInput
   ) {
-    createBlog(input: $input, condition: $condition) {
+    createUser(input: $input, condition: $condition) {
       id
       name
-      posts {
+      email
+      images {
         nextToken
         __typename
       }
       createdAt
       updatedAt
+      owner
       __typename
     }
   }
 `;
-export const updateBlog = /* GraphQL */ `
-  mutation UpdateBlog(
-    $input: UpdateBlogInput!
-    $condition: ModelBlogConditionInput
+export const updateUser = /* GraphQL */ `
+  mutation UpdateUser(
+    $input: UpdateUserInput!
+    $condition: ModelUserConditionInput
   ) {
-    updateBlog(input: $input, condition: $condition) {
+    updateUser(input: $input, condition: $condition) {
       id
       name
-      posts {
+      email
+      images {
         nextToken
         __typename
       }
       createdAt
       updatedAt
+      owner
       __typename
     }
   }
 `;
-export const deleteBlog = /* GraphQL */ `
-  mutation DeleteBlog(
-    $input: DeleteBlogInput!
-    $condition: ModelBlogConditionInput
+export const deleteUser = /* GraphQL */ `
+  mutation DeleteUser(
+    $input: DeleteUserInput!
+    $condition: ModelUserConditionInput
   ) {
-    deleteBlog(input: $input, condition: $condition) {
+    deleteUser(input: $input, condition: $condition) {
       id
       name
-      posts {
+      email
+      images {
         nextToken
         __typename
       }
       createdAt
       updatedAt
+      owner
       __typename
     }
   }
 `;
-export const createPost = /* GraphQL */ `
-  mutation CreatePost(
-    $input: CreatePostInput!
-    $condition: ModelPostConditionInput
+export const createUserImage = /* GraphQL */ `
+  mutation CreateUserImage(
+    $input: CreateUserImageInput!
+    $condition: ModelUserImageConditionInput
   ) {
-    createPost(input: $input, condition: $condition) {
+    createUserImage(input: $input, condition: $condition) {
       id
-      title
-      blog {
+      url
+      bodyShape
+      skinTone
+      user {
         id
         name
+        email
         createdAt
         updatedAt
+        owner
         __typename
       }
-      comments {
+      generatedImages {
         nextToken
         __typename
       }
       createdAt
       updatedAt
-      blogPostsId
+      userImagesId
+      owner
       __typename
     }
   }
 `;
-export const updatePost = /* GraphQL */ `
-  mutation UpdatePost(
-    $input: UpdatePostInput!
-    $condition: ModelPostConditionInput
+export const updateUserImage = /* GraphQL */ `
+  mutation UpdateUserImage(
+    $input: UpdateUserImageInput!
+    $condition: ModelUserImageConditionInput
   ) {
-    updatePost(input: $input, condition: $condition) {
+    updateUserImage(input: $input, condition: $condition) {
       id
-      title
-      blog {
+      url
+      bodyShape
+      skinTone
+      user {
         id
         name
+        email
         createdAt
         updatedAt
+        owner
         __typename
       }
-      comments {
+      generatedImages {
         nextToken
         __typename
       }
       createdAt
       updatedAt
-      blogPostsId
+      userImagesId
+      owner
       __typename
     }
   }
 `;
-export const deletePost = /* GraphQL */ `
-  mutation DeletePost(
-    $input: DeletePostInput!
-    $condition: ModelPostConditionInput
+export const deleteUserImage = /* GraphQL */ `
+  mutation DeleteUserImage(
+    $input: DeleteUserImageInput!
+    $condition: ModelUserImageConditionInput
   ) {
-    deletePost(input: $input, condition: $condition) {
+    deleteUserImage(input: $input, condition: $condition) {
       id
-      title
-      blog {
+      url
+      bodyShape
+      skinTone
+      user {
         id
         name
+        email
         createdAt
         updatedAt
+        owner
         __typename
       }
-      comments {
+      generatedImages {
         nextToken
         __typename
       }
       createdAt
       updatedAt
-      blogPostsId
+      userImagesId
+      owner
       __typename
     }
   }
 `;
-export const createComment = /* GraphQL */ `
-  mutation CreateComment(
-    $input: CreateCommentInput!
-    $condition: ModelCommentConditionInput
+export const createApparel = /* GraphQL */ `
+  mutation CreateApparel(
+    $input: CreateApparelInput!
+    $condition: ModelApparelConditionInput
   ) {
-    createComment(input: $input, condition: $condition) {
+    createApparel(input: $input, condition: $condition) {
       id
-      post {
-        id
-        title
-        createdAt
-        updatedAt
-        blogPostsId
+      name
+      category
+      imageUrl
+      generatedImages {
+        nextToken
         __typename
       }
-      content
       createdAt
       updatedAt
-      postCommentsId
+      owner
       __typename
     }
   }
 `;
-export const updateComment = /* GraphQL */ `
-  mutation UpdateComment(
-    $input: UpdateCommentInput!
-    $condition: ModelCommentConditionInput
+export const updateApparel = /* GraphQL */ `
+  mutation UpdateApparel(
+    $input: UpdateApparelInput!
+    $condition: ModelApparelConditionInput
   ) {
-    updateComment(input: $input, condition: $condition) {
+    updateApparel(input: $input, condition: $condition) {
       id
-      post {
-        id
-        title
-        createdAt
-        updatedAt
-        blogPostsId
+      name
+      category
+      imageUrl
+      generatedImages {
+        nextToken
         __typename
       }
-      content
       createdAt
       updatedAt
-      postCommentsId
+      owner
       __typename
     }
   }
 `;
-export const deleteComment = /* GraphQL */ `
-  mutation DeleteComment(
-    $input: DeleteCommentInput!
-    $condition: ModelCommentConditionInput
+export const deleteApparel = /* GraphQL */ `
+  mutation DeleteApparel(
+    $input: DeleteApparelInput!
+    $condition: ModelApparelConditionInput
   ) {
-    deleteComment(input: $input, condition: $condition) {
+    deleteApparel(input: $input, condition: $condition) {
       id
-      post {
-        id
-        title
-        createdAt
-        updatedAt
-        blogPostsId
+      name
+      category
+      imageUrl
+      generatedImages {
+        nextToken
         __typename
       }
-      content
       createdAt
       updatedAt
-      postCommentsId
+      owner
+      __typename
+    }
+  }
+`;
+export const createGeneratedImage = /* GraphQL */ `
+  mutation CreateGeneratedImage(
+    $input: CreateGeneratedImageInput!
+    $condition: ModelGeneratedImageConditionInput
+  ) {
+    createGeneratedImage(input: $input, condition: $condition) {
+      id
+      userImage {
+        id
+        url
+        bodyShape
+        skinTone
+        createdAt
+        updatedAt
+        userImagesId
+        owner
+        __typename
+      }
+      apparel {
+        id
+        name
+        category
+        imageUrl
+        createdAt
+        updatedAt
+        owner
+        __typename
+      }
+      generatedUrl
+      createdAt
+      updatedAt
+      userImageGeneratedImagesId
+      apparelGeneratedImagesId
+      owner
+      __typename
+    }
+  }
+`;
+export const updateGeneratedImage = /* GraphQL */ `
+  mutation UpdateGeneratedImage(
+    $input: UpdateGeneratedImageInput!
+    $condition: ModelGeneratedImageConditionInput
+  ) {
+    updateGeneratedImage(input: $input, condition: $condition) {
+      id
+      userImage {
+        id
+        url
+        bodyShape
+        skinTone
+        createdAt
+        updatedAt
+        userImagesId
+        owner
+        __typename
+      }
+      apparel {
+        id
+        name
+        category
+        imageUrl
+        createdAt
+        updatedAt
+        owner
+        __typename
+      }
+      generatedUrl
+      createdAt
+      updatedAt
+      userImageGeneratedImagesId
+      apparelGeneratedImagesId
+      owner
+      __typename
+    }
+  }
+`;
+export const deleteGeneratedImage = /* GraphQL */ `
+  mutation DeleteGeneratedImage(
+    $input: DeleteGeneratedImageInput!
+    $condition: ModelGeneratedImageConditionInput
+  ) {
+    deleteGeneratedImage(input: $input, condition: $condition) {
+      id
+      userImage {
+        id
+        url
+        bodyShape
+        skinTone
+        createdAt
+        updatedAt
+        userImagesId
+        owner
+        __typename
+      }
+      apparel {
+        id
+        name
+        category
+        imageUrl
+        createdAt
+        updatedAt
+        owner
+        __typename
+      }
+      generatedUrl
+      createdAt
+      updatedAt
+      userImageGeneratedImagesId
+      apparelGeneratedImagesId
+      owner
       __typename
     }
   }

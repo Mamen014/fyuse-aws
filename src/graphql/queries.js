@@ -1,33 +1,37 @@
 /* eslint-disable */
 // this is an auto generated file. This will be overwritten
 
-export const getBlog = /* GraphQL */ `
-  query GetBlog($id: ID!) {
-    getBlog(id: $id) {
+export const getUser = /* GraphQL */ `
+  query GetUser($id: ID!) {
+    getUser(id: $id) {
       id
       name
-      posts {
+      email
+      images {
         nextToken
         __typename
       }
       createdAt
       updatedAt
+      owner
       __typename
     }
   }
 `;
-export const listBlogs = /* GraphQL */ `
-  query ListBlogs(
-    $filter: ModelBlogFilterInput
+export const listUsers = /* GraphQL */ `
+  query ListUsers(
+    $filter: ModelUserFilterInput
     $limit: Int
     $nextToken: String
   ) {
-    listBlogs(filter: $filter, limit: $limit, nextToken: $nextToken) {
+    listUsers(filter: $filter, limit: $limit, nextToken: $nextToken) {
       items {
         id
         name
+        email
         createdAt
         updatedAt
+        owner
         __typename
       }
       nextToken
@@ -35,42 +39,50 @@ export const listBlogs = /* GraphQL */ `
     }
   }
 `;
-export const getPost = /* GraphQL */ `
-  query GetPost($id: ID!) {
-    getPost(id: $id) {
+export const getUserImage = /* GraphQL */ `
+  query GetUserImage($id: ID!) {
+    getUserImage(id: $id) {
       id
-      title
-      blog {
+      url
+      bodyShape
+      skinTone
+      user {
         id
         name
+        email
         createdAt
         updatedAt
+        owner
         __typename
       }
-      comments {
+      generatedImages {
         nextToken
         __typename
       }
       createdAt
       updatedAt
-      blogPostsId
+      userImagesId
+      owner
       __typename
     }
   }
 `;
-export const listPosts = /* GraphQL */ `
-  query ListPosts(
-    $filter: ModelPostFilterInput
+export const listUserImages = /* GraphQL */ `
+  query ListUserImages(
+    $filter: ModelUserImageFilterInput
     $limit: Int
     $nextToken: String
   ) {
-    listPosts(filter: $filter, limit: $limit, nextToken: $nextToken) {
+    listUserImages(filter: $filter, limit: $limit, nextToken: $nextToken) {
       items {
         id
-        title
+        url
+        bodyShape
+        skinTone
         createdAt
         updatedAt
-        blogPostsId
+        userImagesId
+        owner
         __typename
       }
       nextToken
@@ -78,39 +90,96 @@ export const listPosts = /* GraphQL */ `
     }
   }
 `;
-export const getComment = /* GraphQL */ `
-  query GetComment($id: ID!) {
-    getComment(id: $id) {
+export const getApparel = /* GraphQL */ `
+  query GetApparel($id: ID!) {
+    getApparel(id: $id) {
       id
-      post {
-        id
-        title
-        createdAt
-        updatedAt
-        blogPostsId
+      name
+      category
+      imageUrl
+      generatedImages {
+        nextToken
         __typename
       }
-      content
       createdAt
       updatedAt
-      postCommentsId
+      owner
       __typename
     }
   }
 `;
-export const listComments = /* GraphQL */ `
-  query ListComments(
-    $filter: ModelCommentFilterInput
+export const listApparels = /* GraphQL */ `
+  query ListApparels(
+    $filter: ModelApparelFilterInput
     $limit: Int
     $nextToken: String
   ) {
-    listComments(filter: $filter, limit: $limit, nextToken: $nextToken) {
+    listApparels(filter: $filter, limit: $limit, nextToken: $nextToken) {
       items {
         id
-        content
+        name
+        category
+        imageUrl
         createdAt
         updatedAt
-        postCommentsId
+        owner
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const getGeneratedImage = /* GraphQL */ `
+  query GetGeneratedImage($id: ID!) {
+    getGeneratedImage(id: $id) {
+      id
+      userImage {
+        id
+        url
+        bodyShape
+        skinTone
+        createdAt
+        updatedAt
+        userImagesId
+        owner
+        __typename
+      }
+      apparel {
+        id
+        name
+        category
+        imageUrl
+        createdAt
+        updatedAt
+        owner
+        __typename
+      }
+      generatedUrl
+      createdAt
+      updatedAt
+      userImageGeneratedImagesId
+      apparelGeneratedImagesId
+      owner
+      __typename
+    }
+  }
+`;
+export const listGeneratedImages = /* GraphQL */ `
+  query ListGeneratedImages(
+    $filter: ModelGeneratedImageFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    listGeneratedImages(filter: $filter, limit: $limit, nextToken: $nextToken) {
+      items {
+        id
+        generatedUrl
+        createdAt
+        updatedAt
+        userImageGeneratedImagesId
+        apparelGeneratedImagesId
+        owner
         __typename
       }
       nextToken

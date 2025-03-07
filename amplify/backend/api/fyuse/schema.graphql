@@ -1,19 +1,20 @@
-type User @model @auth(rules: [{ allow: owner }]) {
+type User @model @auth(rules: [{ allow: owner }, { allow: public, operations: [read] }]) {
   id: ID!
   name: String!
-  email: String! @unique
+  email: String!
   images: [UserImage] @hasMany
 }
 
-type UserImage @model {
+type UserImage @model @auth(rules: [{ allow: owner }, { allow: public, operations: [read] }]) {
   id: ID!
   url: String!
   bodyShape: String
   skinTone: String
   user: User @belongsTo
+  generatedImages: [GeneratedImage] @hasMany # ✅ Added reverse relationship
 }
 
-type Apparel @model {
+type Apparel @model @auth(rules: [{ allow: owner }, { allow: public, operations: [read] }]) {
   id: ID!
   name: String!
   category: String
@@ -21,7 +22,7 @@ type Apparel @model {
   generatedImages: [GeneratedImage] @hasMany
 }
 
-type GeneratedImage @model {
+type GeneratedImage @model @auth(rules: [{ allow: owner }, { allow: public, operations: [read] }]) {
   id: ID!
   userImage: UserImage @belongsTo
   apparel: Apparel @belongsTo

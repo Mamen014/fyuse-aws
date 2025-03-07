@@ -1,17 +1,33 @@
 {
+  "temp": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-fyuse-temp-be3aa-authRole",
+      "UnauthRoleArn": "arn:aws:iam::586794474562:role/amplify-fyuse-temp-be3aa-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::586794474562:role/amplify-fyuse-temp-be3aa-authRole",
+      "Region": "ap-southeast-2",
+      "DeploymentBucketName": "amplify-fyuse-temp-be3aa-deployment",
+      "UnauthRoleName": "amplify-fyuse-temp-be3aa-unauthRole",
+      "StackName": "amplify-fyuse-temp-be3aa",
+      "StackId": "arn:aws:cloudformation:ap-southeast-2:586794474562:stack/amplify-fyuse-temp-be3aa/35807390-fb54-11ef-b16e-0a8c3a517c15",
+      "AmplifyAppId": "dxq0pwxrzexzi"
+    }
+  },
   "dev": {
     "awscloudformation": {
-      "AuthRoleName": "amplify-fyuse-dev-f06be-authRole",
-      "UnauthRoleArn": "arn:aws:iam::586794474562:role/amplify-fyuse-dev-f06be-unauthRole",
-      "AuthRoleArn": "arn:aws:iam::586794474562:role/amplify-fyuse-dev-f06be-authRole",
+      "AuthRoleName": "amplify-fyuse-dev-51dda-authRole",
+      "UnauthRoleArn": "arn:aws:iam::586794474562:role/amplify-fyuse-dev-51dda-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::586794474562:role/amplify-fyuse-dev-51dda-authRole",
       "Region": "ap-southeast-2",
-      "DeploymentBucketName": "amplify-fyuse-dev-f06be-deployment",
-      "UnauthRoleName": "amplify-fyuse-dev-f06be-unauthRole",
-      "StackName": "amplify-fyuse-dev-f06be",
-      "StackId": "arn:aws:cloudformation:ap-southeast-2:586794474562:stack/amplify-fyuse-dev-f06be/e68aeca0-faba-11ef-bd94-06c59c236821",
-      "AmplifyAppId": "d10xd1tcyi797g"
+      "DeploymentBucketName": "amplify-fyuse-dev-51dda-deployment",
+      "UnauthRoleName": "amplify-fyuse-dev-51dda-unauthRole",
+      "StackName": "amplify-fyuse-dev-51dda",
+      "StackId": "arn:aws:cloudformation:ap-southeast-2:586794474562:stack/amplify-fyuse-dev-51dda/79bf0080-fb54-11ef-9888-021af9e0dbcd",
+      "AmplifyAppId": "dxq0pwxrzexzi"
     },
     "categories": {
+      "auth": {
+        "fyuse5b19848d": {}
+      },
       "api": {
         "fyuse": {}
       }

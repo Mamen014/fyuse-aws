@@ -1,176 +1,332 @@
 /* eslint-disable */
 // this is an auto generated file. This will be overwritten
 
-export const onCreateBlog = /* GraphQL */ `
-  subscription OnCreateBlog($filter: ModelSubscriptionBlogFilterInput) {
-    onCreateBlog(filter: $filter) {
+export const onCreateUser = /* GraphQL */ `
+  subscription OnCreateUser(
+    $filter: ModelSubscriptionUserFilterInput
+    $owner: String
+  ) {
+    onCreateUser(filter: $filter, owner: $owner) {
       id
       name
-      posts {
+      email
+      images {
         nextToken
         __typename
       }
       createdAt
       updatedAt
+      owner
       __typename
     }
   }
 `;
-export const onUpdateBlog = /* GraphQL */ `
-  subscription OnUpdateBlog($filter: ModelSubscriptionBlogFilterInput) {
-    onUpdateBlog(filter: $filter) {
+export const onUpdateUser = /* GraphQL */ `
+  subscription OnUpdateUser(
+    $filter: ModelSubscriptionUserFilterInput
+    $owner: String
+  ) {
+    onUpdateUser(filter: $filter, owner: $owner) {
       id
       name
-      posts {
+      email
+      images {
         nextToken
         __typename
       }
       createdAt
       updatedAt
+      owner
       __typename
     }
   }
 `;
-export const onDeleteBlog = /* GraphQL */ `
-  subscription OnDeleteBlog($filter: ModelSubscriptionBlogFilterInput) {
-    onDeleteBlog(filter: $filter) {
+export const onDeleteUser = /* GraphQL */ `
+  subscription OnDeleteUser(
+    $filter: ModelSubscriptionUserFilterInput
+    $owner: String
+  ) {
+    onDeleteUser(filter: $filter, owner: $owner) {
       id
       name
-      posts {
+      email
+      images {
         nextToken
         __typename
       }
       createdAt
       updatedAt
+      owner
       __typename
     }
   }
 `;
-export const onCreatePost = /* GraphQL */ `
-  subscription OnCreatePost($filter: ModelSubscriptionPostFilterInput) {
-    onCreatePost(filter: $filter) {
+export const onCreateUserImage = /* GraphQL */ `
+  subscription OnCreateUserImage(
+    $filter: ModelSubscriptionUserImageFilterInput
+    $owner: String
+  ) {
+    onCreateUserImage(filter: $filter, owner: $owner) {
       id
-      title
-      blog {
+      url
+      bodyShape
+      skinTone
+      user {
         id
         name
+        email
         createdAt
         updatedAt
+        owner
         __typename
       }
-      comments {
+      generatedImages {
         nextToken
         __typename
       }
       createdAt
       updatedAt
-      blogPostsId
+      userImagesId
+      owner
       __typename
     }
   }
 `;
-export const onUpdatePost = /* GraphQL */ `
-  subscription OnUpdatePost($filter: ModelSubscriptionPostFilterInput) {
-    onUpdatePost(filter: $filter) {
+export const onUpdateUserImage = /* GraphQL */ `
+  subscription OnUpdateUserImage(
+    $filter: ModelSubscriptionUserImageFilterInput
+    $owner: String
+  ) {
+    onUpdateUserImage(filter: $filter, owner: $owner) {
       id
-      title
-      blog {
+      url
+      bodyShape
+      skinTone
+      user {
         id
         name
+        email
         createdAt
         updatedAt
+        owner
         __typename
       }
-      comments {
+      generatedImages {
         nextToken
         __typename
       }
       createdAt
       updatedAt
-      blogPostsId
+      userImagesId
+      owner
       __typename
     }
   }
 `;
-export const onDeletePost = /* GraphQL */ `
-  subscription OnDeletePost($filter: ModelSubscriptionPostFilterInput) {
-    onDeletePost(filter: $filter) {
+export const onDeleteUserImage = /* GraphQL */ `
+  subscription OnDeleteUserImage(
+    $filter: ModelSubscriptionUserImageFilterInput
+    $owner: String
+  ) {
+    onDeleteUserImage(filter: $filter, owner: $owner) {
       id
-      title
-      blog {
+      url
+      bodyShape
+      skinTone
+      user {
         id
         name
+        email
         createdAt
         updatedAt
+        owner
         __typename
       }
-      comments {
+      generatedImages {
         nextToken
         __typename
       }
       createdAt
       updatedAt
-      blogPostsId
+      userImagesId
+      owner
       __typename
     }
   }
 `;
-export const onCreateComment = /* GraphQL */ `
-  subscription OnCreateComment($filter: ModelSubscriptionCommentFilterInput) {
-    onCreateComment(filter: $filter) {
+export const onCreateApparel = /* GraphQL */ `
+  subscription OnCreateApparel(
+    $filter: ModelSubscriptionApparelFilterInput
+    $owner: String
+  ) {
+    onCreateApparel(filter: $filter, owner: $owner) {
       id
-      post {
-        id
-        title
-        createdAt
-        updatedAt
-        blogPostsId
+      name
+      category
+      imageUrl
+      generatedImages {
+        nextToken
         __typename
       }
-      content
       createdAt
       updatedAt
-      postCommentsId
+      owner
       __typename
     }
   }
 `;
-export const onUpdateComment = /* GraphQL */ `
-  subscription OnUpdateComment($filter: ModelSubscriptionCommentFilterInput) {
-    onUpdateComment(filter: $filter) {
+export const onUpdateApparel = /* GraphQL */ `
+  subscription OnUpdateApparel(
+    $filter: ModelSubscriptionApparelFilterInput
+    $owner: String
+  ) {
+    onUpdateApparel(filter: $filter, owner: $owner) {
       id
-      post {
-        id
-        title
-        createdAt
-        updatedAt
-        blogPostsId
+      name
+      category
+      imageUrl
+      generatedImages {
+        nextToken
         __typename
       }
-      content
       createdAt
       updatedAt
-      postCommentsId
+      owner
       __typename
     }
   }
 `;
-export const onDeleteComment = /* GraphQL */ `
-  subscription OnDeleteComment($filter: ModelSubscriptionCommentFilterInput) {
-    onDeleteComment(filter: $filter) {
+export const onDeleteApparel = /* GraphQL */ `
+  subscription OnDeleteApparel(
+    $filter: ModelSubscriptionApparelFilterInput
+    $owner: String
+  ) {
+    onDeleteApparel(filter: $filter, owner: $owner) {
       id
-      post {
-        id
-        title
-        createdAt
-        updatedAt
-        blogPostsId
+      name
+      category
+      imageUrl
+      generatedImages {
+        nextToken
         __typename
       }
-      content
       createdAt
       updatedAt
-      postCommentsId
+      owner
+      __typename
+    }
+  }
+`;
+export const onCreateGeneratedImage = /* GraphQL */ `
+  subscription OnCreateGeneratedImage(
+    $filter: ModelSubscriptionGeneratedImageFilterInput
+    $owner: String
+  ) {
+    onCreateGeneratedImage(filter: $filter, owner: $owner) {
+      id
+      userImage {
+        id
+        url
+        bodyShape
+        skinTone
+        createdAt
+        updatedAt
+        userImagesId
+        owner
+        __typename
+      }
+      apparel {
+        id
+        name
+        category
+        imageUrl
+        createdAt
+        updatedAt
+        owner
+        __typename
+      }
+      generatedUrl
+      createdAt
+      updatedAt
+      userImageGeneratedImagesId
+      apparelGeneratedImagesId
+      owner
+      __typename
+    }
+  }
+`;
+export const onUpdateGeneratedImage = /* GraphQL */ `
+  subscription OnUpdateGeneratedImage(
+    $filter: ModelSubscriptionGeneratedImageFilterInput
+    $owner: String
+  ) {
+    onUpdateGeneratedImage(filter: $filter, owner: $owner) {
+      id
+      userImage {
+        id
+        url
+        bodyShape
+        skinTone
+        createdAt
+        updatedAt
+        userImagesId
+        owner
+        __typename
+      }
+      apparel {
+        id
+        name
+        category
+        imageUrl
+        createdAt
+        updatedAt
+        owner
+        __typename
+      }
+      generatedUrl
+      createdAt
+      updatedAt
+      userImageGeneratedImagesId
+      apparelGeneratedImagesId
+      owner
+      __typename
+    }
+  }
+`;
+export const onDeleteGeneratedImage = /* GraphQL */ `
+  subscription OnDeleteGeneratedImage(
+    $filter: ModelSubscriptionGeneratedImageFilterInput
+    $owner: String
+  ) {
+    onDeleteGeneratedImage(filter: $filter, owner: $owner) {
+      id
+      userImage {
+        id
+        url
+        bodyShape
+        skinTone
+        createdAt
+        updatedAt
+        userImagesId
+        owner
+        __typename
+      }
+      apparel {
+        id
+        name
+        category
+        imageUrl
+        createdAt
+        updatedAt
+        owner
+        __typename
+      }
+      generatedUrl
+      createdAt
+      updatedAt
+      userImageGeneratedImagesId
+      apparelGeneratedImagesId
+      owner
       __typename
     }
   }
