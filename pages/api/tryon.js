@@ -4,46 +4,6 @@ import jwt from "jsonwebtoken";
 import { v4 as uuidv4 } from "uuid";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { BedrockRuntimeClient, InvokeModelCommand } from "@aws-sdk/client-bedrock-runtime";
-import getSecrets from './secrets';  // Import secrets.js for AWS Secrets Manager
-import dotenv from "dotenv";
-// Load environment variables from .env
-dotenv.config();
-
-async function initializeSecrets() {
-    try {
-        const secrets = await getSecrets(process.env.SECRET_NAME); // Fetch secrets from AWS Secrets Manager
-
-        // Set environment variables dynamically
-        process.env.KOLORS_ACCESS_KEY_ID = secrets.KOLORS_ACCESS_KEY_ID || process.env.KOLORS_ACCESS_KEY_ID;
-        process.env.KOLORS_ACCESS_KEY_SECRET = secrets.KOLORS_ACCESS_KEY_SECRET || process.env.KOLORS_ACCESS_KEY_SECRET;
-        process.env.AWS_ACCESS_KEY_ID = secrets.AWS_ACCESS_KEY_ID || process.env.AWS_ACCESS_KEY_ID;
-        process.env.AWS_SECRET_ACCESS_KEY = secrets.AWS_SECRET_ACCESS_KEY || process.env.AWS_SECRET_ACCESS_KEY;
-        process.env.AWS_REGION = secrets.AWS_REGION || process.env.AWS_REGION;
-        process.env.AWS_S3_BUCKET_NAME = secrets.AWS_S3_BUCKET_NAME || process.env.AWS_S3_BUCKET_NAME;
-
-        console.log("✅ Secrets successfully loaded!");
-    } catch (error) {
-        console.error("❌ Error loading secrets:", error);
-    }
-}
-
-// Call the function to load secrets
-initializeSecrets();
-
-async function init() {
-  try {
-    const secrets = await getSecret();
-
-    console.log("Retrieved secrets:", secrets); // Debugging (Remove in production)
-
-  } catch (error) {
-    console.error("Failed to load secrets:", error);
-    process.exit(1); // Stop execution if secrets fail to load
-  }
-}
-
-await init(); // Ensure secrets load before running anything else
-
 
 const POLL_INTERVAL_MS = 3000; // 3 seconds between checks
 const MAX_WAIT_TIME_MS = 120000; // 2 minutes max wait
