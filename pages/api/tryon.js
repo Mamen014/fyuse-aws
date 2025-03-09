@@ -4,6 +4,8 @@ import jwt from "jsonwebtoken";
 import { v4 as uuidv4 } from "uuid";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { BedrockRuntimeClient, InvokeModelCommand } from "@aws-sdk/client-bedrock-runtime";
+import { SecretsManagerClient, GetSecretValueCommand } from "@aws-sdk/client-secrets-manager";
+
 
 const POLL_INTERVAL_MS = 3000; // 3 seconds between checks
 const MAX_WAIT_TIME_MS = 120000; // 2 minutes max wait
@@ -30,53 +32,6 @@ function generateToken(accessKeyId, accessKeySecret) {
   };
 
   return jwt.sign(payload, accessKeySecret, { header: headers });
-}
-
-async function uploadToS3AndGetUrl(buffer, filename, folder) {
-  const uniqueFilename = `${uuidv4()}-${filename}`;
-  const key = `${folder}/${uniqueFilename}`;
-  let contentType = "image/jpeg";
-  const lowerName = filename.toLowerCase();
-  if (lowerName.endsWith(".png")) contentType = "image/png";
-  else if (lowerName.endsWith(".gif")) contentType = "image/gif";
-  else if (lowerName.endsWith(".webp")) contentType = "image/webp";
-
-  const client = new S3Client({
-    region: process.env.AWS_REGION,
-    credentials: {
-      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-    },
-  });
-
-  const command = new PutObjectCommand({
-    Bucket: process.env.AWS_S3_BUCKET_NAME,
-    Key: key,
-    Body: buffer,
-    ContentType: contentType,
-  });
-
-  await client.send(command);
-  return `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
-}
-
-async function validateImageUrl(url) {
-  console.log("Validating URL:", url);
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 10000);
-
-  const response = await fetch(url, { method: "HEAD", signal: controller.signal });
-  clearTimeout(timeoutId);
-
-  const contentType = response.headers.get("content-type") || "";
-  console.log("URL validation - Content type:", contentType, "Status:", response.status);
-
-  if (!contentType.startsWith("image/")) {
-    throw new Error(`URL does not point to an image (content-type: ${contentType})`);
-  }
-  if (!response.ok) {
-    throw new Error(`URL is not accessible (status code: ${response.status})`);
-  }
 }
 
 // Updated streamToString: if not a stream or is a typed array, convert it to a string.
@@ -107,9 +62,9 @@ function streamToString(stream) {
 }
 
 // Function that downloads the image, determines its MIME type, and then calls Amazon Nova Lite for matching analysis.
-async function callMatchingAnalysis(imageUrl) {
+async function callMatchingAnalysis(imageUrl, bedrockClient) {
   console.log("Downloading composite image for matching analysis...");
-  const resp = await fetch(imageUrl);
+  const resp = await fetch(imageUrl); 
   if (!resp.ok) {
     throw new Error(`Failed to fetch image: ${resp.statusText}`);
   }
@@ -169,20 +124,13 @@ Matching Description: [A short description summarizing the analysis]
     },
   };
 
-  const bedrockClient = new BedrockRuntimeClient({
-    region: "us-east-1", // Using the region where Nova Lite is available
-    credentials: {
-      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-    },
-  });
+  console.log("Invoking Amazon Nova Lite for matching analysis...");
 
   const command = new InvokeModelCommand({
     modelId: "us.amazon.nova-lite-v1:0",
     body: JSON.stringify(payload),
   });
-
-  console.log("Invoking Amazon Nova Lite for matching analysis...");
+ 
   const bedrockResponse = await bedrockClient.send(command);
   const raw = await streamToString(bedrockResponse.body);
   console.log("Raw response from Bedrock:", raw);
@@ -199,9 +147,29 @@ Matching Description: [A short description summarizing the analysis]
   return result.output.message.content[0].text;
 }
 
+async function getSecrets() {
+  const secretName = "APIcredentials"; // Use the correct secret name
+  if (!secretName) {
+    return null;
+  }
+  const client = new SecretsManagerClient({ region: process.env.AMPLIFY_REGION }); // Use process.env.AMPLIFY_REGION
+  const command = new GetSecretValueCommand({ SecretId: secretName });
+  const response = await client.send(command);
+  return JSON.parse(response.SecretString);
+}
+
 export default async function tryonHandler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  // Retrieve secrets from Secrets Manager
+  let secrets;
+  try {
+    secrets = await getSecrets();
+  } catch (error) {
+    console.error("Error retrieving secrets:", error);
+    return res.status(500).json({ error: "Failed to retrieve secrets" });
   }
 
   // --- Matching Analysis Only Mode ---
@@ -215,7 +183,15 @@ export default async function tryonHandler(req, res) {
       if (!image_url) {
         return res.status(400).json({ error: "Missing image_url in request body" });
       }
-      const analysis = await callMatchingAnalysis(image_url);
+      const bedrockClient = new BedrockRuntimeClient({
+        region: "us-east-1", // Using the region where Nova Lite is available
+        credentials: {
+          accessKeyId: secrets.AWS_ACCESS_KEY_ID,
+          secretAccessKey: secrets.AWS_SECRET_ACCESS_KEY,
+        },
+      });
+
+      const analysis = await callMatchingAnalysis(image_url, bedrockClient); // Pass bedrockClient
       return res.status(200).json({ matching_analysis: analysis });
     } catch (err) {
       console.error("Error during matching analysis:", err);
@@ -229,10 +205,10 @@ export default async function tryonHandler(req, res) {
 
   try {
     if (
-      !process.env.AWS_ACCESS_KEY_ID ||
-      !process.env.AWS_SECRET_ACCESS_KEY ||
-      !process.env.KOLORS_ACCESS_KEY_ID ||
-      !process.env.KOLORS_ACCESS_KEY_SECRET
+      !secrets.AWS_ACCESS_KEY_ID ||
+      !secrets.AWS_SECRET_ACCESS_KEY ||
+      !secrets.KOLORS_ACCESS_KEY_ID ||
+      !secrets.KOLORS_ACCESS_KEY_SECRET
     ) {
       return res.status(500).json({
         error: "Missing S3 Bucket or Kling credentials",
@@ -267,16 +243,65 @@ export default async function tryonHandler(req, res) {
     const personImgBuffer = await fs.promises.readFile(personImgFile.filepath);
     const garmentImgBuffer = await fs.promises.readFile(garmentImgFile.filepath);
 
+    const client = new S3Client({
+      region: process.env.AMPLIFY_REGION,
+      credentials: {
+        accessKeyId: secrets.AWS_ACCESS_KEY_ID,
+        secretAccessKey: secrets.AWS_SECRET_ACCESS_KEY,
+      },
+    });
+
+    async function uploadToS3AndGetUrl(buffer, filename, folder, s3Client) { // Add s3Client parameter
+      const uniqueFilename = `${uuidv4()}-${filename}`;
+      const key = `${folder}/${uniqueFilename}`;
+      let contentType = "image/jpeg";
+      const lowerName = filename.toLowerCase();
+      if (lowerName.endsWith(".png")) contentType = "image/png";
+      else if (lowerName.endsWith(".gif")) contentType = "image/gif";
+
+      const command = new PutObjectCommand({
+        Bucket: secrets.AWS_S3_BUCKET_NAME,
+        Key: key,
+        Body: buffer,
+        ContentType: contentType,
+      });
+
+      await s3Client.send(command); // Use the s3Client instance
+      return `https://${secrets.AWS_S3_BUCKET_NAME}.s3.${process.env.AMPLIFY_REGION}.amazonaws.com/${key}`;
+    }
+
     const humanImageUrl = await uploadToS3AndGetUrl(
       personImgBuffer,
       personImgFile.originalFilename || "person.jpg",
-      "uploaded-image/user-image"
+      "uploaded-image/user-image",
+      client
     );
     const clothImageUrl = await uploadToS3AndGetUrl(
       garmentImgBuffer,
       garmentImgFile.originalFilename || "garment.jpg",
-      "uploaded-image/apparel-image"
+      "uploaded-image/apparel-image",
+      client
     );
+
+    async function validateImageUrl(url) {
+      console.log("Validating URL:", url);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+    
+      const response = await fetch(url, { method: "HEAD", signal: controller.signal });
+      clearTimeout(timeoutId);
+    
+      const contentType = response.headers.get("content-type") || "";
+      console.log("URL validation - Content type:", contentType, "Status:", response.status);
+    
+      if (!contentType.startsWith("image/")) {
+        throw new Error(`URL does not point to an image (content-type: ${contentType})`);
+      }
+      if (!response.ok) {
+        throw new Error(`URL is not accessible (status code: ${response.status})`);
+      }
+    }
+
     console.log("Human Image URL:", humanImageUrl);
     console.log("Cloth Image URL:", clothImageUrl);
 
@@ -289,7 +314,15 @@ export default async function tryonHandler(req, res) {
       console.warn("File cleanup failed:", err);
     }
 
-    const API_BASE_URL = process.env.KOLORS_API_URL;
+    const bedrockClient = new BedrockRuntimeClient({
+      region: "us-east-1", // Using the region where Nova Lite is available
+      credentials: {
+        accessKeyId: secrets.AWS_ACCESS_KEY_ID,
+        secretAccessKey: secrets.AWS_SECRET_ACCESS_KEY,
+      },
+    });
+      
+    const API_BASE_URL = secrets.KOLORS_API_URL;
     if (!API_BASE_URL) {
       return res.status(500).json({
         error: "Missing API configuration",
@@ -300,8 +333,8 @@ export default async function tryonHandler(req, res) {
     console.log("Using API URL:", API_BASE_URL);
 
     const token = generateToken(
-      process.env.KOLORS_ACCESS_KEY_ID,
-      process.env.KOLORS_ACCESS_KEY_SECRET
+      secrets.KOLORS_ACCESS_KEY_ID,
+      secrets.KOLORS_ACCESS_KEY_SECRET
     );
     const headers = {
       "Content-Type": "application/json",
@@ -406,6 +439,7 @@ export default async function tryonHandler(req, res) {
       task_id: taskId,
       generated_image_url: resultImageUrl,
     });
+
   } catch (error) {
     console.error("Processing error:", error);
     return res.status(500).json({
