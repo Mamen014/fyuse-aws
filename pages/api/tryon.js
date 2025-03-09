@@ -152,7 +152,7 @@ async function getSecrets() {
   if (!secretName) {
     return null;
   }
-  const client = new SecretsManagerClient({ region: secrets.AMPLIFY_REGION.AMPLIFY_REGION }); // Use secrets.AMPLIFY_REGION.AMPLIFY_REGION
+  const client = new SecretsManagerClient({ region: secrets.AMPLIFY_REGION }); // Use secrets.AMPLIFY_REGION.AMPLIFY_REGION
   const command = new GetSecretValueCommand({ SecretId: secretName });
   const response = await client.send(command);
   return JSON.parse(response.SecretString);
@@ -244,7 +244,7 @@ export default async function tryonHandler(req, res) {
     const garmentImgBuffer = await fs.promises.readFile(garmentImgFile.filepath);
 
     const client = new S3Client({
-      region: secrets.AMPLIFY_REGION.AMPLIFY_REGION,
+      region: secrets.AMPLIFY_REGION,
       credentials: {
         accessKeyId: secrets.AWS_ACCESS_KEY_ID,
         secretAccessKey: secrets.AWS_SECRET_ACCESS_KEY,
@@ -267,7 +267,7 @@ export default async function tryonHandler(req, res) {
       });
 
       await s3Client.send(command); // Use the s3Client instance
-      return `https://${secrets.AWS_S3_BUCKET_NAME}.s3.${secrets.AMPLIFY_REGION.AMPLIFY_REGION}.amazonaws.com/${key}`;
+      return `https://${secrets.AWS_S3_BUCKET_NAME}.s3.${secrets.AMPLIFY_REGION}.amazonaws.com/${key}`;
     }
 
     const humanImageUrl = await uploadToS3AndGetUrl(
