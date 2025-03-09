@@ -152,6 +152,7 @@ async function getSecrets() {
   if (!secretName) {
     return null;
   }
+  console.log("Amplify Region:", secrets.AMPLIFY_REGION); // Add this line
   const client = new SecretsManagerClient({ region: secrets.AMPLIFY_REGION }); // Use secrets.AMPLIFY_REGION.AMPLIFY_REGION
   const command = new GetSecretValueCommand({ SecretId: secretName });
   const response = await client.send(command);
