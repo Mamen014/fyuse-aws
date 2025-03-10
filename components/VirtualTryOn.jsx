@@ -16,7 +16,7 @@ const VirtualTryOn = () => {
 
     try {
       const response = await axios.post(
-        "https://ipgyftqcsg.execute-api.ap-southeast-2.amazonaws.com/dev/tryon-image", // 🔁 Replace this with your actual API Gateway endpoint
+        "https://ipgyftqcsg.execute-api.ap-southeast-2.amazonaws.com/dev", // 🔁 Replace this with your actual API Gateway endpoint
         {
           person_image_url: personImageUrl,
           garment_image_url: garmentImageUrl,
