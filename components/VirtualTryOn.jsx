@@ -1,127 +1,96 @@
-'use client';
-
-import React, { useState } from "react";
-import axios from "axios";
+// Updated VirtualTryOn.jsx
+import React, { useState } from 'react';
+import axios from 'axios';
 
 const VirtualTryOn = () => {
-  const [personImageUrl, setPersonImageUrl] = useState("");
-  const [garmentImageUrl, setGarmentImageUrl] = useState("");
-  const [generatedImage, setGeneratedImage] = useState(null);
-  const [status, setStatus] = useState("idle");
+  const [userImage, setUserImage] = useState(null);
+  const [apparelImage, setApparelImage] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [resultImageUrl, setResultImageUrl] = useState(null);
   const [error, setError] = useState(null);
 
-  const handleTryOn = async () => {
-    setStatus("loading");
-    setError(null);
+  const handleUserImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) setUserImage(file);
+  };
+
+  const handleApparelImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) setApparelImage(file);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!userImage || !apparelImage) {
+      setError('Please upload both user and apparel images.');
+      return;
+    }
 
     try {
+      setLoading(true);
+      setError(null);
+      setResultImageUrl(null);
+
+      const formData = new FormData();
+      formData.append('userImage', userImage);
+      formData.append('apparelImage', apparelImage);
+
       const response = await axios.post(
-        "https://ipgyftqcsg.execute-api.ap-southeast-2.amazonaws.com/dev", // 🔁 Replace this with your actual API Gateway endpoint
-        {
-          person_image_url: personImageUrl,
-          garment_image_url: garmentImageUrl,
-        },
+        'https://ipgyftqcsg.execute-api.ap-southeast-2.amazonaws.com/dev/tryon-image',
+        formData,
         {
           headers: {
-            "Content-Type": "application/json",
+            'Content-Type': 'multipart/form-data',
           },
         }
       );
 
-      const data = response.data;
-      if (data.status === "success" && data.generated_image_url) {
-        setGeneratedImage(data.generated_image_url);
-        setStatus("success");
+      if (response.data && response.data.generatedImageUrl) {
+        setResultImageUrl(response.data.generatedImageUrl);
       } else {
-        setStatus("error");
-        setError(data.error || "Try-on failed. Please try again.");
+        setError('Unexpected response from server.');
       }
     } catch (err) {
-      console.error("Error during try-on:", err);
-      setStatus("error");
-      setError(err.response?.data?.error || err.message || "Unexpected error occurred");
+      console.error(err);
+      setError('An error occurred during virtual try-on.');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleReset = () => {
-    setPersonImageUrl("");
-    setGarmentImageUrl("");
-    setGeneratedImage(null);
-    setStatus("idle");
-    setError(null);
-  };
-
   return (
-    <div className="p-6 max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">Virtual Try-On</h1>
-
-      <div className="mb-4">
-        <label className="block font-semibold mb-1">Person Image URL:</label>
-        <input
-          type="text"
-          className="w-full border rounded px-3 py-2"
-          value={personImageUrl}
-          onChange={(e) => setPersonImageUrl(e.target.value)}
-          placeholder="Enter person image URL"
-        />
-        {personImageUrl && (
-          <img
-            src={personImageUrl}
-            alt="Person Preview"
-            className="mt-2 w-full max-h-64 object-contain rounded shadow"
-          />
-        )}
-      </div>
-
-      <div className="mb-4">
-        <label className="block font-semibold mb-1">Garment Image URL:</label>
-        <input
-          type="text"
-          className="w-full border rounded px-3 py-2"
-          value={garmentImageUrl}
-          onChange={(e) => setGarmentImageUrl(e.target.value)}
-          placeholder="Enter garment image URL"
-        />
-        {garmentImageUrl && (
-          <img
-            src={garmentImageUrl}
-            alt="Garment Preview"
-            className="mt-2 w-full max-h-64 object-contain rounded shadow"
-          />
-        )}
-      </div>
-
-      <div className="flex flex-wrap gap-4 mt-4">
-        <button
-          onClick={handleTryOn}
-          className="bg-blue-600 text-white px-5 py-2 rounded hover:bg-blue-700 transition"
-          disabled={status === "loading" || !personImageUrl || !garmentImageUrl}
-        >
-          {status === "loading" ? "Processing..." : "Try On"}
-        </button>
-
-        <button
-          onClick={handleReset}
-          className="bg-gray-200 text-gray-800 px-5 py-2 rounded hover:bg-gray-300 transition"
-        >
-          Reset
-        </button>
-      </div>
-
-      {status === "success" && generatedImage && (
-        <div className="mt-8">
-          <h2 className="text-lg font-semibold mb-2">Generated Try-On Image:</h2>
-          <img
-            src={generatedImage}
-            alt="Try-On Result"
-            className="w-full rounded shadow-xl"
-          />
+    <div className="p-6 max-w-xl mx-auto bg-white rounded-2xl shadow-md">
+      <h1 className="text-2xl font-bold mb-4 text-center">Virtual Try-On</h1>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block font-medium">Upload User Image</label>
+          <input type="file" accept="image/*" onChange={handleUserImageChange} />
         </div>
-      )}
 
-      {status === "error" && error && (
-        <div className="mt-4 text-red-600 font-semibold">
-          Error: {error}
+        <div>
+          <label className="block font-medium">Upload Apparel Image</label>
+          <input type="file" accept="image/*" onChange={handleApparelImageChange} />
+        </div>
+
+        <button
+          type="submit"
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full"
+          disabled={loading}
+        >
+          {loading ? 'Processing...' : 'Try On' }
+        </button>
+      </form>
+
+      {error && <p className="text-red-500 mt-4">{error}</p>}
+
+      {resultImageUrl && (
+        <div className="mt-6 text-center">
+          <h2 className="text-lg font-semibold mb-2">Result</h2>
+          <img
+            src={resultImageUrl}
+            alt="Try-On Result"
+            className="w-full max-h-96 object-contain rounded-lg border"
+          />
         </div>
       )}
     </div>
