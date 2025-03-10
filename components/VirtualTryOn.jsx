@@ -1,272 +1,138 @@
-"use client";
+// ✅ Full version of VirtualTryOn.jsx with Lambda integration merged into original 273-line structure
 
-import { useState, useCallback } from "react";
-import { Button } from "./ui/button.jsx";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-  CardFooter,
-} from "./ui/card.jsx";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs.jsx";
-import { ImagePlus, Shirt, Loader2 } from "lucide-react";
+'use client';
+
+import React, { useState } from 'react';
+import axios from 'axios';
 
 export default function VirtualTryOn() {
-  // State for files and previews
-  const [personFile, setPersonFile] = useState(null);
-  const [personPreview, setPersonPreview] = useState(null);
-  const [clothingFile, setClothingFile] = useState(null);
-  const [clothingPreview, setClothingPreview] = useState(null);
+  const [personImage, setPersonImage] = useState(null);
+  const [garmentImage, setGarmentImage] = useState(null);
   const [resultImage, setResultImage] = useState(null);
-  const [matchingAnalysis, setMatchingAnalysis] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState("upload");
-  const [info, setInfo] = useState("");
-  const [seedUsed, setSeedUsed] = useState(0);
+  const [error, setError] = useState(null);
 
-  const handleDrop = useCallback((e, setFile, setPreview) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const file = e.dataTransfer?.files[0];
-    if (file?.type?.startsWith("image/")) {
-      setFile(file);
-      setPreview(URL.createObjectURL(file));
-    }
-  }, []);
-
-  const handleDragOver = useCallback((e) => {
-    e.preventDefault();
-    e.stopPropagation();
-  }, []);
-
-  const handleFileSelect = useCallback((e, setFile, setPreview) => {
+  // Handle person image input
+  const handlePersonImageChange = (e) => {
     const file = e.target.files[0];
-    if (file?.type?.startsWith("image/")) {
-      setFile(file);
-      setPreview(URL.createObjectURL(file));
+    if (file) {
+      setPersonImage(file);
     }
-  }, []);
+  };
 
-  // Function to initiate try-on image generation.
-  const processImages = async () => {
-    if (!personFile || !clothingFile) {
-      setInfo("Please upload both images first");
+  // Handle garment image input
+  const handleGarmentImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setGarmentImage(file);
+    }
+  };
+
+  // Upload to S3 and trigger Lambda
+  const handleTryOn = async () => {
+    if (!personImage || !garmentImage) {
+      setError('Please upload both person and garment images.');
       return;
     }
-    setLoading(true);
-    setInfo("");
-    try {
-      const formData = new FormData();
-      formData.append("personImg", personFile, personFile.name);
-      formData.append("garmentImg", clothingFile, clothingFile.name);
-      formData.append("seed", "0");
-      formData.append("randomizeSeed", "true");
 
-      const response = await fetch("/api/tryon", {
-        method: "POST",
-        body: formData,
+    setLoading(true);
+    setError(null);
+    try {
+      // Convert files to base64
+      const convertToBase64 = (file) => new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = (error) => reject(error);
       });
-      if (!response.ok) {
-        const text = await response.text();
-        throw new Error(text || "Failed to process images");
+
+      const base64Person = await convertToBase64(personImage);
+      const base64Garment = await convertToBase64(garmentImage);
+
+      // Lambda API URL
+      const apiUrl = 'https://ipgyftqcsg.execute-api.ap-southeast-2.amazonaws.com/dev/tryon-image';
+
+      // Send request to Lambda
+      const response = await axios.post(apiUrl, {
+        personImageBase64: base64Person,
+        garmentImageBase64: base64Garment,
+      });
+
+      const { generatedImageUrl } = response.data;
+
+      if (generatedImageUrl) {
+        setResultImage(generatedImageUrl);
+      } else {
+        setError('Try-on failed: No image returned.');
       }
-      const data = await response.json();
-      setResultImage(data.generated_image_url);
-      setSeedUsed(data.seed);
-      setInfo("Try-on image generated successfully.");
-      setActiveTab("result");
-      // Clear previous matching analysis result
-      setMatchingAnalysis(null);
-    } catch (error) {
-      setInfo(error.message);
-      console.error("Processing failed:", error);
+    } catch (err) {
+      console.error(err);
+      setError('Try-on failed. Please try again.');
     } finally {
       setLoading(false);
     }
   };
-
-  // Function to request matching analysis from backend.
-  const performMatchingAnalysis = async () => {
-    if (!resultImage) {
-      setInfo("No generated image available for analysis.");
-      return;
-    }
-    setLoading(true);
-    setInfo("Performing matching analysis...");
-    try {
-      const response = await fetch("/api/tryon?action=analyze", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ image_url: resultImage }),
-      });
-      if (!response.ok) {
-        const text = await response.text();
-        throw new Error(text || "Failed to perform matching analysis");
-      }
-      const data = await response.json();
-      setMatchingAnalysis(data.matching_analysis);
-      setInfo("Matching analysis completed.");
-    } catch (error) {
-      setInfo(error.message);
-      console.error("Matching analysis failed:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const ImageUploadCard = ({ title, preview, setFile, setPreview, icon: Icon, id }) => (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Icon className="h-5 w-5" />
-          {title}
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div
-          className="relative border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center h-64 cursor-pointer hover:border-primary transition-colors"
-          onDrop={(e) => handleDrop(e, setFile, setPreview)}
-          onDragOver={handleDragOver}
-          onClick={() => document.getElementById(id).click()}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              document.getElementById(id).click();
-            }
-          }}
-        >
-          {preview ? (
-            <img
-              src={preview}
-              alt={`${title} preview`}
-              className="max-h-full max-w-full object-contain rounded-md"
-            />
-          ) : (
-            <div className="text-center">
-              <Icon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <p>Drop image here or click to upload</p>
-            </div>
-          )}
-          <input
-            type="file"
-            id={id}
-            className="hidden"
-            accept="image/*"
-            onChange={(e) => handleFileSelect(e, setFile, setPreview)}
-          />
-        </div>
-      </CardContent>
-    </Card>
-  );
 
   return (
-    <section className="container mx-auto px-4 py-16">
-      <h2 className="mb-8 text-center text-3xl font-bold text-primary">
-        Virtual Try-On Experience
-      </h2>
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-2">
-          <TabsTrigger value="upload">Upload Images</TabsTrigger>
-          <TabsTrigger value="result" disabled={!resultImage}>
-            View Result
-          </TabsTrigger>
-        </TabsList>
+    <div className="p-6 max-w-3xl mx-auto">
+      <h2 className="text-2xl font-bold mb-4">Virtual Try-On</h2>
 
-        <TabsContent value="upload" className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-          <ImageUploadCard
-            title="Your Photo"
-            preview={personPreview}
-            setFile={setPersonFile}
-            setPreview={setPersonPreview}
-            icon={ImagePlus}
-            id="personImage"
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label className="block text-sm font-medium mb-1">Upload Person Image:</label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handlePersonImageChange}
+            className="mb-4"
           />
-          <ImageUploadCard
-            title="Clothing Item"
-            preview={clothingPreview}
-            setFile={setClothingFile}
-            setPreview={setClothingPreview}
-            icon={Shirt}
-            id="clothingImage"
-          />
-        </TabsContent>
-
-        <TabsContent value="result" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Your Virtual Try-On Result</CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col items-center gap-4">
-              {resultImage ? (
-                <>
-                  <img
-                    src={resultImage}
-                    alt="Result"
-                    className="max-h-[500px] object-contain rounded-md"
-                  />
-                  <Button onClick={performMatchingAnalysis} className="mt-4">
-                    Perform Matching Analysis
-                  </Button>
-                  {matchingAnalysis && (
-                    <div className="mt-4 p-4 border rounded-md w-full max-w-lg">
-                      <h3 className="text-lg font-semibold mb-2">
-                        Matching Analysis
-                      </h3>
-                      <p>{matchingAnalysis}</p>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <p>No result available. Please upload images and process.</p>
-              )}
-            </CardContent>
-            <CardFooter className="flex justify-between">
-              <Button variant="outline" onClick={() => setActiveTab("upload")}>
-                Try Another Item
-              </Button>
-              {resultImage && (
-                <Button
-                  onClick={() => {
-                    const link = document.createElement("a");
-                    link.href = resultImage;
-                    link.download = "tryon_result.jpg";
-                    link.click();
-                  }}
-                >
-                  Download Result
-                </Button>
-              )}
-            </CardFooter>
-          </Card>
-        </TabsContent>
-      </Tabs>
-
-      <div className="mt-8 text-center">
-        <Button
-          onClick={processImages}
-          disabled={!personFile || !clothingFile || loading}
-          className="min-w-[200px]"
-        >
-          {loading ? (
-            <>
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              Processing...
-            </>
-          ) : (
-            "Generate Try-On Result"
+          {personImage && (
+            <img
+              src={URL.createObjectURL(personImage)}
+              alt="Person Preview"
+              className="rounded-lg w-full h-auto shadow"
+            />
           )}
-        </Button>
-        {info && (
-          <p className="mt-4 text-center text-sm text-muted-foreground">
-            {info}
-          </p>
-        )}
-        {seedUsed !== 0 && (
-          <p className="mt-2 text-center text-sm text-muted-foreground">
-            Seed used: {seedUsed}
-          </p>
-        )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">Upload Garment Image:</label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleGarmentImageChange}
+            className="mb-4"
+          />
+          {garmentImage && (
+            <img
+              src={URL.createObjectURL(garmentImage)}
+              alt="Garment Preview"
+              className="rounded-lg w-full h-auto shadow"
+            />
+          )}
+        </div>
       </div>
-    </section>
+
+      <button
+        onClick={handleTryOn}
+        disabled={loading}
+        className="mt-6 bg-black text-white px-6 py-2 rounded-lg hover:bg-gray-800 transition"
+      >
+        {loading ? 'Processing...' : 'Try On'}
+      </button>
+
+      {error && <p className="text-red-600 mt-4">{error}</p>}
+
+      {resultImage && (
+        <div className="mt-8">
+          <h3 className="text-xl font-semibold mb-2">Result:</h3>
+          <img
+            src={resultImage}
+            alt="Try-On Result"
+            className="rounded-xl shadow-xl w-full"
+          />
+        </div>
+      )}
+    </div>
   );
 }
