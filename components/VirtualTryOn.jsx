@@ -64,18 +64,20 @@ const VirtualTryOn = () => {
       setError(null);
       setResultImageUrl(null);
 
+      const API_BASE_URL = 'https://76e5op5rg6.execute-api.ap-southeast-2.amazonaws.com/dev';
+      
       const userImageUrl = await uploadImageToS3(
         userImage,
-        'https://ipgyftqcsg.execute-api.ap-southeast-2.amazonaws.com/dev/upload-user-image'
+        `${API_BASE_URL}/upload-user-image`
       );
 
       const apparelImageUrl = await uploadImageToS3(
         apparelImage,
-        'https://ipgyftqcsg.execute-api.ap-southeast-2.amazonaws.com/dev/upload-apparel-image'
+        `${API_BASE_URL}/upload-apparel-image`
       );
 
       const tryonResponse = await axios.post(
-        'https://ipgyftqcsg.execute-api.ap-southeast-2.amazonaws.com/dev/tryon-image',
+        `${API_BASE_URL}/tryon-image`,
         {
           person_image_url: userImageUrl,
           garment_image_url: apparelImageUrl,
