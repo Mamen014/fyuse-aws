@@ -26,7 +26,18 @@ const VirtualTryOn = () => {
       setApparelImagePreview(URL.createObjectURL(file));
     }
   };
-   
+
+  const toBase64 = (file) =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        const base64 = reader.result.split(",")[1];
+        resolve(base64);
+      };
+      reader.onerror = (error) => reject(error);
+    });
+
   const uploadImageToS3 = async (imageFile, endpoint) => {
     const base64 = await toBase64(imageFile);
     const contentType = imageFile.type;
@@ -41,19 +52,8 @@ const VirtualTryOn = () => {
     return response.data?.imageUrl;
   };
 
-  const toBase64 = (file) =>
-    new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => {
-        const base64 = reader.result.split(",")[1];
-        resolve(base64);
-      };
-      reader.onerror = (error) => reject(error);
-    });
-
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    e?.preventDefault(); // If used inside a form; otherwise not needed
     if (!userImage || !apparelImage) {
       setError("Please upload both user and apparel images.");
       return;
@@ -117,11 +117,6 @@ const VirtualTryOn = () => {
       setMatchingAnalysis(null);
       setError(null);
 
-      console.log("🔍 Matching analysis payload:", {
-        generated_image_url: window.generatedImageUrl,
-        apparel_image_url: window.apparelImageUrl,
-      });
-
       const response = await axios.post(
         "https://j1sp2omtq2.execute-api.ap-southeast-2.amazonaws.com/dev/MatchingAnalyzer",
         {
@@ -146,79 +141,108 @@ const VirtualTryOn = () => {
   };
 
   return (
-    <div className="p-6 max-w-xl mx-auto bg-white rounded shadow">
-      <h2 className="text-xl font-bold mb-4">Virtual Try-On</h2>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label htmlFor="userImage" className="block mb-1 font-medium">
-            Upload User Image:
-          </label>
+    <div className="container mx-auto p-6">
+      {/* Title */}
+      <h1 className="text-2xl font-bold text-center mb-6">
+        Virtual Try-On Experience
+      </h1>
+
+      {/* Two-column layout for uploading images */}
+      <div className="flex flex-col md:flex-row gap-6 justify-center">
+        {/* User Photo Column */}
+        <div className="flex-1 border-2 border-dashed border-gray-300 rounded-md p-4 text-center">
+          <h2 className="text-lg font-semibold mb-2">Your Photo</h2>
           <input
-            id="userImage"
             type="file"
             accept="image/*"
             onChange={handleUserImageChange}
+            className="hidden"
+            id="userPhoto"
           />
-          {userImagePreview && (
-            <img
-              src={userImagePreview}
-              alt="User Preview"
-              className="mt-2 max-h-48"
-            />
-          )}
-        </div>
-        <div>
-          <label htmlFor="apparelImage" className="block mb-1 font-medium">
-            Upload Apparel Image:
+          <label htmlFor="userPhoto" className="cursor-pointer">
+            {userImagePreview ? (
+              <img
+                src={userImagePreview}
+                alt="User Preview"
+                className="mx-auto max-h-48 object-contain"
+              />
+            ) : (
+              <div className="flex flex-col items-center justify-center h-48">
+                <p className="text-gray-500">
+                  Drop image here or click to upload
+                </p>
+              </div>
+            )}
           </label>
+        </div>
+
+        {/* Clothing Item Column */}
+        <div className="flex-1 border-2 border-dashed border-gray-300 rounded-md p-4 text-center">
+          <h2 className="text-lg font-semibold mb-2">Clothing Item</h2>
           <input
-            id="apparelImage"
             type="file"
             accept="image/*"
             onChange={handleApparelImageChange}
+            className="hidden"
+            id="apparelPhoto"
           />
-          {apparelImagePreview && (
-            <img
-              src={apparelImagePreview}
-              alt="Apparel Preview"
-              className="mt-2 max-h-48"
-            />
-          )}
+          <label htmlFor="apparelPhoto" className="cursor-pointer">
+            {apparelImagePreview ? (
+              <img
+                src={apparelImagePreview}
+                alt="Apparel Preview"
+                className="mx-auto max-h-48 object-contain"
+              />
+            ) : (
+              <div className="flex flex-col items-center justify-center h-48">
+                <p className="text-gray-500">
+                  Drop image here or click to upload
+                </p>
+              </div>
+            )}
+          </label>
         </div>
+      </div>
+
+      {/* Generate Try-On Button */}
+      <div className="text-center mt-6">
         <button
-          type="submit"
+          onClick={handleSubmit}
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
         >
-          Submit for Try-On
+          Generate Try-On Result
         </button>
-      </form>
+      </div>
 
-      {loading && <p className="mt-4 text-gray-600">Processing...</p>}
-      {error && <p className="mt-4 text-red-600">{error}</p>}
+      {/* Loading or Error Messages */}
+      {loading && (
+        <p className="mt-4 text-gray-600 text-center">Processing...</p>
+      )}
+      {error && <p className="mt-4 text-red-600 text-center">{error}</p>}
 
+      {/* Result Image & Matching Analysis */}
       {resultImageUrl && (
-        <div className="mt-6">
-          <h3 className="text-lg font-semibold mb-2">
-            Generated Try-On Image:
-          </h3>
+        <div className="mt-8 text-center">
+          <h3 className="text-xl font-semibold mb-2">Generated Try-On Image</h3>
           <img
             src={resultImageUrl}
             alt="Try-On Result"
-            className="rounded shadow max-h-96"
+            className="rounded shadow inline-block max-h-96 object-contain"
           />
-          <button
-            type="button"
-            onClick={handleMatchingAnalysis}
-            className="mt-4 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-          >
-            Get Matching Analysis
-          </button>
+          <div className="mt-4">
+            <button
+              onClick={handleMatchingAnalysis}
+              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+            >
+              Get Matching Analysis
+            </button>
+          </div>
         </div>
       )}
 
       {matchingAnalysis && (
-        <div className="mt-6 p-4 border rounded bg-gray-100">
-          <h4 className="font-semibold mb-2">Matching Analysis Result:</h4>
+        <div className="mt-6 p-4 border rounded bg-gray-100 text-center">
+          <h4 className="font-semibold mb-2">Matching Analysis Result</h4>
           <pre className="whitespace-pre-wrap text-sm text-gray-800">
             {matchingAnalysis}
           </pre>
