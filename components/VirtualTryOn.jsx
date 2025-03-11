@@ -77,7 +77,7 @@ const VirtualTryOn = () => {
       );
 
       const tryonResponse = await axios.post(
-        `${API_BASE_URL}/tryon-image`,
+        `https://ipgyftqcsg.execute-api.ap-southeast-2.amazonaws.com/dev/tryon-image`,
         {
           person_image_url: userImageUrl,
           garment_image_url: apparelImageUrl,
