@@ -1,4 +1,4 @@
-// Updated VirtualTryOn.jsx with error handling and preview support
+// Updated VirtualTryOn.jsx to match new backend Lambda + API Gateway architecture
 import React, { useState } from 'react';
 import axios from 'axios';
 
@@ -27,6 +27,18 @@ const VirtualTryOn = () => {
     }
   };
 
+  const uploadImageToS3 = async (imageFile, endpoint) => {
+    const formData = new FormData();
+    formData.append('file', imageFile);
+
+    const response = await axios.post(endpoint, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data?.image_url;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!userImage || !apparelImage) {
@@ -39,24 +51,28 @@ const VirtualTryOn = () => {
       setError(null);
       setResultImageUrl(null);
 
-      const formData = new FormData();
-      formData.append('userImage', userImage);
-      formData.append('apparelImage', apparelImage);
+      const userImageUrl = await uploadImageToS3(
+        userImage,
+        'https://ipgyftqcsg.execute-api.ap-southeast-2.amazonaws.com/dev/upload-user-image'
+      );
 
-      const response = await axios.post(
+      const apparelImageUrl = await uploadImageToS3(
+        apparelImage,
+        'https://ipgyftqcsg.execute-api.ap-southeast-2.amazonaws.com/dev/upload-apparel-image'
+      );
+
+      const tryonResponse = await axios.post(
         'https://ipgyftqcsg.execute-api.ap-southeast-2.amazonaws.com/dev/tryon-image',
-        formData,
         {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
+          user_image_url: userImageUrl,
+          apparel_image_url: apparelImageUrl,
         }
       );
 
-      if (response.data?.generated_image_url) {
-        setResultImageUrl(response.data.generated_image_url);
-      } else if (response.data?.error) {
-        setError(`Server error: ${response.data.error}`);
+      if (tryonResponse.data?.generated_image_url) {
+        setResultImageUrl(tryonResponse.data.generated_image_url);
+      } else if (tryonResponse.data?.error) {
+        setError(`Server error: ${tryonResponse.data.error}`);
       } else {
         setError('Unexpected response from server.');
       }
