@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import axios from 'axios';
+import React, { useState } from "react";
+import axios from "axios";
 
 const VirtualTryOn = () => {
   const [userImage, setUserImage] = useState(null);
@@ -26,7 +26,7 @@ const VirtualTryOn = () => {
       setApparelImagePreview(URL.createObjectURL(file));
     }
   };
-
+   
   const uploadImageToS3 = async (imageFile, endpoint) => {
     const base64 = await toBase64(imageFile);
     const contentType = imageFile.type;
@@ -46,7 +46,7 @@ const VirtualTryOn = () => {
       const reader = new FileReader();
       reader.readAsDataURL(file);
       reader.onload = () => {
-        const base64 = reader.result.split(',')[1];
+        const base64 = reader.result.split(",")[1];
         resolve(base64);
       };
       reader.onerror = (error) => reject(error);
@@ -55,7 +55,7 @@ const VirtualTryOn = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!userImage || !apparelImage) {
-      setError('Please upload both user and apparel images.');
+      setError("Please upload both user and apparel images.");
       return;
     }
 
@@ -65,7 +65,8 @@ const VirtualTryOn = () => {
       setResultImageUrl(null);
       setMatchingAnalysis(null);
 
-      const API_BASE_URL = 'https://76e5op5rg6.execute-api.ap-southeast-2.amazonaws.com/dev';
+      const API_BASE_URL =
+        "https://76e5op5rg6.execute-api.ap-southeast-2.amazonaws.com/dev";
 
       const userImageUrl = await uploadImageToS3(
         userImage,
@@ -78,7 +79,7 @@ const VirtualTryOn = () => {
       );
 
       const tryonResponse = await axios.post(
-        `https://ipgyftqcsg.execute-api.ap-southeast-2.amazonaws.com/dev/tryon-image`,
+        "https://ipgyftqcsg.execute-api.ap-southeast-2.amazonaws.com/dev/tryon-image",
         {
           person_image_url: userImageUrl,
           garment_image_url: apparelImageUrl,
@@ -93,11 +94,13 @@ const VirtualTryOn = () => {
       } else if (tryonResponse.data?.error) {
         setError(`Server error: ${tryonResponse.data.error}`);
       } else {
-        setError('Unexpected response from server.');
+        setError("Unexpected response from server.");
       }
     } catch (err) {
       console.error(err);
-      setError(err.response?.data?.error || 'An error occurred during virtual try-on.');
+      setError(
+        err.response?.data?.error || "An error occurred during virtual try-on."
+      );
     } finally {
       setLoading(false);
     }
@@ -105,57 +108,82 @@ const VirtualTryOn = () => {
 
   const handleMatchingAnalysis = async () => {
     if (!window.generatedImageUrl || !window.apparelImageUrl) {
-      setError('Missing generated try-on image or apparel image URL.');
+      setError("Missing generated try-on image or apparel image URL.");
       return;
     }
-  
+
     try {
       setLoading(true);
       setMatchingAnalysis(null);
       setError(null);
-  
+
       console.log("🔍 Matching analysis payload:", {
         generated_image_url: window.generatedImageUrl,
         apparel_image_url: window.apparelImageUrl,
       });
-  
+
       const response = await axios.post(
-        'https://j1sp2omtq2.execute-api.ap-southeast-2.amazonaws.com/dev/MatchingAnalyzer',
+        "https://j1sp2omtq2.execute-api.ap-southeast-2.amazonaws.com/dev/MatchingAnalyzer",
         {
           generated_image_url: window.generatedImageUrl,
           apparel_image_url: window.apparelImageUrl,
         }
       );
-  
+
       if (response.data?.matching_analysis) {
         setMatchingAnalysis(response.data.matching_analysis);
       } else if (response.data?.error) {
         setError(`Matching Analysis Error: ${response.data.error}`);
       } else {
-        setError('Unexpected response from Matching Analyzer.');
+        setError("Unexpected response from Matching Analyzer.");
       }
     } catch (err) {
       console.error(err);
-      setError(err.response?.data?.error || 'Matching Analysis failed.');
+      setError(err.response?.data?.error || "Matching Analysis failed.");
     } finally {
       setLoading(false);
     }
   };
-  
 
   return (
     <div className="p-6 max-w-xl mx-auto bg-white rounded shadow">
       <h2 className="text-xl font-bold mb-4">Virtual Try-On</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block mb-1 font-medium">Upload User Image:</label>
-          <input type="file" accept="image/*" onChange={handleUserImageChange} />
-          {userImagePreview && <img src={userImagePreview} alt="User Preview" className="mt-2 max-h-48" />}
+          <label htmlFor="userImage" className="block mb-1 font-medium">
+            Upload User Image:
+          </label>
+          <input
+            id="userImage"
+            type="file"
+            accept="image/*"
+            onChange={handleUserImageChange}
+          />
+          {userImagePreview && (
+            <img
+              src={userImagePreview}
+              alt="User Preview"
+              className="mt-2 max-h-48"
+            />
+          )}
         </div>
         <div>
-          <label className="block mb-1 font-medium">Upload Apparel Image:</label>
-          <input type="file" accept="image/*" onChange={handleApparelImageChange} />
-          {apparelImagePreview && <img src={apparelImagePreview} alt="Apparel Preview" className="mt-2 max-h-48" />}
+          <label htmlFor="apparelImage" className="block mb-1 font-medium">
+            Upload Apparel Image:
+          </label>
+          <input
+            id="apparelImage"
+            type="file"
+            accept="image/*"
+            onChange={handleApparelImageChange}
+          />
+          {apparelImagePreview && (
+            <img
+              src={apparelImagePreview}
+              alt="Apparel Preview"
+              className="mt-2 max-h-48"
+            />
+          )}
         </div>
         <button
           type="submit"
@@ -170,9 +198,16 @@ const VirtualTryOn = () => {
 
       {resultImageUrl && (
         <div className="mt-6">
-          <h3 className="text-lg font-semibold mb-2">Generated Try-On Image:</h3>
-          <img src={resultImageUrl} alt="Try-On Result" className="rounded shadow max-h-96" />
+          <h3 className="text-lg font-semibold mb-2">
+            Generated Try-On Image:
+          </h3>
+          <img
+            src={resultImageUrl}
+            alt="Try-On Result"
+            className="rounded shadow max-h-96"
+          />
           <button
+            type="button"
             onClick={handleMatchingAnalysis}
             className="mt-4 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
           >
@@ -184,7 +219,9 @@ const VirtualTryOn = () => {
       {matchingAnalysis && (
         <div className="mt-6 p-4 border rounded bg-gray-100">
           <h4 className="font-semibold mb-2">Matching Analysis Result:</h4>
-          <pre className="whitespace-pre-wrap text-sm text-gray-800">{matchingAnalysis}</pre>
+          <pre className="whitespace-pre-wrap text-sm text-gray-800">
+            {matchingAnalysis}
+          </pre>
         </div>
       )}
     </div>
