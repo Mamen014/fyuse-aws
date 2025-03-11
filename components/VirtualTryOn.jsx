@@ -108,20 +108,20 @@ const VirtualTryOn = () => {
       setError('Missing generated try-on image or apparel image URL.');
       return;
     }
-
+  
     try {
       setLoading(true);
       setMatchingAnalysis(null);
       setError(null);
-
+  
       const response = await axios.post(
-        'https://ipgyftqcsg.execute-api.ap-southeast-2.amazonaws.com/dev/matching-analysis',
+        'https://j1sp2omtq2.execute-api.ap-southeast-2.amazonaws.com/dev/MatchingAnalyzer',
         {
-          generated_image_url: window.generatedImageUrl,
-          apparel_image_url: window.apparelImageUrl,
+          generatedImageUrl: window.generatedImageUrl,
+          apparelImageUrl: window.apparelImageUrl,
         }
       );
-
+  
       if (response.data?.matching_analysis) {
         setMatchingAnalysis(response.data.matching_analysis);
       } else if (response.data?.error) {
@@ -135,7 +135,7 @@ const VirtualTryOn = () => {
     } finally {
       setLoading(false);
     }
-  };
+  };  
 
   return (
     <div className="p-6 max-w-xl mx-auto bg-white rounded shadow">
