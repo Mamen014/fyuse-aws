@@ -1,22 +1,30 @@
-// Updated VirtualTryOn.jsx
+// Updated VirtualTryOn.jsx with error handling and preview support
 import React, { useState } from 'react';
 import axios from 'axios';
 
 const VirtualTryOn = () => {
   const [userImage, setUserImage] = useState(null);
   const [apparelImage, setApparelImage] = useState(null);
+  const [userImagePreview, setUserImagePreview] = useState(null);
+  const [apparelImagePreview, setApparelImagePreview] = useState(null);
   const [loading, setLoading] = useState(false);
   const [resultImageUrl, setResultImageUrl] = useState(null);
   const [error, setError] = useState(null);
 
   const handleUserImageChange = (e) => {
     const file = e.target.files[0];
-    if (file) setUserImage(file);
+    if (file) {
+      setUserImage(file);
+      setUserImagePreview(URL.createObjectURL(file));
+    }
   };
 
   const handleApparelImageChange = (e) => {
     const file = e.target.files[0];
-    if (file) setApparelImage(file);
+    if (file) {
+      setApparelImage(file);
+      setApparelImagePreview(URL.createObjectURL(file));
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -45,14 +53,16 @@ const VirtualTryOn = () => {
         }
       );
 
-      if (response.data && response.data.generatedImageUrl) {
-        setResultImageUrl(response.data.generatedImageUrl);
+      if (response.data?.generated_image_url) {
+        setResultImageUrl(response.data.generated_image_url);
+      } else if (response.data?.error) {
+        setError(`Server error: ${response.data.error}`);
       } else {
         setError('Unexpected response from server.');
       }
     } catch (err) {
       console.error(err);
-      setError('An error occurred during virtual try-on.');
+      setError(err.response?.data?.error || 'An error occurred during virtual try-on.');
     } finally {
       setLoading(false);
     }
@@ -65,11 +75,25 @@ const VirtualTryOn = () => {
         <div>
           <label className="block font-medium">Upload User Image</label>
           <input type="file" accept="image/*" onChange={handleUserImageChange} />
+          {userImagePreview && (
+            <img
+              src={userImagePreview}
+              alt="User Preview"
+              className="mt-2 w-full max-h-48 object-contain rounded-lg border"
+            />
+          )}
         </div>
 
         <div>
           <label className="block font-medium">Upload Apparel Image</label>
           <input type="file" accept="image/*" onChange={handleApparelImageChange} />
+          {apparelImagePreview && (
+            <img
+              src={apparelImagePreview}
+              alt="Apparel Preview"
+              className="mt-2 w-full max-h-48 object-contain rounded-lg border"
+            />
+          )}
         </div>
 
         <button
@@ -77,7 +101,7 @@ const VirtualTryOn = () => {
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full"
           disabled={loading}
         >
-          {loading ? 'Processing...' : 'Try On' }
+          {loading ? 'Processing...' : 'Try On'}
         </button>
       </form>
 
