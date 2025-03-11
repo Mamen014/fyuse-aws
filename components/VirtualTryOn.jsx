@@ -28,16 +28,29 @@ const VirtualTryOn = () => {
   };
 
   const uploadImageToS3 = async (imageFile, endpoint) => {
-    const formData = new FormData();
-    formData.append('file', imageFile);
-
-    const response = await axios.post(endpoint, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
+    const base64 = await toBase64(imageFile);
+    const contentType = imageFile.type;
+    const fileName = imageFile.name;
+  
+    const response = await axios.post(endpoint, {
+      fileName,
+      fileDataBase64: base64,
+      contentType,
     });
-    return response.data?.image_url;
+  
+    return response.data?.imageUrl;
   };
+  
+  const toBase64 = (file) =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        const base64 = reader.result.split(',')[1]; // remove "data:image/jpeg;base64,"
+        resolve(base64);
+      };
+      reader.onerror = (error) => reject(error);
+    });  
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -64,10 +77,10 @@ const VirtualTryOn = () => {
       const tryonResponse = await axios.post(
         'https://ipgyftqcsg.execute-api.ap-southeast-2.amazonaws.com/dev/tryon-image',
         {
-          user_image_url: userImageUrl,
-          apparel_image_url: apparelImageUrl,
+          person_image_url: userImageUrl,
+          garment_image_url: apparelImageUrl,
         }
-      );
+      );      
 
       if (tryonResponse.data?.generated_image_url) {
         setResultImageUrl(tryonResponse.data.generated_image_url);
