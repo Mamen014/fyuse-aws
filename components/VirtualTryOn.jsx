@@ -114,11 +114,16 @@ const VirtualTryOn = () => {
       setMatchingAnalysis(null);
       setError(null);
   
+      console.log("🔍 Matching analysis payload:", {
+        generated_image_url: window.generatedImageUrl,
+        apparel_image_url: window.apparelImageUrl,
+      });
+  
       const response = await axios.post(
         'https://j1sp2omtq2.execute-api.ap-southeast-2.amazonaws.com/dev/MatchingAnalyzer',
         {
-          generatedImageUrl: window.generatedImageUrl,
-          apparelImageUrl: window.apparelImageUrl,
+          generated_image_url: window.generatedImageUrl,
+          apparel_image_url: window.apparelImageUrl,
         }
       );
   
@@ -135,7 +140,8 @@ const VirtualTryOn = () => {
     } finally {
       setLoading(false);
     }
-  };  
+  };
+  
 
   return (
     <div className="p-6 max-w-xl mx-auto bg-white rounded shadow">
