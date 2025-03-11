@@ -207,6 +207,7 @@ const VirtualTryOn = () => {
       {/* Generate Try-On Button */}
       <div className="text-center mt-6">
         <button
+          type="button"
           onClick={handleSubmit}
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
         >
@@ -231,6 +232,7 @@ const VirtualTryOn = () => {
           />
           <div className="mt-4">
             <button
+              type="button"
               onClick={handleMatchingAnalysis}
               className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
             >
