@@ -269,6 +269,7 @@ const VirtualTryOn = () => {
   const [resultImageUrl, setResultImageUrl] = useState(null);
   const [error, setError] = useState(null);
   const [matchingAnalysis, setMatchingAnalysis] = useState(null);
+  const [taskId, setTaskId] = useState(null);
 
   const handleUserImageChange = (e) => {
     const file = e.target.files[0];
@@ -334,22 +335,25 @@ const VirtualTryOn = () => {
         `${API_BASE_URL}/upload-apparel-image`
       );
 
-      const tryonResponse = await axios.post(
-        "https://ipgyftqcsg.execute-api.ap-southeast-2.amazonaws.com/dev/tryon-image",
-        {
-          person_image_url: userImageUrl,
-          garment_image_url: apparelImageUrl,
-        }
-      );
+      // Trigger the enqueue-tryon-job Lambda function
+      try {
+        const tryonResponse = await axios.post(
+          `https://jev6ryapva.execute-api.ap-southeast-2.amazonaws.com/dev/enqueue-tryon-job`,
+          {
+            person_image_url: userImageUrl,
+            garment_image_url: apparelImageUrl,
+          }
+        );
+        // Handle response
+      } catch (error) {
+        console.error("Error enqueuing try-on job:", error);
+        setError("Failed to start try-on job.");
+      }
 
-      if (tryonResponse.data?.generated_image_url) {
-        setResultImageUrl(tryonResponse.data.generated_image_url);
-        window.generatedImageUrl = tryonResponse.data.generated_image_url;
-        window.apparelImageUrl = apparelImageUrl;
-      } else if (tryonResponse.data?.error) {
-        setError(`Server error: ${tryonResponse.data.error}`);
+      if (tryonResponse.data?.taskId) {
+        setTaskId(tryonResponse.data.taskId);
       } else {
-        setError("Unexpected response from server.");
+        setError("Failed to initiate try-on job.");
       }
     } catch (err) {
       console.error(err);
@@ -361,9 +365,39 @@ const VirtualTryOn = () => {
     }
   };
 
+  const checkTryOnStatus = async () => {
+    if (!taskId) {
+      setError("Missing task ID. Please try again.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      const API_BASE_URL =
+        "https://76e5op5rg6.execute-api.ap-southeast-2.amazonaws.com/dev";
+
+      if (statusResponse.data?.status === "completed") {
+        const resultImageUrl = statusResponse.data.generated_image_url;
+        setResultImageUrl(resultImageUrl);
+        window.generatedImageUrl = resultImageUrl;
+      } else if (statusResponse.data?.status === "failed") {
+        setError("Try-on job failed.");
+      } else {
+        setError("Try-on job is still processing...");
+      }
+    } catch (err) {
+      console.error(err);
+      setError(err.response?.data?.error || "Failed to check try-on status.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleMatchingAnalysis = async () => {
-    if (!window.generatedImageUrl || !window.apparelImageUrl) {
-      setError("Missing generated try-on image or apparel image URL.");
+    if (!window.generatedImageUrl) {
+      setError("Missing generated try-on image.");
       return;
     }
 
@@ -382,10 +416,8 @@ const VirtualTryOn = () => {
 
       if (response.data?.matching_analysis) {
         setMatchingAnalysis(response.data.matching_analysis);
-      } else if (response.data?.error) {
-        setError(`Matching Analysis Error: ${response.data.error}`);
       } else {
-        setError("Unexpected response from Matching Analyzer.");
+        setError("Matching Analysis failed.");
       }
     } catch (err) {
       console.error(err);
@@ -396,7 +428,7 @@ const VirtualTryOn = () => {
   };
 
   return (
-    <div className=" min-h-screen flex flex-col items-center justify-center font-sans">
+    <div className="min-h-screen flex flex-col items-center justify-center font-sans">
       {/* Header */}
       <header className="text-center mb-8">
         <h1 className="text-4xl font-bold text-white">Virtual Try-On</h1>
@@ -495,8 +527,15 @@ const VirtualTryOn = () => {
           <div className="text-center">
             <button
               type="button"
-              onClick={handleMatchingAnalysis}
+              onClick={checkTryOnStatus}
               className="bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition duration-300"
+            >
+              Check Try-On Status
+            </button>
+            <button
+              type="button"
+              onClick={handleMatchingAnalysis}
+              className="bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition duration-300 mt-4"
             >
               Analyze Fit
             </button>
@@ -507,10 +546,8 @@ const VirtualTryOn = () => {
       {/* Matching Analysis Section */}
       {matchingAnalysis && (
         <div className="mt-6 w-full max-w-4xl bg-gray-50 rounded-lg p-6 text-center">
-          <h3 className="font-semibold text-gray-800 mb-2">Fit Analysis</h3>
-          <pre className="whitespace-pre-wrap text-sm text-gray-700">
-            {matchingAnalysis}
-          </pre>
+          <h3 className="font-semibold text-gray-800">Fit Analysis</h3>
+          <p className="text-lg text-gray-600">{matchingAnalysis}</p>
         </div>
       )}
     </div>
