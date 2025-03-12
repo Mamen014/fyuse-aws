@@ -269,6 +269,8 @@ const VirtualTryOn = () => {
   const [resultImageUrl, setResultImageUrl] = useState(null);
   const [error, setError] = useState(null);
   const [matchingAnalysis, setMatchingAnalysis] = useState(null);
+  const [uploadingImages, setUploadingImages] = useState(false);
+  const [generatingTryOn, setGeneratingTryOn] = useState(false);
 
   const handleUserImageChange = (e) => {
     const file = e.target.files[0];
@@ -314,26 +316,29 @@ const VirtualTryOn = () => {
       setError("Please upload both user and apparel images.");
       return;
     }
-
+  
     try {
-      setLoading(true);
       setError(null);
       setResultImageUrl(null);
       setMatchingAnalysis(null);
-
+  
       const API_BASE_URL =
         "https://76e5op5rg6.execute-api.ap-southeast-2.amazonaws.com/dev";
-
+  
+      // Step 1: Uploading images
+      setUploadingImages(true);
       const userImageUrl = await uploadImageToS3(
         userImage,
         `${API_BASE_URL}/upload-user-image`
       );
-
       const apparelImageUrl = await uploadImageToS3(
         apparelImage,
         `${API_BASE_URL}/upload-apparel-image`
       );
-
+      setUploadingImages(false);
+  
+      // Step 2: Generating try-on image
+      setGeneratingTryOn(true);
       const tryonResponse = await axios.post(
         "https://ipgyftqcsg.execute-api.ap-southeast-2.amazonaws.com/dev/tryon-image",
         {
@@ -341,7 +346,7 @@ const VirtualTryOn = () => {
           garment_image_url: apparelImageUrl,
         }
       );
-
+  
       if (tryonResponse.data?.generated_image_url) {
         setResultImageUrl(tryonResponse.data.generated_image_url);
         window.generatedImageUrl = tryonResponse.data.generated_image_url;
@@ -357,9 +362,11 @@ const VirtualTryOn = () => {
         err.response?.data?.error || "An error occurred during virtual try-on."
       );
     } finally {
-      setLoading(false);
+      setUploadingImages(false);
+      setGeneratingTryOn(false);
     }
   };
+  
 
   const handleMatchingAnalysis = async () => {
     if (!window.generatedImageUrl || !window.apparelImageUrl) {
@@ -475,9 +482,18 @@ const VirtualTryOn = () => {
         </div>
 
         {/* Loading/Error Messages */}
-        {loading && (
-          <p className="text-gray-600 text-center animate-pulse">Processing...</p>
+        {uploadingImages && (
+        <p className="text-yellow-400 text-center animate-pulse">
+        Uploading images to server...
+        </p>
         )}
+
+        {generatingTryOn && (
+  <p className="text-blue-400 text-center animate-pulse">
+    Generating try-on result...
+  </p>
+        )}
+
         {error && <p className="text-red-600 text-center">{error}</p>}
       </div>
 
