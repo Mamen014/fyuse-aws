@@ -344,11 +344,18 @@ const VirtualTryOn = () => {
             garment_image_url: apparelImageUrl,
           }
         );
-        // Handle response
+      
+        // Ensure you handle the response correctly
+        if (tryonResponse.data?.taskId) {
+          setTaskId(tryonResponse.data.taskId);
+        } else {
+          setError("Failed to initiate try-on job.");
+        }
       } catch (error) {
         console.error("Error enqueuing try-on job:", error);
         setError("Failed to start try-on job.");
       }
+      
 
       if (tryonResponse.data?.taskId) {
         setTaskId(tryonResponse.data.taskId);
@@ -365,55 +372,25 @@ const VirtualTryOn = () => {
     }
   };
 
-  const checkTryOnStatus = async () => {
-    if (!taskId) {
-      setError("Missing task ID. Please try again.");
-      return;
-    }
-
-    try {
-      setLoading(true);
-      setError(null);
-
-      const API_BASE_URL =
-        "https://76e5op5rg6.execute-api.ap-southeast-2.amazonaws.com/dev";
-
-      if (statusResponse.data?.status === "completed") {
-        const resultImageUrl = statusResponse.data.generated_image_url;
-        setResultImageUrl(resultImageUrl);
-        window.generatedImageUrl = resultImageUrl;
-      } else if (statusResponse.data?.status === "failed") {
-        setError("Try-on job failed.");
-      } else {
-        setError("Try-on job is still processing...");
-      }
-    } catch (err) {
-      console.error(err);
-      setError(err.response?.data?.error || "Failed to check try-on status.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleMatchingAnalysis = async () => {
     if (!window.generatedImageUrl) {
       setError("Missing generated try-on image.");
       return;
     }
-
+  
     try {
       setLoading(true);
       setMatchingAnalysis(null);
       setError(null);
-
+  
       const response = await axios.post(
         "https://j1sp2omtq2.execute-api.ap-southeast-2.amazonaws.com/dev/MatchingAnalyzer",
         {
           generated_image_url: window.generatedImageUrl,
-          apparel_image_url: window.apparelImageUrl,
+          apparel_image_url: apparelImageUrl,  // Pass apparelImageUrl directly or store it in the global window
         }
       );
-
+  
       if (response.data?.matching_analysis) {
         setMatchingAnalysis(response.data.matching_analysis);
       } else {
@@ -426,6 +403,7 @@ const VirtualTryOn = () => {
       setLoading(false);
     }
   };
+  
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center font-sans">
@@ -525,13 +503,7 @@ const VirtualTryOn = () => {
             className="rounded-lg shadow-md mx-auto max-h-96 object-contain"
           />
           <div className="text-center">
-            <button
-              type="button"
-              onClick={checkTryOnStatus}
-              className="bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition duration-300"
-            >
-              Check Try-On Status
-            </button>
+
             <button
               type="button"
               onClick={handleMatchingAnalysis}
