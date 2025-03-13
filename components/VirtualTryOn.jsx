@@ -315,26 +315,30 @@ const VirtualTryOn = () => {
       setError("Please upload both user and apparel images.");
       return;
     }
-
+  
     try {
       setLoading(true);
       setError(null);
       setResultImageUrl(null);
       setMatchingAnalysis(null);
-
+  
       const API_BASE_URL =
         "https://76e5op5rg6.execute-api.ap-southeast-2.amazonaws.com/dev";
-
+  
+      // Upload user and apparel images to S3
       const userImageUrl = await uploadImageToS3(
         userImage,
         `${API_BASE_URL}/upload-user-image`
       );
-
       const apparelImageUrl = await uploadImageToS3(
         apparelImage,
         `${API_BASE_URL}/upload-apparel-image`
       );
-
+  
+      // Log the image URLs to ensure they are correct
+      console.log("User Image URL:", userImageUrl);
+      console.log("Apparel Image URL:", apparelImageUrl);
+  
       // Trigger the enqueue-tryon-job Lambda function
       try {
         const tryonResponse = await axios.post(
@@ -344,26 +348,21 @@ const VirtualTryOn = () => {
             garment_image_url: apparelImageUrl,
           }
         );
-      
+  
+        console.log("Try-On Response:", tryonResponse);
+  
         // Ensure you handle the response correctly
-        if (tryonResponse.data?.taskId) {
+        if (tryonResponse?.data?.taskId) {
           setTaskId(tryonResponse.data.taskId);
         } else {
           setError("Failed to initiate try-on job.");
         }
       } catch (error) {
-        console.error("Error enqueuing try-on job:", error);
+        console.error("Error enqueuing try-on job:", error.response || error);
         setError("Failed to start try-on job.");
       }
-      
-
-      if (tryonResponse.data?.taskId) {
-        setTaskId(tryonResponse.data.taskId);
-      } else {
-        setError("Failed to initiate try-on job.");
-      }
     } catch (err) {
-      console.error(err);
+      console.error("Error uploading images:", err.response || err);
       setError(
         err.response?.data?.error || "An error occurred during virtual try-on."
       );
@@ -372,6 +371,7 @@ const VirtualTryOn = () => {
     }
   };
 
+  
   const handleMatchingAnalysis = async () => {
     if (!window.generatedImageUrl) {
       setError("Missing generated try-on image.");
