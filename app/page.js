@@ -31,7 +31,7 @@ export default function Home() {
       <nav className="fixed top-0 left-0 w-full bg-gradient-to-b from-[#0f0c29] via-[#302b63] to-[#24243e] z-50 shadow-md">
         <div className="container mx-auto px-6 py-4 flex justify-between items-center">
           <div className="bg-[#1a1a1a] rounded-full px-4 py-2 shadow-sm">
-            <h1 className="text-xl font-bold text-white">⚡ Fyuse</h1>
+            <h1 className="text-xl font-bold text-white">FYUSE</h1>
           </div>
           <div className="bg-[#1a1a2f] border border-[#4e4e70] rounded-full px-4 py-1 flex items-center space-x-4 shadow-sm">
             <a
@@ -59,9 +59,6 @@ export default function Home() {
               Contact
             </a>
           </div>
-          <Button className="rounded-full bg-gradient-to-r from-indigo-500 to-blue-500 text-white px-6 py-2 text-sm font-semibold shadow-lg hover:opacity-90 transition">
-            Book a Call 📞
-          </Button>
         </div>
       </nav>
 
@@ -95,7 +92,7 @@ export default function Home() {
               Virtual Try-On Powered by AI
             </h2>
             <p className="text-purple-200 mt-4 max-w-2xl mx-auto">
-              Discover how Fyuse lets you see your outfit before wearing it —
+              Discover how FYUSE lets you see your outfit before wearing it —
               upload your photo and clothing to preview a realistic look using
               AI.
             </p>
@@ -109,7 +106,7 @@ export default function Home() {
               </h3>
               <p className="text-sm text-purple-200">
                 Upload a clear image of yourself. Our AI prepares it for
-                accurate virtual try-on results.
+                accurate virtual try-on.
               </p>
             </div>
             <div className="bg-[#1a1a1a] rounded-2xl p-6 border border-gray-700 hover:shadow-xl transition duration-300">
@@ -118,7 +115,7 @@ export default function Home() {
                 Clothing Detection
               </h3>
               <p className="text-sm text-purple-200">
-                Upload any clothing item — our model detects its shape, texture,
+                Upload any clothing item — our model detects its shape,
                 and style for a perfect overlay.
               </p>
             </div>
@@ -128,7 +125,7 @@ export default function Home() {
                 AI-Powered Fitting
               </h3>
               <p className="text-sm text-purple-200">
-                Advanced neural networks generate a lifelike image of you
+                AI generate a lifelike image of you
                 wearing the uploaded outfit — instantly.
               </p>
             </div>
@@ -139,7 +136,7 @@ export default function Home() {
               </h3>
               <p className="text-sm text-purple-200">
                 Get personalized feedback on fit, color match, and style
-                suitability using our Nova Lite analyzer.
+                suitability using our AI analyzer.
               </p>
             </div>
           </div>
@@ -167,19 +164,13 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="bg-[#0f0c29] border-t border-gray-700 py-8 text-center text-purple-200">
-        <p>&copy; 2025 Fyuse. All rights reserved.</p>
+        <p>&copy; 2025 FYUSE. All rights reserved.</p>
         <div className="mt-4 flex justify-center space-x-6">
           <a
             href="https://www.instagram.com/fyuse.id/"
             className="hover:text-white"
           >
             Instagram
-          </a>
-          <a
-            href="https://www.linkedin.com/in/mzidanfatonie/"
-            className="hover:text-white"
-          >
-            LinkedIn
           </a>
         </div>
       </footer>

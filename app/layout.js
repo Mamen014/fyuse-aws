@@ -12,7 +12,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "FYUSE Web App",
+  title: "FYUSE: For You Style",
   description: "For You Style",
 };
 
