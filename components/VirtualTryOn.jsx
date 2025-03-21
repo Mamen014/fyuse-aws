@@ -1,516 +1,130 @@
-// import React, { useState } from "react";
-// import axios from "axios";
-
-// const VirtualTryOn = () => {
-//   const [userImage, setUserImage] = useState(null);
-//   const [apparelImage, setApparelImage] = useState(null);
-//   const [userImagePreview, setUserImagePreview] = useState(null);
-//   const [apparelImagePreview, setApparelImagePreview] = useState(null);
-//   const [loading, setLoading] = useState(false);
-//   const [resultImageUrl, setResultImageUrl] = useState(null);
-//   const [error, setError] = useState(null);
-//   const [matchingAnalysis, setMatchingAnalysis] = useState(null);
-
-//   const handleUserImageChange = (e) => {
-//     const file = e.target.files[0];
-//     if (file) {
-//       setUserImage(file);
-//       setUserImagePreview(URL.createObjectURL(file));
-//     }
-//   };
-
-//   const handleApparelImageChange = (e) => {
-//     const file = e.target.files[0];
-//     if (file) {
-//       setApparelImage(file);
-//       setApparelImagePreview(URL.createObjectURL(file));
-//     }
-//   };
-
-//   const toBase64 = (file) =>
-//     new Promise((resolve, reject) => {
-//       const reader = new FileReader();
-//       reader.readAsDataURL(file);
-//       reader.onload = () => {
-//         const base64 = reader.result.split(",")[1];
-//         resolve(base64);
-//       };
-//       reader.onerror = (error) => reject(error);
-//     });
-
-//   const uploadImageToS3 = async (imageFile, endpoint) => {
-//     const base64 = await toBase64(imageFile);
-//     const contentType = imageFile.type;
-//     const fileName = imageFile.name;
-
-//     const response = await axios.post(endpoint, {
-//       fileName,
-//       fileDataBase64: base64,
-//       contentType,
-//     });
-
-//     return response.data?.imageUrl;
-//   };
-
-//   const handleSubmit = async (e) => {
-//     e?.preventDefault(); // If used inside a form; otherwise not needed
-//     if (!userImage || !apparelImage) {
-//       setError("Please upload both user and apparel images.");
-//       return;
-//     }
-
-//     try {
-//       setLoading(true);
-//       setError(null);
-//       setResultImageUrl(null);
-//       setMatchingAnalysis(null);
-
-//       const API_BASE_URL =
-//         "https://76e5op5rg6.execute-api.ap-southeast-2.amazonaws.com/dev";
-
-//       const userImageUrl = await uploadImageToS3(
-//         userImage,
-//         `${API_BASE_URL}/upload-user-image`
-//       );
-
-//       const apparelImageUrl = await uploadImageToS3(
-//         apparelImage,
-//         `${API_BASE_URL}/upload-apparel-image`
-//       );
-
-//       const tryonResponse = await axios.post(
-//         "https://ipgyftqcsg.execute-api.ap-southeast-2.amazonaws.com/dev/tryon-image",
-//         {
-//           person_image_url: userImageUrl,
-//           garment_image_url: apparelImageUrl,
-//         }
-//       );
-
-//       if (tryonResponse.data?.generated_image_url) {
-//         setResultImageUrl(tryonResponse.data.generated_image_url);
-//         // Save URLs for matching analysis
-//         window.generatedImageUrl = tryonResponse.data.generated_image_url;
-//         window.apparelImageUrl = apparelImageUrl;
-//       } else if (tryonResponse.data?.error) {
-//         setError(`Server error: ${tryonResponse.data.error}`);
-//       } else {
-//         setError("Unexpected response from server.");
-//       }
-//     } catch (err) {
-//       console.error(err);
-//       setError(
-//         err.response?.data?.error || "An error occurred during virtual try-on."
-//       );
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   const handleMatchingAnalysis = async () => {
-//     if (!window.generatedImageUrl || !window.apparelImageUrl) {
-//       setError("Missing generated try-on image or apparel image URL.");
-//       return;
-//     }
-
-//     try {
-//       setLoading(true);
-//       setMatchingAnalysis(null);
-//       setError(null);
-
-//       const response = await axios.post(
-//         "https://j1sp2omtq2.execute-api.ap-southeast-2.amazonaws.com/dev/MatchingAnalyzer",
-//         {
-//           generated_image_url: window.generatedImageUrl,
-//           apparel_image_url: window.apparelImageUrl,
-//         }
-//       );
-
-//       if (response.data?.matching_analysis) {
-//         setMatchingAnalysis(response.data.matching_analysis);
-//       } else if (response.data?.error) {
-//         setError(`Matching Analysis Error: ${response.data.error}`);
-//       } else {
-//         setError("Unexpected response from Matching Analyzer.");
-//       }
-//     } catch (err) {
-//       console.error(err);
-//       setError(err.response?.data?.error || "Matching Analysis failed.");
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   return (
-//     <div className="container mx-auto p-6">
-//       {/* Title */}
-//       <h1 className="text-2xl font-bold text-center mb-6">
-//         Virtual Try-On Experience
-//       </h1>
-
-//       {/* Two-column layout for uploading images */}
-//       <div className="flex flex-col md:flex-row gap-6 justify-center">
-//         {/* User Photo Column */}
-//         <div className="flex-1 border-2 border-dashed border-gray-300 rounded-md p-4 text-center">
-//           <h2 className="text-lg font-semibold mb-2">Your Photo</h2>
-//           <input
-//             type="file"
-//             accept="image/*"
-//             onChange={handleUserImageChange}
-//             className="hidden"
-//             id="userPhoto"
-//           />
-//           <label htmlFor="userPhoto" className="cursor-pointer">
-//             {userImagePreview ? (
-//               <img
-//                 src={userImagePreview}
-//                 alt="User Preview"
-//                 className="mx-auto max-h-48 object-contain"
-//               />
-//             ) : (
-//               <div className="flex flex-col items-center justify-center h-48">
-//                 <p className="text-gray-500">
-//                   Drop image here or click to upload
-//                 </p>
-//               </div>
-//             )}
-//           </label>
-//         </div>
-
-//         {/* Clothing Item Column */}
-//         <div className="flex-1 border-2 border-dashed border-gray-300 rounded-md p-4 text-center">
-//           <h2 className="text-lg font-semibold mb-2">Clothing Item</h2>
-//           <input
-//             type="file"
-//             accept="image/*"
-//             onChange={handleApparelImageChange}
-//             className="hidden"
-//             id="apparelPhoto"
-//           />
-//           <label htmlFor="apparelPhoto" className="cursor-pointer">
-//             {apparelImagePreview ? (
-//               <img
-//                 src={apparelImagePreview}
-//                 alt="Apparel Preview"
-//                 className="mx-auto max-h-48 object-contain"
-//               />
-//             ) : (
-//               <div className="flex flex-col items-center justify-center h-48">
-//                 <p className="text-gray-500">
-//                   Drop image here or click to upload
-//                 </p>
-//               </div>
-//             )}
-//           </label>
-//         </div>
-//       </div>
-
-//       {/* Generate Try-On Button */}
-//       <div className="text-center mt-6">
-//         <button
-//           type="button"
-//           onClick={handleSubmit}
-//           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-//         >
-//           Generate Try-On Result
-//         </button>
-//       </div>
-
-//       {/* Loading or Error Messages */}
-//       {loading && (
-//         <p className="mt-4 text-gray-600 text-center">Processing...</p>
-//       )}
-//       {error && <p className="mt-4 text-red-600 text-center">{error}</p>}
-
-//       {/* Result Image & Matching Analysis */}
-//       {resultImageUrl && (
-//         <div className="mt-8 text-center">
-//           <h3 className="text-xl font-semibold mb-2">Generated Try-On Image</h3>
-//           <img
-//             src={resultImageUrl}
-//             alt="Try-On Result"
-//             className="rounded shadow inline-block max-h-96 object-contain"
-//           />
-//           <div className="mt-4">
-//             <button
-//               type="button"
-//               onClick={handleMatchingAnalysis}
-//               className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-//             >
-//               Get Matching Analysis
-//             </button>
-//           </div>
-//         </div>
-//       )}
-
-//       {matchingAnalysis && (
-//         <div className="mt-6 p-4 border rounded bg-gray-100 text-center">
-//           <h4 className="font-semibold mb-2">Matching Analysis Result</h4>
-//           <pre className="whitespace-pre-wrap text-sm text-gray-800">
-//             {matchingAnalysis}
-//           </pre>
-//         </div>
-//       )}
-//     </div>
-//   );
-// };
-
-// export default VirtualTryOn;
-
 
 import React, { useState } from "react";
 import axios from "axios";
+import { signIn, fetchAuthSession } from "@aws-amplify/auth";
 
 const VirtualTryOn = () => {
-  const [userImage, setUserImage] = useState(null);
-  const [apparelImage, setApparelImage] = useState(null);
-  const [userImagePreview, setUserImagePreview] = useState(null);
-  const [apparelImagePreview, setApparelImagePreview] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [resultImageUrl, setResultImageUrl] = useState(null);
-  const [error, setError] = useState(null);
-  const [matchingAnalysis, setMatchingAnalysis] = useState(null);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [personImage, setPersonImage] = useState(null);
+  const [garmentImage, setGarmentImage] = useState(null);
+  const [tryonImage, setTryonImage] = useState(null);
+  const [matchResult, setMatchResult] = useState(null);
 
-  const handleUserImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setUserImage(file);
-      setUserImagePreview(URL.createObjectURL(file));
-    }
-  };
-
-  const handleApparelImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setApparelImage(file);
-      setApparelImagePreview(URL.createObjectURL(file));
-    }
-  };
-
-  const toBase64 = (file) =>
-    new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result.split(",")[1]);
-      reader.onerror = (error) => reject(error);
-    });
-
-  const uploadImageToS3 = async (imageFile, endpoint) => {
-    const base64 = await toBase64(imageFile);
-    const contentType = imageFile.type;
-    const fileName = imageFile.name;
-
-    const response = await axios.post(endpoint, {
-      fileName,
-      fileDataBase64: base64,
-      contentType,
-    });
-
-    return response.data?.imageUrl;
-  };
-
-  const handleSubmit = async (e) => {
-    e?.preventDefault();
-    if (!userImage || !apparelImage) {
-      setError("Please upload both user and apparel images.");
-      return;
-    }
-
+  const handleLogin = async () => {
     try {
-      setLoading(true);
-      setError(null);
-      setResultImageUrl(null);
-      setMatchingAnalysis(null);
-
-      const API_BASE_URL =
-        "https://76e5op5rg6.execute-api.ap-southeast-2.amazonaws.com/dev";
-
-      const userImageUrl = await uploadImageToS3(
-        userImage,
-        `${API_BASE_URL}/upload-user-image`
-      );
-
-      const apparelImageUrl = await uploadImageToS3(
-        apparelImage,
-        `${API_BASE_URL}/upload-apparel-image`
-      );
-
-      const tryonResponse = await axios.post(
-        "https://ipgyftqcsg.execute-api.ap-southeast-2.amazonaws.com/dev/tryon-image",
-        {
-          person_image_url: userImageUrl,
-          garment_image_url: apparelImageUrl,
-        }
-      );
-
-      if (tryonResponse.data?.generated_image_url) {
-        setResultImageUrl(tryonResponse.data.generated_image_url);
-        window.generatedImageUrl = tryonResponse.data.generated_image_url;
-        window.apparelImageUrl = apparelImageUrl;
-      } else if (tryonResponse.data?.error) {
-        setError(`Server error: ${tryonResponse.data.error}`);
+      await signIn({ username: email, password });
+      const session = await fetchAuthSession();
+      const token = session.tokens?.idToken?.toString();
+      if (token) {
+        localStorage.setItem("token", token); // ✅ use localStorage
+        setIsLoggedIn(true);
       } else {
-        setError("Unexpected response from server.");
+        console.error("Token not found in session.");
       }
     } catch (err) {
-      console.error(err);
-      setError(
-        err.response?.data?.error || "An error occurred during virtual try-on."
-      );
-    } finally {
-      setLoading(false);
+      console.error("Login failed:", err);
     }
   };
 
-  const handleMatchingAnalysis = async () => {
-    if (!window.generatedImageUrl || !window.apparelImageUrl) {
-      setError("Missing generated try-on image or apparel image URL.");
-      return;
-    }
+  const handleUpload = async () => {
+    const formData = new FormData();
+    formData.append("personImage", personImage);
+    formData.append("garmentImage", garmentImage);
 
     try {
-      setLoading(true);
-      setMatchingAnalysis(null);
-      setError(null);
-
-      const response = await axios.post(
-        "https://j1sp2omtq2.execute-api.ap-southeast-2.amazonaws.com/dev/MatchingAnalyzer",
-        {
-          generated_image_url: window.generatedImageUrl,
-          apparel_image_url: window.apparelImageUrl,
-        }
-      );
-
-      if (response.data?.matching_analysis) {
-        setMatchingAnalysis(response.data.matching_analysis);
-      } else if (response.data?.error) {
-        setError(`Matching Analysis Error: ${response.data.error}`);
-      } else {
-        setError("Unexpected response from Matching Analyzer.");
-      }
+      const response = await axios.post("/api/tryon", formData, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`, // ✅ use localStorage
+        },
+      });
+      setTryonImage(response.data.imageUrl);
     } catch (err) {
-      console.error(err);
-      setError(err.response?.data?.error || "Matching Analysis failed.");
-    } finally {
-      setLoading(false);
+      console.error("Upload error:", err);
     }
   };
+
+  const handleAnalyze = async () => {
+    try {
+      const response = await axios.get("/api/tryon?action=analyze", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`, // ✅ use localStorage
+        },
+      });
+      setMatchResult(response.data.matchResult);
+    } catch (err) {
+      console.error("Analyze error:", err);
+    }
+  };
+
+  if (!isLoggedIn) {
+    return (
+      <div className="p-4 max-w-md mx-auto">
+        <h2 className="text-xl font-semibold mb-2">Login to Fyuse</h2>
+        <input
+          type="email"
+          className="border p-2 w-full mb-2"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+        <input
+          type="password"
+          className="border p-2 w-full mb-2"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        <button
+          onClick={handleLogin}
+          className="bg-blue-600 text-white px-4 py-2 rounded"
+        >
+          Login
+        </button>
+      </div>
+    );
+  }
 
   return (
-    <div className=" min-h-screen flex flex-col items-center justify-center font-sans">
-      {/* Header */}
-      <header className="text-center mb-8">
-        <h1 className="text-4xl font-bold text-white">Virtual Try-On</h1>
-        <p className="text-white mt-2">Experience the perfect fit.</p>
-      </header>
-
-      {/* Upload Section */}
-      <div className="bg-[#1a1a2f] w-full max-w-4xl  rounded-lg shadow-md p-8 space-y-6">
-        <h2 className="text-2xl font-medium text-white text-center mb-4">
-          Step 1: Upload Your Photos
-        </h2>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* User Photo Card */}
-          <div className="border border-gray-200 rounded-lg p-6 text-center transition hover:border-gray-400">
-            <h3 className="text-lg font-medium text-white mb-4">Your Photo</h3>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleUserImageChange}
-              className="hidden"
-              id="userPhoto"
-            />
-            <label htmlFor="userPhoto" className="cursor-pointer">
-              {userImagePreview ? (
-                <img
-                  src={userImagePreview}
-                  alt="User Preview"
-                  className="mx-auto max-h-48 object-contain rounded-lg"
-                />
-              ) : (
-                <div className="flex flex-col items-center justify-center h-48">
-                  <p className="text-white">Click to upload</p>
-                </div>
-              )}
-            </label>
-          </div>
-
-          {/* Apparel Photo Card */}
-          <div className="border border-gray-200 rounded-lg p-6 text-center transition hover:border-gray-400">
-            <h3 className="text-lg font-medium text-white mb-4">
-              Clothing Item
-            </h3>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleApparelImageChange}
-              className="hidden"
-              id="apparelPhoto"
-            />
-            <label htmlFor="apparelPhoto" className="cursor-pointer">
-              {apparelImagePreview ? (
-                <img
-                  src={apparelImagePreview}
-                  alt="Apparel Preview"
-                  className="mx-auto max-h-48 object-contain rounded-lg"
-                />
-              ) : (
-                <div className="flex flex-col items-center justify-center h-48">
-                  <p className="text-white">Click to upload</p>
-                </div>
-              )}
-            </label>
-          </div>
-        </div>
-
-        {/* Generate Button */}
-        <div className="text-center">
-          <button
-            type="button"
-            onClick={handleSubmit}
-            className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition duration-300"
-          >
-            Generate Try-On Result
-          </button>
-        </div>
-
-        {/* Loading/Error Messages */}
-        {loading && (
-          <p className="text-gray-600 text-center animate-pulse">Processing...</p>
-        )}
-        {error && <p className="text-red-600 text-center">{error}</p>}
+    <div className="p-4 max-w-xl mx-auto">
+      <h2 className="text-xl font-semibold mb-4">Virtual Try-On</h2>
+      <div className="space-y-3">
+        <input
+          type="file"
+          accept="image/*"
+          onChange={(e) => setPersonImage(e.target.files[0])}
+        />
+        <input
+          type="file"
+          accept="image/*"
+          onChange={(e) => setGarmentImage(e.target.files[0])}
+        />
+        <button
+          onClick={handleUpload}
+          className="bg-green-600 text-white px-4 py-2 rounded"
+        >
+          Upload & Try On
+        </button>
+        <button
+          onClick={handleAnalyze}
+          className="bg-purple-600 text-white px-4 py-2 rounded"
+        >
+          Analyze Match
+        </button>
       </div>
 
-      {/* Result Section */}
-      {resultImageUrl && (
-        <div className="mt-8 w-full max-w-4xl bg-white rounded-lg shadow-md p-8 space-y-6">
-          <h2 className="text-2xl font-medium text-gray-800 text-center mb-4">
-            Step 2: Try-On Result
-          </h2>
-          <img
-            src={resultImageUrl}
-            alt="Try-On Result"
-            className="rounded-lg shadow-md mx-auto max-h-96 object-contain"
-          />
-          <div className="text-center">
-            <button
-              type="button"
-              onClick={handleMatchingAnalysis}
-              className="bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition duration-300"
-            >
-              Analyze Fit
-            </button>
-          </div>
+      {tryonImage && (
+        <div className="mt-6">
+          <h3 className="font-semibold mb-2">Try-On Result:</h3>
+          <img src={tryonImage} alt="Try-on result" className="rounded shadow" />
         </div>
       )}
 
-      {/* Matching Analysis Section */}
-      {matchingAnalysis && (
-        <div className="mt-6 w-full max-w-4xl bg-gray-50 rounded-lg p-6 text-center">
-          <h3 className="font-semibold text-gray-800 mb-2">Fit Analysis</h3>
-          <pre className="whitespace-pre-wrap text-sm text-gray-700">
-            {matchingAnalysis}
-          </pre>
+      {matchResult && (
+        <div className="mt-4">
+          <h3 className="font-semibold">Match Analysis:</h3>
+          <p>{matchResult}</p>
         </div>
       )}
     </div>

@@ -1,0 +1,20 @@
+{
+  "dev": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-fyuse-dev-03d87-authRole",
+      "UnauthRoleArn": "arn:aws:iam::586794474562:role/amplify-fyuse-dev-03d87-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::586794474562:role/amplify-fyuse-dev-03d87-authRole",
+      "Region": "us-west-2",
+      "DeploymentBucketName": "amplify-fyuse-dev-03d87-deployment",
+      "UnauthRoleName": "amplify-fyuse-dev-03d87-unauthRole",
+      "StackName": "amplify-fyuse-dev-03d87",
+      "StackId": "arn:aws:cloudformation:us-west-2:586794474562:stack/amplify-fyuse-dev-03d87/e308f460-04d7-11f0-a166-0213345ac787",
+      "AmplifyAppId": "d1u4z7cssu81o2"
+    },
+    "categories": {
+      "auth": {
+        "fyusecca3b873": {}
+      }
+    }
+  }
+}

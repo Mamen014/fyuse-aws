@@ -22,11 +22,13 @@ import {
 import { Sparkles, Star, CheckCircle } from "lucide-react";
 
 import VirtualTryOnWrapper from "../components/VirtualTryOnWrapper";
+import Header from "@/components/Header.js";
 
 export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#0f0c29] via-[#302b63] to-[#24243e] text-white">
       {/* Navigation Bar */}
+      <Header />
       <nav className="fixed top-0 left-0 w-full bg-gradient-to-b from-[#0f0c29] via-[#302b63] to-[#24243e] z-50 shadow-md">
         <div className="container mx-auto px-6 py-4 flex justify-between items-center">
           <div className="bg-[#1a1a1a] rounded-full px-4 py-2 shadow-sm">
