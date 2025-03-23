@@ -13,6 +13,7 @@ function AuthActionsInNavbar() {
     if (auth?.isAuthenticated && auth?.user?.profile?.email) {
       const userData = {
         email: auth.user.profile.email,
+        name: auth.user.profile.name || '',
         idToken: auth.user.id_token,
         accessToken: auth.user.access_token,
         refreshToken: auth.user.refresh_token,
@@ -25,11 +26,7 @@ function AuthActionsInNavbar() {
 
   const handleSignOut = () => {
     localStorage.removeItem('loggedInUser');
-    if (auth?.signoutRedirect) {
-      auth.signoutRedirect();
-    } else {
-      console.warn('auth.signoutRedirect is not available');
-    }
+    auth.signoutRedirect(); // ✅ This will now correctly use post_logout_redirect_uri
   };
 
   if (auth.isLoading) return null;
@@ -39,7 +36,7 @@ function AuthActionsInNavbar() {
 
     return (
       <div className="flex items-center space-x-4">
-        <span className="text-sm text-white whitespace-nowrap truncate max-w-[150px]">Welcome, {username}</span>
+        <span className="text-sm text-white whitespace-nowrap">Welcome, {username}</span>
         <Link href="/profile" passHref>
           <button className="bg-green-600 hover:bg-green-700 text-white text-sm px-4 py-2 rounded">
             My Profile
@@ -56,7 +53,7 @@ function AuthActionsInNavbar() {
   }
 
   return (
-    <div className="">
+    <div>
       <button
         onClick={() => auth.signinRedirect()}
         className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded"
@@ -66,6 +63,7 @@ function AuthActionsInNavbar() {
     </div>
   );
 }
+
 
 export default function Home() {
   return (
