@@ -1,14 +1,17 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useAuth } from 'react-oidc-context';
+import { useRouter } from 'next/navigation';
 import { Toaster, toast } from 'react-hot-toast';
 
 export default function ProfilePage() {
   const auth = useAuth();
+  const router = useRouter();
   const [tryOnHistory, setTryOnHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(null);
 
+  // Debugging localStorage if needed
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const storedUser = localStorage.getItem('loggedInUser');
@@ -24,10 +27,14 @@ export default function ProfilePage() {
       const res = await fetch(`/api/tryon-history?email=${encodeURIComponent(auth.user.profile.email)}`);
       if (!res.ok) throw new Error('Failed to fetch history');
       const data = await res.json();
-      setTryOnHistory(Array.isArray(data.items) ? data.items : []);
+
+      const allItems = Array.isArray(data.items) ? data.items : [];
+      const wardrobeItems = allItems.filter((item) => item.isInWardrobe === true);
+
+      setTryOnHistory(wardrobeItems);
     } catch (err) {
-      console.error('❌ Error fetching history:', err);
-      toast.error('Failed to load your wardrobe history.');
+      console.error('❌ Error fetching wardrobe history:', err);
+      toast.error('Failed to load your wardrobe items.');
       setTryOnHistory([]);
     } finally {
       setLoading(false);
@@ -37,34 +44,49 @@ export default function ProfilePage() {
   useEffect(() => {
     if (auth?.isAuthenticated) {
       fetchHistory();
+
+      // Start polling every 5 seconds
+      const interval = setInterval(() => {
+        fetchHistory();
+      }, 5000);
+
+      // Cleanup on unmount or auth state change
+      return () => clearInterval(interval);
     }
   }, [auth?.isAuthenticated]);
 
-  const handleWardrobeAction = async (taskId) => {
+  const handleRemoveFromWardrobe = async (taskId) => {
     if (!taskId) return;
     setActionLoading(taskId);
+
     try {
-      const res = await fetch(
-        `https://fzfl586ufb.execute-api.ap-southeast-2.amazonaws.com/dev/remove`,
+      const response = await fetch(
+        'https://fzfl586ufb.execute-api.ap-southeast-2.amazonaws.com/dev/remove',
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+          },
           body: JSON.stringify({ taskId }),
         }
       );
 
-      if (!res.ok) {
-        const errorBody = await res.text();
-        throw new Error(`API error: ${res.status} - ${errorBody}`);
+      if (!response.ok) {
+        const errorBody = await response.text();
+        throw new Error(`API error: ${response.status} - ${errorBody}`);
       }
 
-      const result = await res.json();
-      console.log('✅ Remove response:', result);
+      const result = await response.json();
+      console.log('✅ Removed from wardrobe:', result);
       toast.success('Item removed from wardrobe!');
-      await fetchHistory(); // Refresh
+      await fetchHistory();
     } catch (err) {
       console.error('❌ Failed to remove wardrobe item:', err);
-      toast.error('Failed to remove item. Please try again.');
+      if (err.message.includes('Failed to fetch')) {
+        toast.error('Network error or CORS issue. Check console for details.');
+      } else {
+        toast.error(err.message || 'Unexpected error removing item.');
+      }
     } finally {
       setActionLoading(null);
     }
@@ -87,6 +109,16 @@ export default function ProfilePage() {
 
       <h2 className="text-2xl font-bold mb-4">👤 My Profile</h2>
 
+      {/* Back to Home Button */}
+      <div className="mb-6">
+        <button
+          onClick={() => router.push('/')}
+          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-all"
+        >
+          ← Back to Home
+        </button>
+      </div>
+
       <div className="bg-[#1a1a2f] p-4 rounded-xl mb-6">
         <p><strong>Name:</strong> {auth.user?.profile?.name || 'N/A'}</p>
         <p><strong>Email:</strong> {auth.user?.profile?.email}</p>
@@ -97,7 +129,9 @@ export default function ProfilePage() {
       {loading ? (
         <p className="text-gray-400">Loading wardrobe...</p>
       ) : tryOnHistory.length === 0 ? (
-        <p className="text-gray-400">Your wardrobe is empty. Start trying on outfits to build your collection!</p>
+        <p className="text-gray-400">
+          Your wardrobe is empty. Try on outfits and build your collection!
+        </p>
       ) : (
         <ul className="space-y-4">
           {tryOnHistory.map((item) => (
@@ -117,7 +151,7 @@ export default function ProfilePage() {
 
               <div className="mt-3">
                 <button
-                  onClick={() => handleWardrobeAction(item.taskId)}
+                  onClick={() => handleRemoveFromWardrobe(item.taskId)}
                   disabled={actionLoading === item.taskId}
                   className="px-4 py-2 rounded text-sm bg-red-600 hover:bg-red-700 transition-all"
                 >

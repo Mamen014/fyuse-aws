@@ -8,7 +8,10 @@ export async function GET(request) {
   const headers = { 'Content-Type': 'application/json' };
 
   if (!userEmail) {
-    return new Response(JSON.stringify({ error: "Missing userEmail", items: [] }), { status: 400, headers });
+    return new Response(JSON.stringify({ error: "Missing userEmail", items: [] }), {
+      status: 400,
+      headers,
+    });
   }
 
   try {
@@ -16,10 +19,12 @@ export async function GET(request) {
       TableName: process.env.DYNAMODB_TABLE || "TryonTaskStatus",
       IndexName: "userEmail-index",
       KeyConditionExpression: "userEmail = :email",
-      ExpressionAttributeValues: { ":email": { S: userEmail } },
+      ExpressionAttributeValues: {
+        ":email": { S: userEmail },
+      },
     }));
 
-    const items = (result.Items || []).map(item => ({
+    const items = (result.Items || []).map((item) => ({
       taskId: item.taskId?.S,
       generatedImageUrl: item.generatedImageUrl?.S,
       matchingAnalysisText: item.matchingAnalysisText?.S,
@@ -30,11 +35,18 @@ export async function GET(request) {
       skinTone: item.skinTone?.S,
       gender: item.gender?.S,
       timestamp: item.timestamp?.S,
+      isInWardrobe: item.isInWardrobe?.BOOL === true, // ✅ Safe boolean mapping
     }));
 
-    return new Response(JSON.stringify({ items }), { status: 200, headers });
+    return new Response(JSON.stringify({ items }), {
+      status: 200,
+      headers,
+    });
   } catch (error) {
     console.error("❌ DynamoDB Query Error:", error);
-    return new Response(JSON.stringify({ error: "Internal Server Error", items: [] }), { status: 500, headers });
+    return new Response(JSON.stringify({ error: "Internal Server Error", items: [] }), {
+      status: 500,
+      headers,
+    });
   }
 }

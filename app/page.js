@@ -22,12 +22,26 @@ function AuthActionsInNavbar() {
       localStorage.setItem('loggedInUser', JSON.stringify(userData));
       console.log('✅ User session stored in localStorage', userData);
     }
+
+    if (!auth?.isAuthenticated) {
+      localStorage.removeItem('loggedInUser');
+    }
   }, [auth?.isAuthenticated, auth?.user]);
 
   const handleSignOut = () => {
     localStorage.removeItem('loggedInUser');
-    auth.signoutRedirect(); // ✅ This will now correctly use post_logout_redirect_uri
+  
+    if (auth && auth.removeUser) {
+      auth.removeUser();
+    }
+  
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
+    const logoutUrl = `https://ap-southeast-2imonu7fwb.auth.ap-southeast-2.amazoncognito.com/logout?client_id=4l7l5ebjj2io1vap6qohbl2i7l&post_logout_redirect_uri=${encodeURIComponent(origin)}`;
+  
+    window.location.href = logoutUrl;
   };
+  
+  
 
   if (auth.isLoading) return null;
 
@@ -64,7 +78,6 @@ function AuthActionsInNavbar() {
   );
 }
 
-
 export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#0f0c29] via-[#302b63] to-[#24243e] text-white">
@@ -98,38 +111,6 @@ export default function Home() {
           </div>
           <div className="md:w-1/2 mt-10 md:mt-0" id="app">
             <VirtualTryOnWrapper />
-          </div>
-        </section>
-
-        <section className="bg-gradient-to-b from-[#0f0c29] via-[#302b63] to-[#24243e] py-20 px-6">
-          <div className="text-center mb-12">
-            <span className="inline-block px-4 py-1 rounded-full bg-purple-100 text-purple-700 text-sm font-medium mb-4">How It Works</span>
-            <h2 className="text-4xl md:text-5xl font-bold text-purple-100">Virtual Try-On Powered by AI</h2>
-            <p className="text-purple-200 mt-4 max-w-2xl mx-auto">
-              Discover how FYUSE lets you see your outfit before wearing it — upload your photo and clothing to preview a realistic look using AI.
-            </p>
-          </div>
-          <div className="grid md:grid-cols-4 gap-6 max-w-6xl mx-auto">
-            <div className="bg-[#1a1a1a] rounded-2xl p-6 border border-gray-700 hover:shadow-xl transition duration-300">
-              <div className="text-4xl mb-4">🖼️</div>
-              <h3 className="font-semibold text-lg mb-2 text-white">Smart Photo Upload</h3>
-              <p className="text-sm text-purple-200">Upload a clear image of yourself. Our AI prepares it for accurate virtual try-on.</p>
-            </div>
-            <div className="bg-[#1a1a1a] rounded-2xl p-6 border border-gray-700 hover:shadow-xl transition duration-300">
-              <div className="text-4xl mb-4">👗</div>
-              <h3 className="font-semibold text-lg mb-2 text-white">Clothing Detection</h3>
-              <p className="text-sm text-purple-200">Upload any clothing item — our model detects its shape and style for a perfect overlay.</p>
-            </div>
-            <div className="bg-[#1a1a1a] rounded-2xl p-6 border border-gray-700 hover:shadow-xl transition duration-300">
-              <div className="text-4xl mb-4">⚡</div>
-              <h3 className="font-semibold text-lg mb-2 text-white">AI-Powered Fitting</h3>
-              <p className="text-sm text-purple-200">AI generates a lifelike image of you wearing the uploaded outfit — instantly.</p>
-            </div>
-            <div className="bg-[#1a1a1a] rounded-2xl p-6 border border-gray-700 hover:shadow-xl transition duration-300">
-              <div className="text-4xl mb-4">📈</div>
-              <h3 className="font-semibold text-lg mb-2 text-white">Fit & Style Analysis</h3>
-              <p className="text-sm text-purple-200">Get personalized feedback on fit, color match, and style suitability using our AI analyzer.</p>
-            </div>
           </div>
         </section>
 

@@ -4,8 +4,7 @@ import { useEffect } from 'react';
 import { AuthProvider, useAuth } from 'react-oidc-context';
 
 const getOidcConfig = () => {
-  const origin =
-    typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
 
   return {
     authority: 'https://cognito-idp.ap-southeast-2.amazonaws.com/ap-southeast-2_ImOnU7FwB',
@@ -14,8 +13,12 @@ const getOidcConfig = () => {
     post_logout_redirect_uri: `${origin}/`,
     response_type: 'code',
     scope: 'openid profile email',
+    loadUserInfo: true,
+    response_mode: 'query'
   };
+  
 };
+
 
 function AuthInitializer() {
   const auth = useAuth();
