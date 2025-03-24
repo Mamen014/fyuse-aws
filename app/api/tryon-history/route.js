@@ -16,7 +16,7 @@ export async function GET(request) {
 
   try {
     const result = await client.send(new QueryCommand({
-      TableName: process.env.DYNAMODB_TABLE || "TryonTaskStatus",
+      TableName: "TryonTaskStatus",
       IndexName: "userEmail-index",
       KeyConditionExpression: "userEmail = :email",
       ExpressionAttributeValues: {
