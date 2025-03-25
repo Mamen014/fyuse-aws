@@ -23,23 +23,33 @@ export default function ProfilePage() {
 
   const fetchHistory = async () => {
     if (!auth?.user?.profile?.email) return;
+    
     try {
-      const res = await fetch(`/api/tryon-history?email=${encodeURIComponent(auth.user.profile.email)}`);
-      if (!res.ok) throw new Error('Failed to fetch history');
+      const lambdaUrl = "https://gg24ph26yjrvw4b3t47tfjagxy0ctukl.lambda-url.ap-southeast-2.on.aws/"; // Replace with actual Lambda URL
+  
+      const res = await fetch(`${lambdaUrl}?email=${encodeURIComponent(auth.user.profile.email)}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+  
+      if (!res.ok) throw new Error(`Failed to fetch history: ${res.status}`);
+  
       const data = await res.json();
-
       const allItems = Array.isArray(data.items) ? data.items : [];
       const wardrobeItems = allItems.filter((item) => item.isInWardrobe === true);
-
+  
       setTryOnHistory(wardrobeItems);
     } catch (err) {
-      console.error('❌ Error fetching wardrobe history:', err);
-      toast.error('Failed to load your wardrobe items.');
+      console.error("❌ Error fetching wardrobe history:", err);
+      toast.error("Failed to load your wardrobe items.");
       setTryOnHistory([]);
     } finally {
       setLoading(false);
     }
   };
+  
 
   useEffect(() => {
     if (auth?.isAuthenticated) {
