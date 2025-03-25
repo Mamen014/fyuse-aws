@@ -57,7 +57,7 @@ const VirtualTryOn = () => {
   };
 
   const pollTryonStatus = (taskId) => {
-    const API_STATUS_URL = `https://n1zcjhjanl.execute-api.ap-southeast-2.amazonaws.com/dev/process-tryon-result`;
+    const API_STATUS_URL = `${API_BASE_URL}/process-tryon-result`;
 
     const intervalId = setInterval(async () => {
       try {
@@ -107,7 +107,7 @@ const VirtualTryOn = () => {
         `${API_BASE_URL}/upload-apparel-image`
       );
 
-      const tryonResponse = await axios.post(`https://ipgyftqcsg.execute-api.ap-southeast-2.amazonaws.com/dev/tryon-image`, {
+      const tryonResponse = await axios.post(`${API_BASE_URL}/tryon-image`, {
         person_image_url: userImageUrl,
         garment_image_url: apparelImageUrl,
       });
@@ -137,7 +137,7 @@ const VirtualTryOn = () => {
       setMatchingAnalysis(null);
       setError(null);
 
-      const response = await axios.post(`https://j1sp2omtq2.execute-api.ap-southeast-2.amazonaws.com/dev/MatchingAnalyzer`, {
+      const response = await axios.post(`${API_BASE_URL}/MatchingAnalyzer`, {
         generated_image_url: window.generatedImageUrl,
         apparel_image_url: apparelImagePreview,
       });

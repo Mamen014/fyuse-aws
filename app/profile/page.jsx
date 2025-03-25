@@ -25,7 +25,7 @@ export default function ProfilePage() {
     if (!auth?.user?.profile?.email) return;
     
     try {
-      const lambdaUrl = "https://gg24ph26yjrvw4b3t47tfjagxy0ctukl.lambda-url.ap-southeast-2.on.aws/"; // Replace with actual Lambda URL
+      const lambdaUrl = "https://gg24ph26yjrvw4b3t47tfjagxy0ctukl.lambda-url.ap-southeast-2.on.aws/";
   
       const res = await fetch(`${lambdaUrl}?email=${encodeURIComponent(auth.user.profile.email)}`, {
         method: "GET",
