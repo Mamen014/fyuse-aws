@@ -1,9 +1,10 @@
-// ✅ Updated VirtualTryOn.jsx with Full Async Workflow & Polling
-
+import { useAuth } from 'react-oidc-context';
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import PricingPlans from "@/components/PricingPlanCard";
 
 const VirtualTryOn = () => {
+  const { user, signinRedirect } = useAuth();
   const [userImage, setUserImage] = useState(null);
   const [apparelImage, setApparelImage] = useState(null);
   const [userImagePreview, setUserImagePreview] = useState(null);
@@ -15,8 +16,31 @@ const VirtualTryOn = () => {
   const [taskId, setTaskId] = useState(null);
   const [polling, setPolling] = useState(false);
   const [pollIntervalId, setPollIntervalId] = useState(null);
+  const [tryOnCount, setTryOnCount] = useState(0);
+  const [showPricingPlans, setShowPricingPlans] = useState(false);
 
   const API_BASE_URL = "https://76e5op5rg6.execute-api.ap-southeast-2.amazonaws.com/dev";
+  const userEmail = user?.profile?.email;
+
+  useEffect(() => {
+    if (!userEmail) return;
+    const storedCount = sessionStorage.getItem("tryOnCount");
+    if (storedCount) {
+      setTryOnCount(parseInt(storedCount));
+      return;
+    }
+  
+    axios.get(`${API_BASE_URL}/getrack?userEmail=${userEmail}`)
+      .then((res) => {
+        console.log("getrack API Response:", res.data); // Debugging
+        const count = res.data.tryOnCount || 0;
+        setTryOnCount(count);
+        sessionStorage.setItem("tryOnCount", count);
+      })
+      .catch((err) => console.error("Error fetching try-on count:", err));
+  }, [userEmail]);
+
+  console.log("Rendering with tryOnCount:", tryOnCount);
 
   const handleUserImageChange = (e) => {
     const file = e.target.files[0];
@@ -86,45 +110,56 @@ const VirtualTryOn = () => {
   };
 
   const handleSubmit = async (e) => {
-    e?.preventDefault();
     if (!userImage || !apparelImage) {
       setError("Please upload both user and apparel images.");
       return;
     }
+  
+    if (!user) {
+      alert("You need to log in to generate a try-on result.");
+      signinRedirect();
+      return;
+    }
 
+    if (tryOnCount >= 3) {
+      setShowPricingPlans(true); // Show pricing plan cards
+      return; // Prevent further try-on requests
+    }
+  
     try {
       setLoading(true);
       setError(null);
       setResultImageUrl(null);
       setMatchingAnalysis(null);
-
-      const userImageUrl = await uploadImageToS3(
-        userImage,
-        `${API_BASE_URL}/upload-user-image`
-      );
-      const apparelImageUrl = await uploadImageToS3(
-        apparelImage,
-        `${API_BASE_URL}/upload-apparel-image`
-      );
-
+  
+      const userImageUrl = await uploadImageToS3(userImage, `${API_BASE_URL}/upload-user-image`);
+      const apparelImageUrl = await uploadImageToS3(apparelImage, `${API_BASE_URL}/upload-apparel-image`);
+  
       const tryonResponse = await axios.post(`${API_BASE_URL}/tryon-image`, {
         person_image_url: userImageUrl,
         garment_image_url: apparelImageUrl,
+        userEmail: userEmail, // Ensure the backend knows which user is trying on
       });
-
+  
       if (tryonResponse?.data?.taskId) {
         setTaskId(tryonResponse.data.taskId);
         pollTryonStatus(tryonResponse.data.taskId);
-      } else {
-        setError("Failed to initiate try-on job.");
+        
+        // **Update try-on count in backend**
+        await axios.post(`${API_BASE_URL}/tryontrack`, { userEmail });
+        setTryOnCount((prevCount) => prevCount + 1);
       }
     } catch (err) {
-      console.error("Error submitting try-on task:", err);
-      setError(err.response?.data?.error || "An error occurred during virtual try-on.");
+      if (err.response?.status === 403) {
+        setPricingPlans(true);
+      } else {
+        setError(err.response?.data?.error || "An error occurred during virtual try-on.");
+      }
     } finally {
       setLoading(false);
     }
   };
+  
 
   const handleMatchingAnalysis = async () => {
     if (!window.generatedImageUrl) {
@@ -168,58 +203,64 @@ const VirtualTryOn = () => {
         <p className="text-white mt-2">Experience the perfect fit.</p>
       </header>
 
-      <div className="bg-[#1a1a2f] w-full max-w-4xl rounded-lg shadow-md p-8 space-y-6">
-        <h2 className="text-2xl font-medium text-white text-center mb-4">
-          Step 1: Upload Your Photos
-        </h2>
+      {showPricingPlans ? (
+        <PricingPlans onSelectPlan={(plan) => alert(`Plan selected: ${plan}`)} />
+      ) : (
+        <div className="bg-[#1a1a2f] w-full max-w-4xl rounded-lg shadow-md p-8 space-y-6">
+          <h2 className="text-2xl font-medium text-white text-center mb-4">
+            Step 1: Upload Your Photos
+          </h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="border border-gray-200 rounded-lg p-6 text-center">
-            <h3 className="text-lg font-medium text-white mb-4">Your Photo</h3>
-            <input type="file" accept="image/*" onChange={handleUserImageChange} className="hidden" id="userPhoto" />
-            <label htmlFor="userPhoto" className="cursor-pointer">
-              {userImagePreview ? (
-                <img src={userImagePreview} alt="User Preview" className="mx-auto max-h-48 object-contain rounded-lg" />
-              ) : (
-                <div className="flex flex-col items-center justify-center h-48">
-                  <p className="text-white">Click to upload</p>
-                </div>
-              )}
-            </label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="border border-gray-200 rounded-lg p-6 text-center">
+              <h3 className="text-lg font-medium text-white mb-4">Your Photo</h3>
+              <input type="file" accept="image/*" onChange={handleUserImageChange} className="hidden" id="userPhoto" />
+              <label htmlFor="userPhoto" className="cursor-pointer">
+                {userImagePreview ? (
+                  <img src={userImagePreview} alt="User Preview" className="mx-auto max-h-48 object-contain rounded-lg" />
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-48">
+                    <p className="text-white">Click to upload</p>
+                  </div>
+                )}
+              </label>
+            </div>
+
+            <div className="border border-gray-200 rounded-lg p-6 text-center">
+              <h3 className="text-lg font-medium text-white mb-4">Clothing Item</h3>
+              <input type="file" accept="image/*" onChange={handleApparelImageChange} className="hidden" id="apparelPhoto" />
+              <label htmlFor="apparelPhoto" className="cursor-pointer">
+                {apparelImagePreview ? (
+                  <img src={apparelImagePreview} alt="Apparel Preview" className="mx-auto max-h-48 object-contain rounded-lg" />
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-48">
+                    <p className="text-white">Click to upload</p>
+                  </div>
+                )}
+              </label>
+            </div>
           </div>
 
-          <div className="border border-gray-200 rounded-lg p-6 text-center">
-            <h3 className="text-lg font-medium text-white mb-4">Clothing Item</h3>
-            <input type="file" accept="image/*" onChange={handleApparelImageChange} className="hidden" id="apparelPhoto" />
-            <label htmlFor="apparelPhoto" className="cursor-pointer">
-              {apparelImagePreview ? (
-                <img src={apparelImagePreview} alt="Apparel Preview" className="mx-auto max-h-48 object-contain rounded-lg" />
-              ) : (
-                <div className="flex flex-col items-center justify-center h-48">
-                  <p className="text-white">Click to upload</p>
-                </div>
-              )}
-            </label>
+          <div className="text-center">
+            <button
+              type="button"
+              onClick={handleSubmit}
+              className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700"
+            >
+              Generate Try-On Result
+            </button>
           </div>
+
+          <p className="text-sm mt-2 text-center text-white">You have used {tryOnCount} out of 3 try-ons this month.</p>
+
+          {polling && !resultImageUrl && (
+            <p className="text-yellow-500 text-center mt-4">Waiting for result... polling server.</p>
+          )}
+
+          {loading && <p className="text-gray-400 text-center animate-pulse">Processing...</p>}
+          {error && <p className="text-red-500 text-center">{error}</p>}
         </div>
-
-        <div className="text-center">
-          <button
-            type="button"
-            onClick={handleSubmit}
-            className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700"
-          >
-            Generate Try-On Result
-          </button>
-        </div>
-
-        {polling && !resultImageUrl && (
-          <p className="text-yellow-500 text-center mt-4">Waiting for result... polling server.</p>
-        )}
-
-        {loading && <p className="text-gray-400 text-center animate-pulse">Processing...</p>}
-        {error && <p className="text-red-500 text-center">{error}</p>}
-      </div>
+      )}
 
       {resultImageUrl && (
         <div className="mt-8 w-full max-w-4xl bg-white rounded-lg shadow-md p-8 space-y-6">

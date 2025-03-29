@@ -30,14 +30,12 @@ function AuthActionsInNavbar() {
 
   const handleSignOut = () => {
     localStorage.removeItem('loggedInUser');
+    sessionStorage.clear();
   
-    if (auth && auth.removeUser) {
-      auth.removeUser();
-    }
   
-    const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
-    const logoutUrl = `https://ap-southeast-2imonu7fwb.auth.ap-southeast-2.amazoncognito.com/logout?client_id=4l7l5ebjj2io1vap6qohbl2i7l&post_logout_redirect_uri=${encodeURIComponent(origin)}`;
-  
+const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
+const logoutUrl = `https://ap-southeast-2imonu7fwb.auth.ap-southeast-2.amazoncognito.com/logout?client_id=4l7l5ebjj2io1vap6qohbl2i7l&logout_uri=${encodeURIComponent(origin + '/')}`;  
+
     window.location.href = logoutUrl;
   };
   
