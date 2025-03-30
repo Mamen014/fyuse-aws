@@ -1,4 +1,3 @@
-// filepath: /Users/zahirjabar/fyuse-web-app/fyuse-frontend/tailwind.config.js
 export default {
     darkMode: ['class'],
     content: [

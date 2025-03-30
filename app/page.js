@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect } from 'react';
-import { Button } from '../components/ui/button.jsx';
 import Link from 'next/link.js';
 import VirtualTryOnWrapper from '../components/VirtualTryOnWrapper';
 import { useAuth } from 'react-oidc-context';
@@ -103,9 +102,6 @@ export default function Home() {
             <p className="text-purple-100 text-lg">
               Upload your photo and see how different styles look on you instantly.
             </p>
-            <Button className="rounded-xl bg-purple-700 hover:bg-purple-800 text-white px-6 py-3 text-lg">
-              Get Started
-            </Button>
           </div>
           <div className="md:w-1/2 mt-10 md:mt-0" id="app">
             <VirtualTryOnWrapper />

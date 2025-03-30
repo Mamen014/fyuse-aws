@@ -19,7 +19,7 @@ const VirtualTryOn = () => {
   const [tryOnCount, setTryOnCount] = useState(0);
   const [showPricingPlans, setShowPricingPlans] = useState(false);
 
-  const API_BASE_URL = "https://76e5op5rg6.execute-api.ap-southeast-2.amazonaws.com/dev";
+  const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
   const userEmail = user?.profile?.email;
 
   useEffect(() => {

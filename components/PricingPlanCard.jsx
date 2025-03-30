@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import LearnMoreBasic from "./LearnMoreBasic";
 import LearnMoreLite from "./LearnMoreLite";
 import LearnMorePro from "./LearnMorePro";
+import LearnMoreElite from "./LearnMoreLite";
 
 export default function PricingPlans({ onSelectPlan }) {
   const [openPlan, setOpenPlan] = useState(null);
@@ -14,7 +15,7 @@ export default function PricingPlans({ onSelectPlan }) {
   const plans = [
     {
       name: "Basic (Free)",
-      price: "Rp.0/mo",
+      price: "Rp. 0/mo",
       features: ["5 Try-Ons/month", "Matching Analysis"],
       promo: null,
       buttonText: "Continue with Basic Plan",
@@ -22,7 +23,7 @@ export default function PricingPlans({ onSelectPlan }) {
     },
     {
       name: "Lite Plan",
-      price: "Rp.29,999/mo",
+      price: "Rp. 29,999/mo",
       features: ["10 Try-Ons/month", "Color Harmony Tips", "Style Suggestions"],
       promo: "🔓 Promo Price! 40% OFF",
       buttonText: "Upgrade to Lite – Rp.29,999",
@@ -30,7 +31,7 @@ export default function PricingPlans({ onSelectPlan }) {
     },
     {
       name: "Pro Plan",
-      price: "Rp.59,999/mo",
+      price: "Rp. 59,999/mo",
       features: [
         "25 Try-Ons/month",
         "AI Stylist Assistant",
@@ -41,20 +42,34 @@ export default function PricingPlans({ onSelectPlan }) {
       buttonText: "Upgrade to Pro – Rp.59,999",
       LearnMoreComponent: LearnMorePro,
     },
+    {
+      name: "👑 Elite Plan",
+      price: "Coming Soon",
+      features: [
+        "Unlimited Try-Ons + Matching Analysis",
+        "Unlimited Personalized Stylist Assistant",
+        "Wardrobe Tracker + Body Tracker",
+        "Unlimited Styles in the Digital Wardrobe",
+        "Exclusive Outfits",
+      ],
+      promo: "💬 Be the first to experience Elite benefits",
+      buttonText: "Notify Me on Launch",
+      LearnMoreComponent: LearnMoreElite,
+    },
   ];
 
   return (
     <div className="max-w-5xl mx-auto p-6">
       <h2 className="text-3xl font-bold text-center text-white mb-6">Choose Your Plan</h2>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-6">
         {plans.map((plan, index) => {
           const LearnMoreComponent = plan.LearnMoreComponent;
 
           return (
             <div
               key={index}
-              className="border border-purple-600 bg-[#1a1a2e] text-white rounded-xl p-5 shadow-lg flex flex-col justify-between"
+              className="border border-purple-600 bg-[#1a1a2e] text-white rounded-xl p-5 shadow-lg flex flex-col justify-between w-full min-w-[280px] max-w-sm"
             >
               <div>
                 <h3 className="text-xl font-semibold">{plan.name}</h3>

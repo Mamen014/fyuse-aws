@@ -1,4 +1,3 @@
-// tailwind.config.js (ESM syntax)
 export default {
   content: [
     "./pages/**/*.{js,ts,jsx,tsx}",
