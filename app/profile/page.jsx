@@ -25,7 +25,7 @@ export default function ProfilePage() {
     if (!auth?.user?.profile?.email) return;
     
     try {
-      const lambdaUrl = process.env.NEXT_PUBLIC_LAMBDA_REMOVE;
+      const lambdaUrl = process.env.NEXT_PUBLIC_HISTORY_HANDLER;
   
       const res = await fetch(`${lambdaUrl}?email=${encodeURIComponent(auth.user.profile.email)}`, {
         method: "GET",
