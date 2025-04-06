@@ -7,6 +7,14 @@ import { useAuth } from 'react-oidc-context';
 
 function AuthActionsInNavbar() {
   const auth = useAuth();
+  const handleSignUp = () => {
+    const clientId = process.env.NEXT_PUBLIC_CLIENTID
+    const domain = process.env.NEXT_PUBLIC_DOMAIN;
+    const redirectUri = typeof window !== 'undefined' ? window.location.origin + '/' : 'http://localhost:3000/';
+    const signUpUrl = `https://${domain}/signup?client_id=${clientId}&response_type=code&scope=openid+profile+email&redirect_uri=${encodeURIComponent(redirectUri)}`;
+  
+    window.location.href = signUpUrl;
+  };
 
   useEffect(() => {
     if (auth?.isAuthenticated && auth?.user?.profile?.email) {
@@ -31,7 +39,7 @@ function AuthActionsInNavbar() {
     localStorage.removeItem('loggedInUser');
     sessionStorage.clear();
   
-  
+    
 const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
 const logoutUrl = `https://ap-southeast-2imonu7fwb.auth.ap-southeast-2.amazoncognito.com/logout?client_id=4l7l5ebjj2io1vap6qohbl2i7l&logout_uri=${encodeURIComponent(origin + '/')}`;  
 
@@ -70,6 +78,13 @@ const logoutUrl = `https://ap-southeast-2imonu7fwb.auth.ap-southeast-2.amazoncog
         className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded"
       >
         Sign In
+      </button>
+
+      <button
+        onClick={handleSignUp}
+        className="bg-purple-600 hover:bg-purple-700 text-white text-sm px-4 py-2 rounded"
+      >
+        Sign Up
       </button>
     </div>
   );

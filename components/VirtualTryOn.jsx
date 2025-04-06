@@ -18,29 +18,33 @@ const VirtualTryOn = () => {
   const [pollIntervalId, setPollIntervalId] = useState(null);
   const [tryOnCount, setTryOnCount] = useState(0);
   const [showPricingPlans, setShowPricingPlans] = useState(false);
+  const [agreeToPrivacy, setAgreeToPrivacy] = useState(false);
 
   const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
   const userEmail = user?.profile?.email;
 
   useEffect(() => {
     if (!userEmail) return;
+
     const storedCount = sessionStorage.getItem("tryOnCount");
     if (storedCount) {
       setTryOnCount(parseInt(storedCount));
-      return;
+    } else {
+      axios.get(`${API_BASE_URL}/getrack?userEmail=${userEmail}`)
+        .then((res) => {
+          const count = res.data.tryOnCount || 0;
+          setTryOnCount(count);
+          sessionStorage.setItem("tryOnCount", count);
+        })
+        .catch((err) => console.error("Error fetching try-on count:", err));
     }
-  
-    axios.get(`${API_BASE_URL}/getrack?userEmail=${userEmail}`)
-      .then((res) => {
-        console.log("getrack API Response:", res.data); // Debugging
-        const count = res.data.tryOnCount || 0;
-        setTryOnCount(count);
-        sessionStorage.setItem("tryOnCount", count);
-      })
-      .catch((err) => console.error("Error fetching try-on count:", err));
-  }, [userEmail]);
 
-  console.log("Rendering with tryOnCount:", tryOnCount);
+    // Restore checkbox state from localStorage
+    const storedAgreement = localStorage.getItem(`privacyAgreement:${userEmail}`);
+    if (storedAgreement === "true") {
+      setAgreeToPrivacy(true);
+    }
+  }, [userEmail]);
 
   const handleUserImageChange = (e) => {
     const file = e.target.files[0];
@@ -92,10 +96,6 @@ const VirtualTryOn = () => {
           setPolling(false);
           setResultImageUrl(response.data.generatedImageUrl);
           window.generatedImageUrl = response.data.generatedImageUrl;
-        } else if (response.data.status === "not_found") {
-          console.log("Status not yet available. Still waiting...");
-        } else {
-          console.log("Still processing...");
         }
       } catch (err) {
         console.error("Polling error:", err);
@@ -109,49 +109,53 @@ const VirtualTryOn = () => {
     setPolling(true);
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async () => {
     if (!userImage || !apparelImage) {
       setError("Please upload both user and apparel images.");
       return;
     }
-  
+
     if (!user) {
       alert("You need to log in to generate a try-on result.");
       signinRedirect();
       return;
     }
 
-    if (tryOnCount >= 3) {
-      setShowPricingPlans(true); // Show pricing plan cards
-      return; // Prevent further try-on requests
+    if (!agreeToPrivacy) {
+      setError("You must agree to the Privacy Policy before continuing.");
+      return;
     }
-  
+
+    if (tryOnCount >= 3) {
+      setShowPricingPlans(true);
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
       setResultImageUrl(null);
       setMatchingAnalysis(null);
-  
+
       const userImageUrl = await uploadImageToS3(userImage, `${API_BASE_URL}/upload-user-image`);
       const apparelImageUrl = await uploadImageToS3(apparelImage, `${API_BASE_URL}/upload-apparel-image`);
-  
+
       const tryonResponse = await axios.post(`${API_BASE_URL}/tryon-image`, {
         person_image_url: userImageUrl,
         garment_image_url: apparelImageUrl,
-        userEmail: userEmail, // Ensure the backend knows which user is trying on
+        userEmail: userEmail,
       });
-  
+
       if (tryonResponse?.data?.taskId) {
         setTaskId(tryonResponse.data.taskId);
         pollTryonStatus(tryonResponse.data.taskId);
-        
-        // **Update try-on count in backend**
+
         await axios.post(`${API_BASE_URL}/tryontrack`, { userEmail });
         setTryOnCount((prevCount) => prevCount + 1);
       }
     } catch (err) {
       if (err.response?.status === 403) {
-        setPricingPlans(true);
+        setShowPricingPlans(true);
       } else {
         setError(err.response?.data?.error || "An error occurred during virtual try-on.");
       }
@@ -159,7 +163,6 @@ const VirtualTryOn = () => {
       setLoading(false);
     }
   };
-  
 
   const handleMatchingAnalysis = async () => {
     if (!window.generatedImageUrl) {
@@ -183,10 +186,17 @@ const VirtualTryOn = () => {
         setError("Matching Analysis failed.");
       }
     } catch (err) {
-      console.error(err);
       setError(err.response?.data?.error || "Matching Analysis failed.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handlePrivacyCheckbox = (e) => {
+    const isChecked = e.target.checked;
+    setAgreeToPrivacy(isChecked);
+    if (userEmail) {
+      localStorage.setItem(`privacyAgreement:${userEmail}`, isChecked.toString());
     }
   };
 
@@ -208,7 +218,7 @@ const VirtualTryOn = () => {
       ) : (
         <div className="bg-[#1a1a2f] w-full max-w-4xl rounded-lg shadow-md p-8 space-y-6">
           <h2 className="text-2xl font-medium text-white text-center mb-4">
-            Step 1: Upload Your Photos
+            Upload Your Photos
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -241,17 +251,35 @@ const VirtualTryOn = () => {
             </div>
           </div>
 
-          <div className="text-center">
+          <p className="text-sm mt-2 text-center text-white">
+            You have used {tryOnCount} out of 3 try-ons this month.
+          </p>
+
+          <div className="flex items-center justify-center mt-2 space-x-2">
+            <input
+              type="checkbox"
+              id="privacyConsent"
+              checked={agreeToPrivacy}
+              onChange={handlePrivacyCheckbox}
+              className="w-4 h-4"
+            />
+            <label htmlFor="privacyConsent" className="text-sm text-white cursor-pointer">
+              I agree to the <a href="/policy" className="underline text-blue-400" target="_blank" rel="noopener noreferrer">Privacy Policy Agreement</a>
+            </label>
+          </div>
+
+          <div className="text-center mt-4">
             <button
               type="button"
               onClick={handleSubmit}
-              className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700"
+              className={`px-6 py-3 rounded-lg font-medium text-white ${
+                agreeToPrivacy ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-500 cursor-not-allowed'
+              }`}
+              disabled={!agreeToPrivacy}
             >
               Generate Try-On Result
             </button>
           </div>
-
-          <p className="text-sm mt-2 text-center text-white">You have used {tryOnCount} out of 3 try-ons this month.</p>
 
           {polling && !resultImageUrl && (
             <p className="text-yellow-500 text-center mt-4">Waiting for result... polling server.</p>
@@ -264,7 +292,7 @@ const VirtualTryOn = () => {
 
       {resultImageUrl && (
         <div className="mt-8 w-full max-w-4xl bg-white rounded-lg shadow-md p-8 space-y-6">
-          <h2 className="text-2xl font-medium text-gray-800 text-center">Step 2: Try-On Result</h2>
+          <h2 className="text-2xl font-medium text-gray-800 text-center">Try-On Result</h2>
           <img src={resultImageUrl} alt="Try-On Result" className="rounded-lg shadow-md mx-auto max-h-96 object-contain" />
           <div className="text-center">
             <button
