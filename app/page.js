@@ -13,9 +13,28 @@ function AuthActionsInNavbar() {
     const redirectUri = typeof window !== 'undefined' ? window.location.origin + '/' : 'http://localhost:3000/';
     const signUpUrl = `https://${domain}/signup?client_id=${clientId}&response_type=code&scope=openid+profile+email&redirect_uri=${encodeURIComponent(redirectUri)}`;
   
+    sessionStorage.setItem('cameFromSignup', 'true'); // 🔑 Set flag
     window.location.href = signUpUrl;
   };
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+  
+    const searchParams = new URLSearchParams(window.location.search);
+    const hasAuthCode = searchParams.get('code');
+    const cameFromSignup = sessionStorage.getItem('cameFromSignup') === 'true';
+  
+    if (hasAuthCode && cameFromSignup && !localStorage.getItem('loggedInUser')) {
+      alert('🎉 Signup complete! Now please log in to start using FYUSE.');
+      
+      // Clean up
+      sessionStorage.removeItem('cameFromSignup');
+      searchParams.delete('code');
+      const newUrl = `${window.location.origin}${window.location.pathname}?${searchParams.toString()}`;
+      window.history.replaceState({}, document.title, newUrl);
+    }
+  }, []);
+  
   useEffect(() => {
     if (auth?.isAuthenticated && auth?.user?.profile?.email) {
       const userData = {
@@ -112,11 +131,8 @@ export default function Home() {
         <section className="pt-10 pb-8 container mx-auto px-6 py-16 flex flex-col md:flex-row items-center justify-between">
           <div className="md:w-1/2 space-y-6 text-center md:text-left">
             <h1 className="text-5xl font-extrabold text-white leading-tight">
-              Try On Fashion <br className="hidden md:block" /> With AI
+            For You Style!
             </h1>
-            <p className="text-purple-100 text-lg">
-              Upload your photo and see how different styles look on you instantly.
-            </p>
           </div>
           <div className="md:w-1/2 mt-10 md:mt-0" id="app">
             <VirtualTryOnWrapper />
@@ -143,6 +159,13 @@ export default function Home() {
         <p>&copy; 2025 FYUSE. All rights reserved.</p>
         <div className="mt-4 flex justify-center space-x-6">
           <a href="https://www.instagram.com/fyuse.id/" className="hover:text-white">Instagram</a>
+        </div>
+        <div className="mt-6">
+          <Link href="/contact">
+            <button className="text-white hover:text-purple-300 text-sm underline">
+              Contact Us
+            </button>
+          </Link>
         </div>
       </footer>
     </div>

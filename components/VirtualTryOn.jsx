@@ -209,7 +209,7 @@ const VirtualTryOn = () => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center font-sans">
       <header className="text-center mb-8">
-        <h1 className="text-4xl font-bold text-white">Virtual Try-On</h1>
+        <h1 className="text-4xl font-bold text-white">Digital Fitting Room</h1>
         <p className="text-white mt-2">Experience the perfect fit.</p>
       </header>
 
@@ -277,7 +277,7 @@ const VirtualTryOn = () => {
               }`}
               disabled={!agreeToPrivacy}
             >
-              Generate Try-On Result
+              Try-On
             </button>
           </div>
 
