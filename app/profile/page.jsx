@@ -117,7 +117,7 @@ export default function ProfilePage() {
     <div className="p-6 max-w-3xl mx-auto text-white">
       <Toaster position="top-center" />
 
-      <h2 className="text-2xl font-bold mb-4">👤 My Profile</h2>
+      <h2 className="text-2xl font-bold mb-4">👤 Digital Wardrobe</h2>
 
       {/* Back to Home Button */}
       <div className="mb-6">

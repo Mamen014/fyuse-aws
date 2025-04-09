@@ -308,7 +308,7 @@ const VirtualTryOn = () => {
             </label>
           </div>
   
-          <div className="text-center mt-4 space-x-2">
+          <div className="flex justify-center items-center mt-4 space-x-2">
             {/* Try-On Button */}
             <button
               onClick={() => {

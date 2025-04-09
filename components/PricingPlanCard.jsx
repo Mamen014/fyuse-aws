@@ -73,9 +73,9 @@ export default function PricingPlans({ isOpen, onSelectPlan, onClose }) {
             &times;
           </button>
 
-          <h2 className="text-4xl font-bold text-center mb-8">Choose Your Plan</h2>
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-8">Choose Your Plan</h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {plans.map((plan, index) => (
               <div
                 key={index}
@@ -83,13 +83,13 @@ export default function PricingPlans({ isOpen, onSelectPlan, onClose }) {
               >
                 <div>
                   {/* Plan Name */}
-                  <h3 className="text-2xl font-semibold text-center">{plan.name}</h3>
+                  <h3 className="text-xl md:text-2xl font-semibold text-center">{plan.name}</h3>
 
                   {/* Price */}
-                  <p className="text-xl text-purple-300 mt-2 text-center">{plan.price}</p>
+                  <p className="text-lg md:text-xl text-purple-300 mt-2 text-center">{plan.price}</p>
 
                   {/* Features */}
-                  <ul className="mt-4 text-base text-purple-200 list-disc ml-6 space-y-2">
+                  <ul className="mt-4 text-sm md:text-base text-purple-200 list-disc ml-6 space-y-2">
                     {plan.features.map((feature, i) => (
                       <li key={i}>✅ {feature}</li>
                     ))}
@@ -97,7 +97,7 @@ export default function PricingPlans({ isOpen, onSelectPlan, onClose }) {
 
                   {/* Promo */}
                   {plan.promo && (
-                    <p className="mt-3 text-yellow-400 text-sm text-center">{plan.promo}</p>
+                    <p className="mt-3 text-yellow-400 text-xs md:text-sm text-center">{plan.promo}</p>
                   )}
                 </div>
 
@@ -105,7 +105,7 @@ export default function PricingPlans({ isOpen, onSelectPlan, onClose }) {
                 <div className="mt-6 space-y-3">
                   <Button
                     onClick={() => onSelectPlan(plan.name)}
-                    className="w-full bg-gradient-to-r from-purple-700 to-indigo-600 text-white rounded-full text-base hover:scale-[1.02] transition-transform"
+                    className="w-full bg-gradient-to-r from-purple-700 to-indigo-600 text-white rounded-full text-sm md:text-base hover:scale-[1.02] transition-transform"
                   >
                     {plan.buttonText}
                   </Button>
@@ -114,7 +114,7 @@ export default function PricingPlans({ isOpen, onSelectPlan, onClose }) {
                   {plan.LearnMoreComponent && (
                     <Button
                       onClick={() => setOpenLearnMoreIndex(index)}
-                      className="w-full text-white border-purple-500 hover:bg-purple-800 hover:border-purple-400 rounded-full text-base transition-colors"
+                      className="w-full text-white border-purple-500 hover:bg-purple-800 hover:border-purple-400 rounded-full text-sm md:text-base transition-colors"
                     >
                       Learn More
                     </Button>

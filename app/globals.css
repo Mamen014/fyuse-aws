@@ -2,11 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Base Styles */
 html,
 body {
-  overflow-x: hidden;
+  overflow-x: hidden; /* Prevent horizontal scrolling */
   width: 100%;
+  min-height: 100vh; /* Ensure full viewport height */
   font-family: Arial, Helvetica, sans-serif;
+  margin: 0; /* Remove default margins */
+  padding: 0; /* Remove default padding */
 }
 
 @layer base {
@@ -68,4 +72,83 @@ body {
   body {
     @apply bg-black text-white;
   }
+}
+
+/* Modal and Overlay Styling */
+.modal {
+  z-index: 50; /* Ensure modals appear above other content */
+}
+
+.modal-content {
+  max-height: 90vh; /* Limit modal height to 90% of viewport height */
+  overflow-y: auto; /* Enable vertical scrolling */
+}
+
+.background-overlay {
+  z-index: 40; /* Background overlay behind the modal */
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  html,
+  body {
+    font-size: 14px; /* Smaller font size for mobile */
+  }
+
+  h1 {
+    font-size: 1.5rem; /* Adjust heading sizes */
+  }
+
+  h2 {
+    font-size: 1.25rem;
+  }
+
+  button {
+    padding: 0.5rem 1rem; /* Compact buttons */
+    font-size: 0.875rem; /* Slightly smaller font size for buttons */
+  }
+
+  img {
+    max-width: 100%; /* Ensure images are responsive */
+    height: auto;
+  }
+
+  .grid {
+    grid-template-columns: 1fr; /* Stack grid items vertically on small screens */
+  }
+
+  .gap-6 {
+    gap: 1rem; /* Reduce spacing between grid items */
+  }
+
+  .space-y-6 {
+    margin-top: 1rem; /* Reduce vertical spacing */
+  }
+}
+
+/* Medium Screens */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)); /* Two columns for medium screens */
+  }
+
+  .gap-6 {
+    gap: 1.5rem; /* Moderate spacing for medium screens */
+  }
+}
+
+/* Large Screens */
+@media (min-width: 1024px) {
+  .grid-cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr)); /* Three columns for large screens */
+  }
+
+  .gap-6 {
+    gap: 2rem; /* Larger spacing for large screens */
+  }
+}
+
+.touch-target {
+  min-width: 48px;
+  min-height: 48px;
 }

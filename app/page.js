@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link.js';
 import VirtualTryOnWrapper from '../components/VirtualTryOnWrapper';
 import { useAuth } from 'react-oidc-context';
@@ -76,8 +76,8 @@ const logoutUrl = `https://ap-southeast-2imonu7fwb.auth.ap-southeast-2.amazoncog
       <div className="flex items-center space-x-4">
         <span className="text-sm text-white whitespace-nowrap">Welcome, {username}</span>
         <Link href="/profile" passHref>
-          <button className="bg-green-600 hover:bg-green-700 text-white text-sm px-4 py-2 rounded">
-            My Profile
+          <button className="bg-gradient-to-r from-blue-700 to-indigo-500 shadow transition hover:bg-green-700 text-white text-sm px-4 py-2 rounded">
+            Digital Wardrobe
           </button>
         </Link>
         <button
@@ -110,14 +110,48 @@ const logoutUrl = `https://ap-southeast-2imonu7fwb.auth.ap-southeast-2.amazoncog
 }
 
 export default function Home() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#0f0c29] via-[#302b63] to-[#24243e] text-white">
       <nav className="fixed top-0 left-0 w-full bg-gradient-to-b from-[#0f0c29] via-[#302b63] to-[#24243e] z-50 shadow-md">
         <div className="container mx-auto px-6 py-4 flex justify-between items-center">
+          {/* Logo */}
           <div className="bg-[#1a1a1a] rounded-full px-4 py-2 shadow-sm">
             <h1 className="text-xl font-bold text-white">FYUSE</h1>
           </div>
-          <div className="flex items-center space-x-4">
+
+          {/* Hamburger Menu for Mobile */}
+          <div className="md:hidden">
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="text-white focus:outline-none"
+            >
+              {isMenuOpen ? (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              ) : (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
+                </svg>
+              )}
+            </button>
+          </div>
+
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center space-x-4">
             <a href="/" className="px-4 py-1 rounded-full text-sm font-medium text-white bg-gradient-to-r from-purple-700 to-indigo-500 shadow transition">Home</a>
             <a href="/features" className="px-4 py-1 rounded-full text-sm font-medium text-white hover:text-purple-200 transition">Features</a>
             <a href="/about" className="px-4 py-1 rounded-full text-sm font-medium text-white hover:text-purple-200 transition">About</a>
@@ -125,6 +159,17 @@ export default function Home() {
             <AuthActionsInNavbar />
           </div>
         </div>
+
+        {/* Mobile Menu */}
+        {isMenuOpen && (
+          <div className="md:hidden bg-[#1a1a2f] p-4 space-y-4">
+            <a href="/" className="block px-4 py-2 rounded-full text-sm font-medium text-white hover:bg-purple-700">Home</a>
+            <a href="/features" className="block px-4 py-2 rounded-full text-sm font-medium text-white hover:bg-purple-700">Features</a>
+            <a href="/about" className="block px-4 py-2 rounded-full text-sm font-medium text-white hover:bg-purple-700">About</a>
+            <a href="/contact" className="block px-4 py-2 rounded-full text-sm font-medium text-white hover:bg-purple-700">Contact</a>
+            <AuthActionsInNavbar />
+          </div>
+        )}
       </nav>
 
       <main className="mt-10">
@@ -149,7 +194,7 @@ export default function Home() {
               type="button"
               className="bg-gradient-to-r from-purple-700 to-indigo-600 text-white px-6 py-3 rounded-full text-lg shadow-lg transition-transform transform hover:scale-105"
             >
-              Upload & Try On Now 🚀
+              Upload & Try On Now 
             </button>
           </Link>
         </section>
