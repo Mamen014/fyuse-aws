@@ -128,7 +128,7 @@ export default function Home() {
       </nav>
 
       <main className="mt-10">
-        <section className="pt-10 pb-8 container mx-auto px-6 py-16 flex flex-col md:flex-row items-center justify-between">
+        <section className="pt-10 pb-8 container mx-auto px-6 py-16 flex flex-col md:flex-row items-center md:items-start justify-center gap-10">
           <div className="md:w-1/2 space-y-6 text-center md:text-left">
             <h1 className="text-5xl font-extrabold text-white leading-tight">
             For You Style!
