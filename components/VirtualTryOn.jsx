@@ -133,7 +133,7 @@ const VirtualTryOn = () => {
   const handleSubmit = async () => {
     if (!userImage || !apparelImage) return setError("Please upload both user and apparel images.");
     if (!agreeToPrivacy) return setError("You must agree to the Privacy Policy.");
-    if (!isAuthenticated) return setIsLoginModalOpen(true);
+    if (!user) return setIsLoginModalOpen(true);
     if (tryOnCount >= 3) return setShowPricingPlans(true);
 
     try {
@@ -170,7 +170,7 @@ const VirtualTryOn = () => {
 
   const handleMatchingAnalysis = async () => {
     if (!window.generatedImageUrl) return setError("Missing generated try-on image.");
-    if (!isAuthenticated) return setIsLoginModalOpen(true);
+    if (!user) return setIsLoginModalOpen(true);
 
     try {
       setLoading(true);
@@ -195,7 +195,7 @@ const VirtualTryOn = () => {
 
   const aloneMatchingAnalysis = async () => {
     if (!userImage || !apparelImage) return setError("Please upload both images.");
-    if (!isAuthenticated) return setIsLoginModalOpen(true);
+    if (!user) return setIsLoginModalOpen(true);
     try {
       setLoading(true);
       setMatchingAnalysis(null);
