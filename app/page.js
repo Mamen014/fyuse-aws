@@ -92,7 +92,7 @@ const logoutUrl = `https://ap-southeast-2imonu7fwb.auth.ap-southeast-2.amazoncog
   }
 
   return (
-    <div>
+    <div className="flex items-center gap-4">
       <button
         onClick={() => auth.signinRedirect()}
         className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded"
@@ -117,7 +117,7 @@ export default function Home() {
       <nav className="fixed top-0 left-0 w-full bg-gradient-to-b from-[#0f0c29] via-[#302b63] to-[#24243e] z-50 shadow-md">
         <div className="container mx-auto px-6 py-4 flex justify-between items-center">
           {/* Logo */}
-          <div className="bg-[#1a1a1a] rounded-full px-4 py-2 shadow-sm">
+          <div>
             <h1 className="text-xl font-bold text-white">FYUSE</h1>
           </div>
 
@@ -173,10 +173,10 @@ export default function Home() {
         )}
       </nav>
 
-      <main className="mt-10">
+      <main className="mt-10 bg-[#1a1a2f]">
         {/* Section: Digital Fitting Room + Personalized Styling Tips */}
         <section className="pt-10 pb-8 container mx-auto px-6 py-16 flex flex-col md:flex-row items-center justify-between gap-10">
-          {/* Middle Column: Digital Fitting Room */}
+          {/* Left Column: Digital Fitting Room */}
           <div className="md:w-1/2 mt-10 md:mt-0" id="app">
             <VirtualTryOnWrapper />
           </div>
@@ -190,10 +190,10 @@ export default function Home() {
         {/* Section: Call to Action */}
         <section className="bg-[#1a1a2f] py-20 text-center px-6">
           <h2 className="text-4xl font-bold mb-4 text-white">
-            Start Your Style Transformation Now
+            For You Style!
           </h2>
-          <p className="text-purple-200 mb-8 max-w-2xl mx-auto">
-            Be among the first to experience how AI can revolutionize how you try on clothes. It's fast, fun, and futuristic.
+          <p className="text-white-200 mb-8 max-w-2xl mx-auto">
+          Discover a smarter way to try on outfits. FYUSE helps you look your best without spending hours in shopping malls.
           </p>
           <Link href="#app" passHref>
             <button
@@ -206,14 +206,14 @@ export default function Home() {
         </section>
       </main>
 
-      <footer className="bg-[#0f0c29] border-t border-gray-700 py-8 text-center text-purple-200">
+      <footer className="bg-gradient-to-b from-[#0f0c29] via-[#302b63] to-[#24243e] py-8 text-center text-white-200">
         <p>&copy; 2025 FYUSE. All rights reserved.</p>
         <div className="mt-4 flex justify-center space-x-6">
           <a href="https://www.instagram.com/fyuse.id/" className="hover:text-white">Instagram</a>
         </div>
         <div className="mt-6">
           <Link href="/contact">
-            <button className="text-white hover:text-purple-300 text-sm underline">
+            <button className="text-white hover:text-white-300 text-sm underline">
               Contact Us
             </button>
           </Link>

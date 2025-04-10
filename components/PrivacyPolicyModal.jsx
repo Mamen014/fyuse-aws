@@ -19,8 +19,8 @@ export default function PrivacyPolicyModal({ isOpen, onClose }) {
         </button>
 
         {/* Modal Content */}
-        <h1 className="text-3xl sm:text-4xl font-bold mb-6 text-[#F38980]">
-          FYUSE Web App – Syarat dan Ketentuan Pengguna
+        <h1 className="text-3xl sm:text-4xl font-bold mb-6 text-[#a569bd]">
+          FYUSE – Syarat dan Ketentuan Pengguna
         </h1>
         <div className="prose prose-lg max-w-none text-gray-300 space-y-4">
           <div className="text-lg">Terakhir Diperbarui: [09-April-2025]</div>

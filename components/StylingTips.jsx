@@ -20,7 +20,7 @@ const OCCASIONS = ['casual', 'business casual', 'formal', 'evening/party', 'spor
 export default function StylingTips() {
   const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const [agreeToPrivacy, setAgreeToPrivacy] = useState(true); // or false if default
+  const [agreeToPrivacy, setAgreeToPrivacy] = useState(false); // or false if default
 
   const { user, signinRedirect } = useAuth();
   const userEmail = user?.profile?.email;
@@ -94,7 +94,7 @@ export default function StylingTips() {
 
   return (
     <>
-      <section className="bg-[#1a1a2f] text-white px-6 py-12 rounded-xl max-w-3xl mx-auto my-12 shadow-xl">
+      <section className="bg-[#1a1a2f] text-white px-6 py-12">
         <h2 className="text-3xl font-bold mb-6 text-center">Personalized Styling Tips</h2>
 
         <div className="flex justify-center gap-6 mb-6">
@@ -127,7 +127,7 @@ export default function StylingTips() {
               <select
                 value={gender}
                 onChange={(e) => setGender(e.target.value)}
-                className="w-full p-2 rounded bg-[#1f1f2e] text-white"
+                className="w-full p-2 rounded bg-[#848CB1] text-white"
               >
                 <option value="female">Female</option>
                 <option value="male">Male</option>
@@ -138,7 +138,7 @@ export default function StylingTips() {
               <label className="block mb-1">Body Shape</label>
               <select
                 name="bodyShape"
-                className="w-full p-2 rounded bg-[#1f1f2e] text-white"
+                className="w-full p-2 rounded bg-[#848CB1] text-white"
               >
                 {BODY_SHAPES[gender].map((shape) => (
                   <option key={shape} value={shape}>
@@ -152,7 +152,7 @@ export default function StylingTips() {
               <label className="block mb-1">Skin Tone</label>
               <select
                 name="skinTone"
-                className="w-full p-2 rounded bg-[#1f1f2e] text-white"
+                className="w-full p-2 rounded bg-[#848CB1] text-white"
               >
                 {SKIN_TONES.map((tone) => (
                   <option key={tone} value={tone}>
@@ -169,7 +169,7 @@ export default function StylingTips() {
           <select
             value={selectedOccasion}
             onChange={(e) => setSelectedOccasion(e.target.value)}
-            className="w-full p-2 rounded bg-[#1f1f2e] text-white"
+            className="w-full p-2 rounded bg-[#848CB1] text-white"
           >
             {OCCASIONS.map((o) => (
               <option key={o} value={o}>

@@ -232,7 +232,7 @@ const VirtualTryOn = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center font-sans bg-[#1a1a2f] rounded-xl">
+    <div className="bg-[#1a1a2f] text-white px-6">
       <header className="text-center mb-8">
         <h1 className="text-4xl font-bold text-gray-100">Digital Fitting Room</h1>
         <p className="text-gray-300 mt-2">Experience the perfect fit.</p>
@@ -247,11 +247,11 @@ const VirtualTryOn = () => {
       )}
   
       {!showPricingPlans && (
-        <div className="bg-[#1a1a2f] w-full max-w-4xl rounded-lg shadow-md p-8 space-y-6">
+        <div className="bg-[#1a1a2f] w-full max-w-4xl space-y-6">
           <h2 className="text-2xl font-medium text-gray-100 text-center mb-4">Upload Your Photos</h2>
   
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="border border-gray-700 rounded-lg p-6 text-center">
+            <div className="border border-[#848CB1]-700 rounded-lg p-6 text-center">
               <h3 className="text-lg font-medium text-gray-100 mb-4">Your Photo</h3>
               <input type="file" accept="image/*" onChange={handleUserImageChange} className="hidden" id="userPhoto" />
               <label htmlFor="userPhoto" className="cursor-pointer">
@@ -265,7 +265,7 @@ const VirtualTryOn = () => {
               </label>
             </div>
   
-            <div className="border border-gray-700 rounded-lg p-6 text-center">
+            <div className="border border-[#848CB1]-700 rounded-lg p-6 text-center">
               <h3 className="text-lg font-medium text-gray-100 mb-4">Clothing Item</h3>
               <input type="file" accept="image/*" onChange={handleApparelImageChange} className="hidden" id="apparelPhoto" />
               <label htmlFor="apparelPhoto" className="cursor-pointer">
@@ -315,7 +315,7 @@ const VirtualTryOn = () => {
               }}
               disabled={!agreeToPrivacy}
               className={`px-6 py-3 rounded-lg font-medium text-white ${
-                agreeToPrivacy ? "bg-gradient-to-r from-cyan-600 to-indigo-500 hover:scale-105" : "bg-gray-500 cursor-not-allowed"
+                agreeToPrivacy ? "bg-gradient-to-r from-indigo-500 to-pink-600 hover:scale-105" : "bg-gray-500 cursor-not-allowed"
               }`}
             >
               Try-On
