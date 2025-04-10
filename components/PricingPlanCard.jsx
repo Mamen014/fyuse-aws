@@ -63,7 +63,7 @@ export default function PricingPlans({ isOpen, onSelectPlan, onClose }) {
   return (
     <>
       <div className="fixed inset-0 z-50 bg-black bg-opacity-70 flex justify-center items-center overflow-y-auto">
-        <div className="bg-[#0f0f1a] text-white rounded-3xl p-8 max-w-7xl w-full mx-4 shadow-2xl relative">
+        <div className="bg-[#0f0f1a] text-white rounded-3xl p-8 max-w-7xl w-full mx-4 shadow-2xl relative overflow-y-auto max-h-[90vh]">
           {/* Close Modal */}
           <button
             onClick={onClose}
@@ -91,7 +91,7 @@ export default function PricingPlans({ isOpen, onSelectPlan, onClose }) {
                   {/* Features */}
                   <ul className="mt-4 text-sm md:text-base text-purple-200 list-disc ml-6 space-y-2">
                     {plan.features.map((feature, i) => (
-                      <li key={i}>✅ {feature}</li>
+                      <li key={i}>{feature}</li>
                     ))}
                   </ul>
 

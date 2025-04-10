@@ -88,6 +88,7 @@ body {
   z-index: 40; /* Background overlay behind the modal */
 }
 
+
 /* Responsive Design */
 @media (max-width: 768px) {
   html,
@@ -148,7 +149,24 @@ body {
   }
 }
 
+@media (max-width: 640px) {
+  .modal-content {
+    padding: 1rem !important;
+    border-radius: 1rem;
+  }
+
+  select,
+  button {
+    font-size: 0.875rem;
+  }
+}
+
 .touch-target {
   min-width: 48px;
   min-height: 48px;
+}
+
+.VirtualTryOnWrapper,
+.StylingTips {
+  width: 100%;
 }

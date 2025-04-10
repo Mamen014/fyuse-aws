@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link.js';
 import VirtualTryOnWrapper from '../components/VirtualTryOnWrapper';
 import { useAuth } from 'react-oidc-context';
+import StylingTips from '@/components/StylingTips';
 
 function AuthActionsInNavbar() {
   const auth = useAuth();
@@ -173,19 +174,24 @@ export default function Home() {
       </nav>
 
       <main className="mt-10">
-        <section className="pt-10 pb-8 container mx-auto px-6 py-16 flex flex-col md:flex-row items-center md:items-start justify-center gap-10">
-          <div className="md:w-1/2 space-y-6 text-center md:text-left">
-            <h1 className="text-5xl font-extrabold text-white leading-tight">
-            For You Style!
-            </h1>
-          </div>
+        {/* Section: Digital Fitting Room + Personalized Styling Tips */}
+        <section className="pt-10 pb-8 container mx-auto px-6 py-16 flex flex-col md:flex-row items-center justify-between gap-10">
+          {/* Middle Column: Digital Fitting Room */}
           <div className="md:w-1/2 mt-10 md:mt-0" id="app">
             <VirtualTryOnWrapper />
           </div>
+
+          {/* Right Column: Personalized Styling Tips */}
+          <div className="md:w-1/2">
+            <StylingTips />
+          </div>
         </section>
 
+        {/* Section: Call to Action */}
         <section className="bg-[#1a1a2f] py-20 text-center px-6">
-          <h2 className="text-4xl font-bold mb-4 text-white">Start Your Style Transformation Now</h2>
+          <h2 className="text-4xl font-bold mb-4 text-white">
+            Start Your Style Transformation Now
+          </h2>
           <p className="text-purple-200 mb-8 max-w-2xl mx-auto">
             Be among the first to experience how AI can revolutionize how you try on clothes. It's fast, fun, and futuristic.
           </p>
@@ -194,7 +200,7 @@ export default function Home() {
               type="button"
               className="bg-gradient-to-r from-purple-700 to-indigo-600 text-white px-6 py-3 rounded-full text-lg shadow-lg transition-transform transform hover:scale-105"
             >
-              Upload & Try On Now 
+              Upload & Try On Now
             </button>
           </Link>
         </section>

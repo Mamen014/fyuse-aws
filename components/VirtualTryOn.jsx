@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useAuth } from "react-oidc-context";
 import PricingPlans from "@/components/PricingPlanCard";
-import StylingTips from "@/components/StylingTips";
 import AnalysisModal from "@/components/AnalysisModal";
 import PrivacyPolicyModal from "@/components/PrivacyPolicyModal";
 import LoginModal from "@/components/LoginModal"
@@ -36,7 +35,6 @@ const VirtualTryOn = () => {
   const [agreeToPrivacy, setAgreeToPrivacy] = useState(false);
 
   const [showPricingPlans, setShowPricingPlans] = useState(false);
-  const [showStylingTips, setShowStylingTips] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [matchingAnalysis, setMatchingAnalysis] = useState(null);
   const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
@@ -234,7 +232,7 @@ const VirtualTryOn = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center font-sans bg-gray-900">
+    <div className="min-h-screen flex flex-col items-center justify-center font-sans bg-[#1a1a2f] rounded-xl">
       <header className="text-center mb-8">
         <h1 className="text-4xl font-bold text-gray-100">Digital Fitting Room</h1>
         <p className="text-gray-300 mt-2">Experience the perfect fit.</p>
@@ -317,24 +315,10 @@ const VirtualTryOn = () => {
               }}
               disabled={!agreeToPrivacy}
               className={`px-6 py-3 rounded-lg font-medium text-white ${
-                agreeToPrivacy ? "bg-blue-600 hover:bg-blue-700" : "bg-gray-500 cursor-not-allowed"
+                agreeToPrivacy ? "bg-gradient-to-r from-cyan-600 to-indigo-500 hover:scale-105" : "bg-gray-500 cursor-not-allowed"
               }`}
             >
               Try-On
-            </button>
-  
-            {/* Get Styling Tips Button */}
-            <button
-              onClick={() => {
-                if (!user) return setIsLoginModalOpen(true); // Show Login Modal
-                setShowStylingTips(!showStylingTips);
-              }}
-              disabled={!agreeToPrivacy}
-              className={`px-6 py-3 rounded-lg font-medium text-white ${
-                agreeToPrivacy ? "bg-green-600 hover:bg-green-700" : "bg-gray-500 cursor-not-allowed"
-              }`}
-            >
-              Get Styling Tips
             </button>
   
             {/* Fit Analysis Button */}
@@ -346,7 +330,7 @@ const VirtualTryOn = () => {
               }}
               disabled={!agreeToPrivacy}
               className={`px-6 py-3 rounded-lg font-medium text-white ${
-                agreeToPrivacy ? "bg-purple-600 hover:bg-purple-700" : "bg-gray-500 cursor-not-allowed"
+                agreeToPrivacy ? "bg-gradient-to-r from-pink-600 to-indigo-500 hover:scale-105" : "bg-gray-500 cursor-not-allowed"
               }`}
             >
               Fit Analysis
@@ -367,9 +351,7 @@ const VirtualTryOn = () => {
           {error && <p className="text-red-500 text-center">{error}</p>}
         </div>
       )}
-  
-      {showStylingTips && user && agreeToPrivacy && <StylingTips userEmail={userEmail} />}
-  
+    
       {resultImageUrl && (
         <div className="mt-8 w-full max-w-4xl bg-white rounded-lg shadow-md p-8 space-y-6">
           <h2 className="text-2xl font-medium text-gray-800 text-center">Try-On Result</h2>
