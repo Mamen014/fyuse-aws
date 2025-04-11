@@ -1,9 +1,12 @@
+"use client";
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import LearnMoreModal from "./LearnMoreModal";
 import LearnMoreLite from "./LearnMoreLite";
 import LearnMorePro from "./LearnMorePro";
 import LearnMoreElite from "./LearnMoreElite";
+import { trackEvent } from "@/lib/trackevent";
 
 export default function PricingPlans({ isOpen, onSelectPlan, onClose }) {
   const [openLearnMoreIndex, setOpenLearnMoreIndex] = useState(null);
@@ -11,7 +14,6 @@ export default function PricingPlans({ isOpen, onSelectPlan, onClose }) {
   if (!isOpen) return null;
 
   const plans = [
-    // New Basic Plan
     {
       name: "Basic Plan",
       price: "Free Forever",
@@ -60,21 +62,41 @@ export default function PricingPlans({ isOpen, onSelectPlan, onClose }) {
     },
   ];
 
+  // Track plan selection event, then call the provided callback.
+  const handlePlanSelect = async (planName) => {
+    try {
+      await trackEvent("pricing-plan-selected", { plan: planName });
+    } catch (error) {
+      console.error("Error tracking plan selection", error);
+    }
+    onSelectPlan(planName);
+  };
+
+  // Track "Learn More" event when the button is clicked.
+  const handleLearnMore = async (index) => {
+    try {
+      await trackEvent("pricing-plan-learn-more", { plan: plans[index].name });
+    } catch (error) {
+      console.error("Error tracking learn more", error);
+    }
+    setOpenLearnMoreIndex(index);
+  };
+
   return (
     <>
       <div className="fixed inset-0 z-50 bg-black bg-opacity-70 flex justify-center items-center overflow-y-auto">
         <div className="bg-[#0f0f1a] text-white rounded-3xl p-8 max-w-7xl w-full mx-4 shadow-2xl relative">
-          {/* Close Modal */}
           <button
+            type="button"
             onClick={onClose}
             className="absolute top-5 right-6 text-white text-3xl font-bold hover:text-purple-300 z-10"
             aria-label="Close Pricing Modal"
           >
             &times;
           </button>
-
-          <h2 className="text-4xl font-bold text-center mb-8">Choose Your Plan</h2>
-
+          <h2 className="text-4xl font-bold text-center mb-8">
+            Choose Your Plan
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-8">
             {plans.map((plan, index) => (
               <div
@@ -82,38 +104,33 @@ export default function PricingPlans({ isOpen, onSelectPlan, onClose }) {
                 className="border border-purple-600 bg-[#1a1a2e] rounded-xl p-6 shadow-lg flex flex-col justify-between"
               >
                 <div>
-                  {/* Plan Name */}
-                  <h3 className="text-2xl font-semibold text-center">{plan.name}</h3>
-
-                  {/* Price */}
-                  <p className="text-xl text-purple-300 mt-2 text-center">{plan.price}</p>
-
-                  {/* Features */}
+                  <h3 className="text-2xl font-semibold text-center">
+                    {plan.name}
+                  </h3>
+                  <p className="text-xl text-purple-300 mt-2 text-center">
+                    {plan.price}
+                  </p>
                   <ul className="mt-4 text-base text-purple-200 list-disc ml-6 space-y-2">
                     {plan.features.map((feature, i) => (
                       <li key={i}>✅ {feature}</li>
                     ))}
                   </ul>
-
-                  {/* Promo */}
                   {plan.promo && (
-                    <p className="mt-3 text-yellow-400 text-sm text-center">{plan.promo}</p>
+                    <p className="mt-3 text-yellow-400 text-sm text-center">
+                      {plan.promo}
+                    </p>
                   )}
                 </div>
-
-                {/* Buttons */}
                 <div className="mt-6 space-y-3">
                   <Button
-                    onClick={() => onSelectPlan(plan.name)}
+                    onClick={() => handlePlanSelect(plan.name)}
                     className="w-full bg-gradient-to-r from-purple-700 to-indigo-600 text-white rounded-full text-base hover:scale-[1.02] transition-transform"
                   >
                     {plan.buttonText}
                   </Button>
-
-                  {/* Conditionally render the "Learn More" button */}
                   {plan.LearnMoreComponent && (
                     <Button
-                      onClick={() => setOpenLearnMoreIndex(index)}
+                      onClick={() => handleLearnMore(index)}
                       className="w-full text-white border-purple-500 hover:bg-purple-800 hover:border-purple-400 rounded-full text-base transition-colors"
                     >
                       Learn More
@@ -125,15 +142,14 @@ export default function PricingPlans({ isOpen, onSelectPlan, onClose }) {
           </div>
         </div>
       </div>
-
-      {/* Learn More Modal */}
-      {openLearnMoreIndex !== null && plans[openLearnMoreIndex]?.LearnMoreComponent && (
-        <LearnMoreModal
-          isOpen={true}
-          onClose={() => setOpenLearnMoreIndex(null)}
-          Component={plans[openLearnMoreIndex].LearnMoreComponent}
-        />
-      )}
+      {openLearnMoreIndex !== null &&
+        plans[openLearnMoreIndex]?.LearnMoreComponent && (
+          <LearnMoreModal
+            isOpen={true}
+            onClose={() => setOpenLearnMoreIndex(null)}
+            Component={plans[openLearnMoreIndex].LearnMoreComponent}
+          />
+        )}
     </>
   );
 }
