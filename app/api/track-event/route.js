@@ -7,10 +7,10 @@ import {
 } from "@aws-sdk/client-cognito-identity";
 import { decodeJwt } from "jose";
 
-const region = process.env.AWS_REGION;
+const region = process.env.REGION;
 const streamName = process.env.KINESIS_STREAM_NAME;
 const identityPoolId = process.env.COGNITO_IDENTITY_POOL_ID;
-const oidcProvider = process.env.OIDC_PROVIDER; // e.g., "oidc.yourprovider.com"
+const oidcProvider = process.env.OIDC_PROVIDER;
 
 // Function to retrieve temporary credentials from Cognito Identity Pools using the OIDC token
 async function getTemporaryCredentials(oidcToken) {
