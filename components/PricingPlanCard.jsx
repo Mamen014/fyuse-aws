@@ -1,3 +1,5 @@
+'use client';
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import LearnMoreModal from "./LearnMoreModal";
@@ -16,7 +18,7 @@ export default function PricingPlans({ isOpen, onSelectPlan, onClose }) {
       name: "Basic Plan",
       price: "Free Forever",
       features: [
-        "5 Try-Ons per Month + Matching Analysis",
+        "3 Try-Ons per Month + Matching Analysis",
         "Styling Tips",
         "15 Styles in the Digital Wardrobe",
       ],
@@ -59,6 +61,44 @@ export default function PricingPlans({ isOpen, onSelectPlan, onClose }) {
       LearnMoreComponent: LearnMoreElite,
     },
   ];
+
+  // Track plan selection event using Google Analytics
+  const handlePlanSelect = (planName) => {
+    try {
+      // Identify the user (optional but recommended)
+      const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
+      if (loggedInUser) {
+        window.gtag("set", { user_id: loggedInUser.profile?.sub || loggedInUser.email });
+      }
+
+      // Track the event
+      window.gtag("event", "select_plan", {
+        plan: planName,
+      });
+    } catch (error) {
+      console.error("Error tracking plan selection", error);
+    }
+    onSelectPlan(planName);
+  };
+
+  // Track "Learn More" event using Google Analytics
+  const handleLearnMore = (index) => {
+    try {
+      // Identify the user (optional but recommended)
+      const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
+      if (loggedInUser) {
+        window.gtag("set", { user_id: loggedInUser.profile?.sub || loggedInUser.email });
+      }
+
+      // Track the event
+      window.gtag("event", "learn_more", {
+        plan: plans[index].name,
+      });
+    } catch (error) {
+      console.error("Error tracking learn more", error);
+    }
+    setOpenLearnMoreIndex(index);
+  };
 
   return (
     <>
@@ -104,7 +144,7 @@ export default function PricingPlans({ isOpen, onSelectPlan, onClose }) {
                 {/* Buttons */}
                 <div className="mt-6 space-y-3">
                   <Button
-                    onClick={() => onSelectPlan(plan.name)}
+                    onClick={() => handlePlanSelect(plan.name)}
                     className="w-full bg-gradient-to-r from-purple-700 to-indigo-600 text-white rounded-full text-sm md:text-base hover:scale-[1.02] transition-transform"
                   >
                     {plan.buttonText}
@@ -113,7 +153,7 @@ export default function PricingPlans({ isOpen, onSelectPlan, onClose }) {
                   {/* Conditionally render the "Learn More" button */}
                   {plan.LearnMoreComponent && (
                     <Button
-                      onClick={() => setOpenLearnMoreIndex(index)}
+                      onClick={() => handleLearnMore(index)}
                       className="w-full text-white border-purple-500 hover:bg-purple-800 hover:border-purple-400 rounded-full text-sm md:text-base transition-colors"
                     >
                       Learn More

@@ -11,7 +11,7 @@ const AnalysisModal = ({ isOpen, onClose, analysisData, loading }) => {
     clothingFit = "unknown",
     clothingColor = "unknown",
     matchingPercentage = "0",
-    analysisText = "No detailed analysis available.",
+    DescriptionRaw = "No detailed analysis available.",
   } = analysisData || {};
 
   const matchingPercentageNum = parseInt(matchingPercentage, 10) || 0;
@@ -126,7 +126,7 @@ const AnalysisModal = ({ isOpen, onClose, analysisData, loading }) => {
             {/* Matching Description */}
             <div className="bg-gray-100 p-4 rounded mt-4">
               <h3 className="text-gray-700 font-medium mb-1">Matching Description</h3>
-              <p className="text-gray-600 whitespace-pre-line">{analysisText}</p>
+              <p className="text-gray-600 whitespace-pre-line">{DescriptionRaw}</p>
             </div>
           </div>
         )}

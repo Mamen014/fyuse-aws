@@ -280,10 +280,6 @@ const VirtualTryOn = () => {
             </div>
           </div>
   
-          <p className="text-sm text-center text-gray-300">
-            You have used {tryOnCount} out of 3 try-ons this month.
-          </p>
-  
           <div className="flex items-center justify-center mt-2 space-x-2">
             <input
               type="checkbox"

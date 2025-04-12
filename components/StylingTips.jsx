@@ -16,21 +16,22 @@ const BODY_SHAPES = {
 
 const SKIN_TONES = ['fair', 'light', 'medium', 'tan', 'deep'];
 const OCCASIONS = ['casual', 'business casual', 'formal', 'evening/party', 'sport/active'];
+const STYLE_OPTIONS = ['Casual', 'Formal', 'Sporty', 'Bohemian', 'Chic'];
 
 export default function StylingTips() {
   const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const [agreeToPrivacy, setAgreeToPrivacy] = useState(false); // or false if default
+  const [agreeToPrivacy, setAgreeToPrivacy] = useState(false);
+  const [selectedStyles, setSelectedStyles] = useState([]);
 
   const { user, signinRedirect } = useAuth();
   const userEmail = user?.profile?.email;
   const handleSignUp = () => {
-    const clientId = process.env.NEXT_PUBLIC_CLIENTID
+    const clientId = process.env.NEXT_PUBLIC_CLIENTID;
     const domain = process.env.NEXT_PUBLIC_DOMAIN;
     const redirectUri = typeof window !== 'undefined' ? window.location.origin + '/' : 'http://localhost:3000/';
     const signUpUrl = `https://${domain}/signup?client_id=${clientId}&response_type=code&scope=openid+profile+email&redirect_uri=${encodeURIComponent(redirectUri)}`;
-  
-    sessionStorage.setItem('cameFromSignup', 'true'); // 🔑 Set flag
+    sessionStorage.setItem('cameFromSignup', 'true');
     window.location.href = signUpUrl;
   };
 
@@ -41,6 +42,21 @@ export default function StylingTips() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleStyleToggle = (style) => {
+    setSelectedStyles((prev) =>
+      prev.includes(style) ? prev.filter((s) => s !== style) : [...prev, style]
+    );
+  };
+
+  const collectUserData = () => ({
+    bodyShape: document.querySelector('select[name="bodyShape"]')?.value,
+    skinTone: document.querySelector('select[name="skinTone"]')?.value,
+    gender,
+    preferences: {
+      style: selectedStyles
+    }
+  });
 
   const handleGetStylingTips = async () => {
     if (!user) {
@@ -54,20 +70,12 @@ export default function StylingTips() {
       setError(null);
       setStylingTips(null);
 
-      const userData = {
-        bodyShape: document.querySelector('select[name="bodyShape"]')?.value,
-        skinTone: document.querySelector('select[name="skinTone"]')?.value,
-        gender,
-        preferences: {
-          style: ['business casual', 'minimalist'],
-        },
-      };
-
+      const userData = collectUserData();
       const payload = {
         userEmail,
         useSavedPreferences,
         occasion: selectedOccasion,
-        ...(useSavedPreferences ? {} : { userData }),
+        ...(useSavedPreferences ? {} : { userData })
       };
 
       const response = await axios.post(`${API_BASE_URL}/styletips`, payload);
@@ -91,6 +99,30 @@ export default function StylingTips() {
       localStorage.setItem(`privacyAgreement:${userEmail}`, checked.toString());
     }
   };
+
+const handleLikeStyle = async (style) => {
+  if (!userEmail || !style) return;
+  try {
+    const payload = {
+      userEmail,
+      likedStyle: [style.toLowerCase()],
+      ...(useSavedPreferences
+        ? {
+            userData: {
+              preferences: {
+                style: selectedStyles,
+              },
+            },
+          }
+        : { userData: collectUserData() }),
+    };
+
+    await axios.post(`${API_BASE_URL}/styletips`, payload);
+  } catch (err) {
+    console.error("Error saving liked style:", err);
+  }
+};
+
 
   return (
     <>
@@ -121,47 +153,64 @@ export default function StylingTips() {
         </div>
 
         {!useSavedPreferences && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-            <div>
-              <label className="block mb-1">Gender</label>
-              <select
-                value={gender}
-                onChange={(e) => setGender(e.target.value)}
-                className="w-full p-2 rounded bg-[#848CB1] text-white"
-              >
-                <option value="female">Female</option>
-                <option value="male">Male</option>
-              </select>
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+              <div>
+                <label className="block mb-1">Gender</label>
+                <select
+                  value={gender}
+                  onChange={(e) => setGender(e.target.value)}
+                  className="w-full p-2 rounded bg-[#848CB1] text-white"
+                >
+                  <option value="female">Female</option>
+                  <option value="male">Male</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block mb-1">Body Shape</label>
+                <select
+                  name="bodyShape"
+                  className="w-full p-2 rounded bg-[#848CB1] text-white"
+                >
+                  {BODY_SHAPES[gender].map((shape) => (
+                    <option key={shape} value={shape}>{shape}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block mb-1">Skin Tone</label>
+                <select
+                  name="skinTone"
+                  className="w-full p-2 rounded bg-[#848CB1] text-white"
+                >
+                  {SKIN_TONES.map((tone) => (
+                    <option key={tone} value={tone}>{tone}</option>
+                  ))}
+                </select>
+              </div>
             </div>
 
-            <div>
-              <label className="block mb-1">Body Shape</label>
-              <select
-                name="bodyShape"
-                className="w-full p-2 rounded bg-[#848CB1] text-white"
-              >
-                {BODY_SHAPES[gender].map((shape) => (
-                  <option key={shape} value={shape}>
-                    {shape}
-                  </option>
+            <div className="mb-6">
+              <label className="block mb-2">Style Preferences</label>
+              <div className="flex flex-wrap gap-2">
+                {STYLE_OPTIONS.map((style) => (
+                  <button
+                    key={style}
+                    onClick={() => handleStyleToggle(style)}
+                    className={`px-4 py-2 rounded-full text-sm font-medium border ${
+                      selectedStyles.includes(style)
+                        ? 'bg-purple-600 border-purple-600 text-white'
+                        : 'bg-transparent border-gray-400 text-gray-200'
+                    }`}
+                  >
+                    {style}
+                  </button>
                 ))}
-              </select>
+              </div>
             </div>
-
-            <div>
-              <label className="block mb-1">Skin Tone</label>
-              <select
-                name="skinTone"
-                className="w-full p-2 rounded bg-[#848CB1] text-white"
-              >
-                {SKIN_TONES.map((tone) => (
-                  <option key={tone} value={tone}>
-                    {tone}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
+          </>
         )}
 
         <div className="mb-6">
@@ -172,74 +221,69 @@ export default function StylingTips() {
             className="w-full p-2 rounded bg-[#848CB1] text-white"
           >
             {OCCASIONS.map((o) => (
-              <option key={o} value={o}>
-                {o}
-              </option>
+              <option key={o} value={o}>{o}</option>
             ))}
           </select>
         </div>
 
         <div className="flex items-center justify-center mt-2 space-x-2">
-            <input
-              type="checkbox"
-              id="privacyConsent"
-              checked={agreeToPrivacy}
-              onChange={handlePrivacyCheckbox}
-              className="w-4 h-4 accent-blue-500"
-            />
-            <label htmlFor="privacyConsent" className="text-sm text-gray-300">
-              I agree to the{" "}
-              <button
-                onClick={(e) => {
-                  e.preventDefault(); // Prevent default link behavior
-                  setIsPrivacyModalOpen(true); // Open the Privacy Policy Modal
-                }}
-                className="underline text-blue-400 cursor-pointer"
-              >
-                Privacy Policy Agreement
-              </button>
-            </label>
+          <input
+            type="checkbox"
+            id="privacyConsent"
+            checked={agreeToPrivacy}
+            onChange={handlePrivacyCheckbox}
+            className="w-4 h-4 accent-blue-500"
+          />
+          <label htmlFor="privacyConsent" className="text-sm text-gray-300">
+            I agree to the{' '}
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                setIsPrivacyModalOpen(true);
+              }}
+              className="underline text-blue-400 cursor-pointer"
+            >
+              Privacy Policy Agreement
+            </button>
+          </label>
         </div>
 
         <div className="flex justify-center items-center mt-4 space-x-2">
-          {/* Get Styling Tips Button */}
-            <button
-              onClick={() => {
-                if (!user) return setIsLoginModalOpen(true); // Show Login Modal instead of signIn()
-                handleGetStylingTips(); // only call this if user is logged in
-              }}
-              disabled={!agreeToPrivacy}
-              className={`px-6 py-3 rounded-full font-medium text-white transition-transform shadow-md ${
-                agreeToPrivacy
-                  ? "bg-gradient-to-r from-purple-600 to-indigo-500 hover:scale-105"
-                  : "bg-gray-500 cursor-not-allowed"
-              }`}
-            >
-              {loading ? "Loading..." : "Get Styling Tips"}
-            </button>
+          <button
+            onClick={() => {
+              if (!user) return setIsLoginModalOpen(true);
+              handleGetStylingTips();
+            }}
+            disabled={!agreeToPrivacy}
+            className={`px-6 py-3 rounded-full font-medium text-white transition-transform shadow-md ${
+              agreeToPrivacy
+                ? 'bg-gradient-to-r from-purple-600 to-indigo-500 hover:scale-105'
+                : 'bg-gray-500 cursor-not-allowed'
+            }`}
+          >
+            {loading ? 'Loading...' : 'Get Styling Tips'}
+          </button>
 
-            {isPrivacyModalOpen && (
-              <PrivacyPolicyModal
-                isOpen={isPrivacyModalOpen}
-                onClose={() => setIsPrivacyModalOpen(false)}
-              />
-            )}
-  
-            {/* Login Modal */}
-            {isLoginModalOpen && (
-              <LoginModal
-                isOpen={isLoginModalOpen}
-                onClose={() => setIsLoginModalOpen(false)}
-                onSignIn={signinRedirect}
-                onSignUp={handleSignUp}
-              />
-            )}
+          {isPrivacyModalOpen && (
+            <PrivacyPolicyModal
+              isOpen={isPrivacyModalOpen}
+              onClose={() => setIsPrivacyModalOpen(false)}
+            />
+          )}
+
+          {isLoginModalOpen && (
+            <LoginModal
+              isOpen={isLoginModalOpen}
+              onClose={() => setIsLoginModalOpen(false)}
+              onSignIn={signinRedirect}
+              onSignUp={handleSignUp}
+            />
+          )}
         </div>
 
         {error && <p className="text-red-400 mt-4 text-center">{error}</p>}
       </section>
 
-      {/* Styling Tips Modal */}
       <Dialog
         open={isModalOpen}
         onClose={() => setIsModalOpen(false)}
@@ -250,8 +294,21 @@ export default function StylingTips() {
             <Dialog.Title className="text-xl font-bold mb-4">Your Styling Tips</Dialog.Title>
             <ul className="list-disc pl-6 space-y-2 text-purple-200">
               {stylingTips?.map((tip, index) => (
-                <li key={index}>
-                  <strong>{tip.style}:</strong> {tip.description}
+                <li key={index} className="flex items-center justify-between">
+                  <div>
+                    <strong>{tip.style}:</strong> {tip.description}
+                  </div>
+                  <button
+                    onClick={async () => {
+                      await handleLikeStyle(tip.style); // wait for backend save
+                      setStylingTips((prev) =>
+                        prev.filter((_, i) => i !== index) // remove the liked tip
+                      );
+                    }}
+                    className="px-3 py-1 rounded-full text-sm bg-gray-500 hover:bg-gray-600"
+                  >
+                    Like
+                  </button>
                 </li>
               ))}
             </ul>
