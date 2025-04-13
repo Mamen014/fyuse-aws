@@ -269,7 +269,8 @@ const VirtualTryOn = () => {
         onClose={() => setIsModalOpen(false)}
         analysisData={matchingAnalysis}
         loading={loading}
-        tryOnImage={resultImageUrl} // Pass the try-on image to the modal
+        tryOnImage={resultImageUrl} 
+        userEmail={session?.user?.email}
       />
 
       {isPrivacyModalOpen && (

@@ -163,7 +163,7 @@ const AnalysisModal = ({ isOpen, onClose, analysisData, loading, tryOnImage, use
               onClick={handleAddToCollection}
               disabled={!userEmail}
             >
-              Add to My Collection
+              Add to My Wardrobe
             </button>
             {/* Close Button */}
             <button
