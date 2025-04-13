@@ -92,7 +92,7 @@ const AnalysisModal = ({ isOpen, onClose, analysisData, loading, tryOnImage, use
         </button>
 
         {/* Main Content */}
-        {loading ? (
+        {loading || !tryOnImage ? (
           // Loading State
           <div className="flex flex-col items-center justify-center h-64">
             <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-[#FF6B6B]"></div>
@@ -155,7 +155,7 @@ const AnalysisModal = ({ isOpen, onClose, analysisData, loading, tryOnImage, use
         )}
 
         {/* Buttons */}
-        {!loading && (
+        {(!loading && tryOnImage) && (
           <div className="mt-6 flex justify-end gap-4">
             {/* Add to My Collection Button */}
             <button
