@@ -1,21 +1,24 @@
 'use client';
-
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useAuth } from 'react-oidc-context';
 import { Dialog } from '@headlessui/react';
 import PrivacyPolicyModal from "@/components/PrivacyPolicyModal";
-import LoginModal from "@/components/LoginModal"
+import LoginModal from "@/components/LoginModal";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
-
 const BODY_SHAPES = {
   male: ['trapezoid', 'triangle', 'inverted triangle', 'rectangle', 'round'],
   female: ['rectangle', 'inverted triangle', 'hourglass', 'pear', 'apple'],
 };
-
 const SKIN_TONES = ['fair', 'light', 'medium', 'tan', 'deep'];
-const OCCASIONS = ['casual', 'business casual', 'formal', 'evening/party', 'sport/active'];
+const OCCASIONS = [
+  'Work',
+  'Gym/Workout',
+  'Wedding',
+  'Outdoor Adventure',
+  'Date Night',
+];
 const STYLE_OPTIONS = ['Casual', 'Formal', 'Sporty', 'Bohemian', 'Chic'];
 
 export default function StylingTips() {
@@ -23,9 +26,9 @@ export default function StylingTips() {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [agreeToPrivacy, setAgreeToPrivacy] = useState(false);
   const [selectedStyles, setSelectedStyles] = useState([]);
-
   const { user, signinRedirect } = useAuth();
   const userEmail = user?.profile?.email;
+
   const handleSignUp = () => {
     const clientId = process.env.NEXT_PUBLIC_CLIENTID;
     const domain = process.env.NEXT_PUBLIC_DOMAIN;
@@ -79,6 +82,7 @@ export default function StylingTips() {
       };
 
       const response = await axios.post(`${API_BASE_URL}/styletips`, payload);
+
       if (Array.isArray(response.data?.stylingTips)) {
         setStylingTips(response.data.stylingTips);
         setIsModalOpen(true);
@@ -100,35 +104,34 @@ export default function StylingTips() {
     }
   };
 
-const handleLikeStyle = async (style) => {
-  if (!userEmail || !style) return;
-  try {
-    const payload = {
-      userEmail,
-      likedStyle: [style.toLowerCase()],
-      ...(useSavedPreferences
-        ? {
-            userData: {
-              preferences: {
-                style: selectedStyles,
+  const handleLikeStyle = async (style) => {
+    if (!userEmail || !style) return;
+
+    try {
+      const payload = {
+        userEmail,
+        likedStyle: [style.toLowerCase()],
+        ...(useSavedPreferences
+          ? {
+              userData: {
+                preferences: {
+                  style: selectedStyles,
+                },
               },
-            },
-          }
-        : { userData: collectUserData() }),
-    };
+            }
+          : { userData: collectUserData() }),
+      };
 
-    await axios.post(`${API_BASE_URL}/styletips`, payload);
-  } catch (err) {
-    console.error("Error saving liked style:", err);
-  }
-};
-
+      await axios.post(`${API_BASE_URL}/styletips`, payload);
+    } catch (err) {
+      console.error("Error saving liked style:", err);
+    }
+  };
 
   return (
     <>
       <section className="bg-[#1a1a2f] text-white px-6 py-12">
         <h2 className="text-3xl font-bold mb-6 text-center">Personalized Styling Tips</h2>
-
         <div className="flex justify-center gap-6 mb-6">
           <label className="flex items-center gap-2">
             <input
@@ -151,7 +154,6 @@ const handleLikeStyle = async (style) => {
             Enter new preferences
           </label>
         </div>
-
         {!useSavedPreferences && (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
@@ -166,7 +168,6 @@ const handleLikeStyle = async (style) => {
                   <option value="male">Male</option>
                 </select>
               </div>
-
               <div>
                 <label className="block mb-1">Body Shape</label>
                 <select
@@ -178,7 +179,6 @@ const handleLikeStyle = async (style) => {
                   ))}
                 </select>
               </div>
-
               <div>
                 <label className="block mb-1">Skin Tone</label>
                 <select
@@ -191,7 +191,6 @@ const handleLikeStyle = async (style) => {
                 </select>
               </div>
             </div>
-
             <div className="mb-6">
               <label className="block mb-2">Style Preferences</label>
               <div className="flex flex-wrap gap-2">
@@ -212,7 +211,6 @@ const handleLikeStyle = async (style) => {
             </div>
           </>
         )}
-
         <div className="mb-6">
           <label className="block mb-1">Occasion</label>
           <select
@@ -225,7 +223,6 @@ const handleLikeStyle = async (style) => {
             ))}
           </select>
         </div>
-
         <div className="flex items-center justify-center mt-2 space-x-2">
           <input
             type="checkbox"
@@ -247,43 +244,38 @@ const handleLikeStyle = async (style) => {
             </button>
           </label>
         </div>
-
         <div className="flex justify-center items-center mt-4 space-x-2">
           <button
             onClick={() => {
               if (!user) return setIsLoginModalOpen(true);
               handleGetStylingTips();
             }}
-            disabled={!agreeToPrivacy}
+            disabled={!agreeToPrivacy || loading}
             className={`px-6 py-3 rounded-full font-medium text-white transition-transform shadow-md ${
               agreeToPrivacy
                 ? 'bg-gradient-to-r from-purple-600 to-indigo-500 hover:scale-105'
                 : 'bg-gray-500 cursor-not-allowed'
             }`}
           >
-            {loading ? 'Loading...' : 'Get Styling Tips'}
+            {loading ? 'Generating...' : 'Get Styling Tips'}
           </button>
-
-          {isPrivacyModalOpen && (
-            <PrivacyPolicyModal
-              isOpen={isPrivacyModalOpen}
-              onClose={() => setIsPrivacyModalOpen(false)}
-            />
-          )}
-
-          {isLoginModalOpen && (
-            <LoginModal
-              isOpen={isLoginModalOpen}
-              onClose={() => setIsLoginModalOpen(false)}
-              onSignIn={signinRedirect}
-              onSignUp={handleSignUp}
-            />
-          )}
         </div>
-
         {error && <p className="text-red-400 mt-4 text-center">{error}</p>}
       </section>
 
+      {/* Loading Modal */}
+      {loading && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-[#1E1E2C] rounded-lg w-full max-w-md p-6 shadow-lg">
+            <div className="flex flex-col items-center justify-center h-48">
+              <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-[#FF6B6B]"></div>
+              <p className="text-gray-400 mt-4">Generating styling tips...</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Styling Tips Modal */}
       <Dialog
         open={isModalOpen}
         onClose={() => setIsModalOpen(false)}
@@ -323,6 +315,24 @@ const handleLikeStyle = async (style) => {
           </Dialog.Panel>
         </div>
       </Dialog>
+
+      {/* Privacy Policy Modal */}
+      {isPrivacyModalOpen && (
+        <PrivacyPolicyModal
+          isOpen={isPrivacyModalOpen}
+          onClose={() => setIsPrivacyModalOpen(false)}
+        />
+      )}
+
+      {/* Login Modal */}
+      {isLoginModalOpen && (
+        <LoginModal
+          isOpen={isLoginModalOpen}
+          onClose={() => setIsLoginModalOpen(false)}
+          onSignIn={signinRedirect}
+          onSignUp={handleSignUp}
+        />
+      )}
     </>
   );
 }

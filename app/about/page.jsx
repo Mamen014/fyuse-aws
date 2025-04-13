@@ -23,6 +23,15 @@ export default function About() {
           </p>
         </motion.div>
 
+        {/* Back to Home Button */}
+        <div className="flex justify-center mb-8">
+          <Link href="/" passHref>
+            <button className="bg-gradient-to-r from-indigo-500 to-blue-500 text-white px-6 py-3 rounded-full shadow-md hover:scale-105 transition-transform text-lg">
+              ← Back to Home
+            </button>
+          </Link>
+        </div>
+
         {/* Vision */}
         <section>
           <h2 className="text-2xl font-bold text-purple-300 mb-4">🌟 Our Vision</h2>

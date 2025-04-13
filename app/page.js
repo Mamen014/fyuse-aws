@@ -5,7 +5,7 @@ import Link from 'next/link';
 import VirtualTryOnWrapper from '../components/VirtualTryOnWrapper';
 import { useAuth } from 'react-oidc-context';
 import StylingTips from '@/components/StylingTips';
-import Script from 'next/script'; // Import the Script component
+import Script from 'next/script';
 
 function AuthActionsInNavbar() {
   const auth = useAuth();
@@ -20,7 +20,7 @@ function AuthActionsInNavbar() {
       redirectUri
     )}`;
 
-    sessionStorage.setItem('cameFromSignup', 'true'); // 🔑 Set flag
+    sessionStorage.setItem('cameFromSignup', 'true'); 
     window.location.href = signUpUrl;
   };
 
@@ -34,7 +34,6 @@ function AuthActionsInNavbar() {
     if (hasAuthCode && cameFromSignup && !localStorage.getItem('loggedInUser')) {
       alert('🎉 Signup complete! Now please log in to start using FYUSE.');
 
-      // Clean up
       sessionStorage.removeItem('cameFromSignup');
       searchParams.delete('code');
       const newUrl = `${window.location.origin}${window.location.pathname}?${searchParams.toString()}`;
@@ -91,7 +90,7 @@ function AuthActionsInNavbar() {
         </Link>
         <button
           onClick={handleSignOut}
-          className="bg-red-600 hover:bg-red-700 text-white text-sm px-4 py-2 rounded"
+          className="bg-gray-600 hover:bg-black-700 text-white text-sm px-4 py-2 rounded"
         >
           Sign Out
         </button>

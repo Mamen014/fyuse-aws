@@ -11,6 +11,11 @@ body {
   font-family: Arial, Helvetica, sans-serif;
   margin: 0; /* Remove default margins */
   padding: 0; /* Remove default padding */
+  font-size: 16px; /* Base font size */
+}
+
+* {
+  box-sizing: border-box; /* Ensure consistent sizing */
 }
 
 @layer base {
@@ -59,34 +64,6 @@ body {
     --radius: 0.5rem; /* Rounded corners */
   }
 
-  .dark {
-    --background: #1C0C1D; /* Dark purple */
-    --foreground: #F38980; /* Warm orange-red */
-
-    --card: #1B0D1E; /* Slightly lighter dark purple */
-    --card-foreground: #F38980; /* Warm orange-red */
-
-    --primary: #848CB1; /* Light blue */
-    --primary-foreground: #1C0C1D; /* Dark purple */
-
-    --secondary: #434259; /* Deep blue-purple */
-    --secondary-foreground: #F38980; /* Warm orange-red */
-
-    --muted: #1A0C1D; /* Very dark purple */
-    --muted-foreground: #8A4A57; /* Muted red-brown */
-
-    --accent: #F38980; /* Warm orange-red */
-    --accent-foreground: #1C0C1D; /* Dark purple */
-
-    --destructive: #8A4A57; /* Muted red-brown */
-    --destructive-foreground: #F38980; /* Warm orange-red */
-
-    --border: #1E111E; /* Dark purple */
-    --input: #1E0D1E; /* Similar dark purple */
-
-    --ring: #848CB1; /* Light blue */
-  }
-
   body {
     @apply bg-[#1C0C1D] text-[#F38980]; /* Background and text colors */
   }
@@ -100,6 +77,8 @@ body {
 .modal-content {
   max-height: 90vh; /* Limit modal height to 90% of viewport height */
   overflow-y: auto; /* Enable vertical scrolling */
+  padding: 1rem; /* Default padding */
+  border-radius: var(--radius); /* Rounded corners */
 }
 
 .background-overlay {
@@ -108,8 +87,7 @@ body {
 
 /* Responsive Design */
 @media (max-width: 768px) {
-  html,
-  body {
+  html {
     font-size: 14px; /* Smaller font size for mobile */
   }
 
@@ -168,8 +146,13 @@ body {
 
 @media (max-width: 640px) {
   .modal-content {
-    padding: 1rem !important;
+    padding: 2rem;
     border-radius: 1rem;
+  }
+
+  .pie-chart {
+    width: 100%; /* Ensure the chart scales properly */
+    height: auto;
   }
 
   select,

@@ -18,8 +18,8 @@ export default function PricingPlans({ isOpen, onSelectPlan, onClose }) {
       name: "Basic Plan",
       price: "Free Forever",
       features: [
-        "3 Try-Ons per Month + Matching Analysis",
-        "Styling Tips",
+        "3 Try-Ons/Month",
+        "6 Styling Tips",
         "15 Styles in the Digital Wardrobe",
       ],
       promo: "",
@@ -28,7 +28,7 @@ export default function PricingPlans({ isOpen, onSelectPlan, onClose }) {
     {
       name: "Lite Plan",
       price: "Rp. 29,999/mo",
-      features: ["10 Try-Ons/month", "Color Harmony Tips", "Style Suggestions"],
+      features: ["10 Try-Ons/month", "15 Styling Tips", "25 Styles in the Digital Wardrobe"],
       promo: "🔓 Promo Price! 40% OFF",
       buttonText: "Upgrade to Lite – Rp.29,999",
       LearnMoreComponent: LearnMoreLite,
@@ -38,9 +38,9 @@ export default function PricingPlans({ isOpen, onSelectPlan, onClose }) {
       price: "Rp. 59,999/mo",
       features: [
         "25 Try-Ons/month",
-        "AI Stylist Assistant",
+        "20 Personalized Styling Recommendations",
         "Compare Looks Side-by-Side",
-        "Digital Wardrobe (Beta)",
+        "30 Styles in the Digital Wardrobe",
       ],
       promo: "🔓 Promo Price! Save Rp.15,000",
       buttonText: "Upgrade to Pro – Rp.59,999",
@@ -50,8 +50,8 @@ export default function PricingPlans({ isOpen, onSelectPlan, onClose }) {
       name: "👑 Elite Plan",
       price: "Coming Soon",
       features: [
-        "Unlimited Try-Ons + Matching Analysis",
-        "Unlimited Personalized Stylist Assistant",
+        "Unlimited Try-Ons",
+        "Unlimited Personalized Styling recommendations",
         "Wardrobe Tracker + Body Tracker",
         "Unlimited Styles in the Digital Wardrobe",
         "Exclusive Outfits",
@@ -65,18 +65,27 @@ export default function PricingPlans({ isOpen, onSelectPlan, onClose }) {
   // Track plan selection event using Google Analytics
   const handlePlanSelect = (planName) => {
     try {
+      console.log("Tracking plan selection for plan:", planName);
+
       // Identify the user (optional but recommended)
       const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
       if (loggedInUser) {
-        window.gtag("set", { user_id: loggedInUser.profile?.sub || loggedInUser.email });
+        const userId = loggedInUser.profile?.sub || loggedInUser.email;
+        console.log("Setting user_id for GA4 tracking:", userId);
+        window.gtag("set", { user_id: userId });
+      } else {
+        console.warn("No logged-in user found. Skipping user identification.");
       }
 
       // Track the event
+      console.log("Sending 'select_plan' event to GA4 with plan:", planName);
       window.gtag("event", "select_plan", {
         plan: planName,
       });
+
+      console.log("Plan selection event successfully sent to GA4.");
     } catch (error) {
-      console.error("Error tracking plan selection", error);
+      console.error("Error tracking plan selection:", error.message, error.stack);
     }
     onSelectPlan(planName);
   };
@@ -84,18 +93,28 @@ export default function PricingPlans({ isOpen, onSelectPlan, onClose }) {
   // Track "Learn More" event using Google Analytics
   const handleLearnMore = (index) => {
     try {
+      console.log(`Tracking "Learn More" event for plan index: ${index}`);
+
       // Identify the user (optional but recommended)
       const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
       if (loggedInUser) {
-        window.gtag("set", { user_id: loggedInUser.profile?.sub || loggedInUser.email });
+        const userId = loggedInUser.profile?.sub || loggedInUser.email;
+        console.log("Setting user_id for GA4 tracking:", userId);
+        window.gtag("set", { user_id: userId });
+      } else {
+        console.warn("No logged-in user found. Skipping user identification.");
       }
 
       // Track the event
+      const planName = plans[index].name;
+      console.log(`Sending 'learn_more' event to GA4 for plan: ${planName}`);
       window.gtag("event", "learn_more", {
-        plan: plans[index].name,
+        plan: planName,
       });
+
+      console.log(`"Learn More" event successfully sent to GA4 for plan: ${planName}`);
     } catch (error) {
-      console.error("Error tracking learn more", error);
+      console.error("Error tracking 'Learn More' event:", error.message, error.stack);
     }
     setOpenLearnMoreIndex(index);
   };

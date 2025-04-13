@@ -20,135 +20,135 @@ export default function PrivacyPolicyModal({ isOpen, onClose }) {
 
         {/* Modal Content */}
         <h1 className="text-3xl sm:text-4xl font-bold mb-6 text-[#a569bd]">
-          FYUSE – Syarat dan Ketentuan Pengguna
+          FYUSE – Terms and Conditions of Use
         </h1>
         <div className="prose prose-lg max-w-none text-gray-300 space-y-4">
-          <div className="text-lg">Terakhir Diperbarui: [09-April-2025]</div>
+          <div className="text-lg">Last Updated: [April 09, 2025]</div>
           <ol className="space-y-4">
             <li>
-              <strong className="text-xl">Penerimaan Syarat dan Ketentuan</strong>
+              <strong className="text-xl">Acceptance of Terms and Conditions</strong>
               <div className="text-lg">
-                Dengan mengakses dan menggunakan FYUSE (“Platform”), Anda menyetujui Syarat dan Ketentuan (“Syarat”) ini. Jika Anda tidak menyetujuinya, harap tidak menggunakan layanan kami.
+                By accessing and using FYUSE (“Platform”), you agree to these Terms and Conditions (“Terms”). If you do not agree, please do not use our services.
               </div>
             </li>
             <li>
-              <strong className="text-xl">Ruang Lingkup Layanan</strong>
+              <strong className="text-xl">Scope of Services</strong>
               <div className="text-lg">
-                FYUSE menyediakan layanan sebagai berikut:
+                FYUSE provides the following services:
                 <ul className="list-disc ml-6 space-y-2">
-                  <li>Layanan virtual try-on melalui unggahan foto pribadi.</li>
-                  <li>Visualisasi pakaian dan analisis kecocokan yang cerdas.</li>
-                  <li>Fitur untuk menyimpan dan mengelola hasil try-on dalam “Koleksi Pribadi”.</li>
-                  <li>Alat bantu untuk mengambil keputusan gaya dan berbagi outfit dengan orang lain.</li>
+                  <li>Virtual try-on services through the upload of personal photos.</li>
+                  <li>Intelligent clothing visualization and fit analysis.</li>
+                  <li>Features to save and manage try-on results in your “Digital Wardrobe ”.</li>
+                  <li>Tools to assist in style decision-making and share outfits with others.</li>
                 </ul>
               </div>
             </li>
             <li>
-              <strong className="text-xl">Kelayakan Pengguna</strong>
+              <strong className="text-xl">User Eligibility</strong>
               <div className="text-lg">
-                Pengguna harus berusia minimal 18 tahun atau mendapatkan persetujuan orang tua/wali yang sah untuk menggunakan layanan ini.
+                Users must be at least 18 years old or have valid parental/guardian consent to use this service.
               </div>
             </li>
             <li>
-              <strong className="text-xl">Perlindungan Data Pengguna dan Privasi</strong>
+              <strong className="text-xl">User Data Protection and Privacy</strong>
               <ol className="list-decimal ml-6 space-y-2">
                 <li>
-                  <strong className="text-lg">Pengumpulan Data Pribadi</strong>
+                  <strong className="text-lg">Collection of Personal Data</strong>
                   <div className="text-lg">
-                    Kami mengumpulkan dan memproses data pribadi seperti: foto tubuh, gambar pakaian, hasil gambar try-on, preferensi pengguna.
+                    We collect and process personal data such as: body photos, clothing images, try-on result images, and user preferences.
                   </div>
                 </li>
                 <li>
-                  <strong className="text-lg">Tujuan Penggunaan Data</strong>
+                  <strong className="text-lg">Purpose of Data Usage</strong>
                   <div className="text-lg">
-                    Data digunakan untuk menyediakan layanan, personalisasi, penyimpanan hasil try-on, dan analisis layanan dalam bentuk anonim.
+                    Data is used to provide services, personalize experiences, store try-on results, and analyze services in anonymized forms.
                   </div>
                 </li>
                 <li>
-                  <strong className="text-lg">Penyimpanan dan Retensi Data</strong>
+                  <strong className="text-lg">Data Storage and Retention</strong>
                   <div className="text-lg">
-                    Data disimpan secara aman di server cloud dan hanya selama diperlukan.
+                    Data is securely stored on cloud servers and only retained for as long as necessary.
                   </div>
                 </li>
                 <li>
-                  <strong className="text-lg">Persetujuan dan Kontrol Pengguna</strong>
+                  <strong className="text-lg">User Consent and Control</strong>
                   <div className="text-lg">
-                    Pengguna dapat mengakses, memperbarui, menghapus, atau menarik persetujuan atas penggunaan data mereka.
+                    Users can access, update, delete, or withdraw consent for the use of their data.
                   </div>
                 </li>
                 <li>
-                  <strong className="text-lg">Pembagian Data dengan Pihak Ketiga</strong>
+                  <strong className="text-lg">Data Sharing with Third Parties</strong>
                   <div className="text-lg">
-                    Data tidak dijual/disewakan. Dibagikan hanya ke penyedia layanan resmi atau pihak berwenang sesuai hukum.
+                    Data is not sold or rented. It is shared only with authorized service providers or legal authorities as required by law.
                   </div>
                 </li>
                 <li>
-                  <strong className="text-lg">Standar Perlindungan Data</strong>
+                  <strong className="text-lg">Data Protection Standards</strong>
                   <div className="text-lg">
-                    Mengikuti UU PDP dengan prinsip transparansi, minimalisasi data, dan keamanan data.
+                    We adhere to data privacy laws with principles of transparency, data minimization, and data security.
                   </div>
                 </li>
               </ol>
             </li>
             <li>
-              <strong className="text-xl">Hak Kekayaan Intelektual</strong>
+              <strong className="text-xl">Intellectual Property Rights</strong>
               <div className="text-lg">
-                Seluruh konten dan teknologi FYUSE dilindungi hukum kekayaan intelektual.
+                All content and technology on FYUSE are protected by intellectual property laws.
               </div>
             </li>
             <li>
-              <strong className="text-xl">Tanggung Jawab Akun</strong>
+              <strong className="text-xl">Account Responsibility</strong>
               <div className="text-lg">
-                Pengguna bertanggung jawab atas keamanan akun mereka.
+                Users are responsible for the security of their accounts.
               </div>
             </li>
             <li>
-              <strong className="text-xl">Penggunaan yang Dilarang</strong>
+              <strong className="text-xl">Prohibited Use</strong>
               <div className="text-lg">
-                Dilarang menggunakan platform untuk tindakan ilegal atau melanggar hak pihak lain.
+                Using the platform for illegal activities or violating the rights of others is prohibited.
               </div>
             </li>
             <li>
-              <strong className="text-xl">Perubahan dan Penghentian Layanan</strong>
+              <strong className="text-xl">Changes and Termination of Service</strong>
               <div className="text-lg">
-                FYUSE berhak mengubah/menghentikan layanan dengan pemberitahuan sebelumnya.
+                FYUSE reserves the right to modify or terminate services with prior notice.
               </div>
             </li>
             <li>
-              <strong className="text-xl">Batasan Tanggung Jawab</strong>
+              <strong className="text-xl">Limitation of Liability</strong>
               <div className="text-lg">
-                FYUSE tidak bertanggung jawab atas kerugian tidak langsung atau insidental.
+                FYUSE is not liable for indirect or incidental damages.
               </div>
             </li>
             <li>
-              <strong className="text-xl">Hukum yang Berlaku</strong>
+              <strong className="text-xl">Governing Law</strong>
               <div className="text-lg">
-                Tunduk pada hukum Republik Indonesia.
+                Subject to the laws of the Republic of Indonesia.
               </div>
             </li>
             <li>
-              <strong className="text-xl">Informasi Kontak</strong>
+              <strong className="text-xl">Contact Information</strong>
               <div className="text-lg">
-                Hubungi: Ryan Iaska Founder of FYUSE
+                Contact: Ryan Iaska, Founder of FYUSE
               </div>
               <div className="text-lg">
                 Email: ryaniaska14@gmail.com
               </div>
               <div className="text-lg">
-                Whatsapp: 081384481108
+                WhatsApp: +62 813 8448 1108
               </div>
             </li>
             <li>
-              <strong className="text-xl">Pembaruan Syarat</strong>
+              <strong className="text-xl">Terms Updates</strong>
               <div className="text-lg">
-                Penggunaan lanjutan menunjukkan persetujuan atas pembaruan Syarat.
+                Continued use of FYUSE indicates agreement to updates to these Terms.
               </div>
             </li>
           </ol>
           <div className="mt-4">
-            <strong className="text-xl">Pernyataan Persetujuan</strong>
+            <strong className="text-xl">Consent Statement</strong>
             <div className="text-lg">
-              Dengan menggunakan FYUSE, Anda menyatakan setuju atas pengumpulan dan penggunaan data pribadi sesuai UU PDP.
+              By using FYUSE, you consent to the collection and use of your personal data in accordance with applicable data privacy laws.
             </div>
           </div>
         </div>

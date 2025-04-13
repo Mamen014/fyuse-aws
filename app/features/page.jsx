@@ -1,7 +1,8 @@
 'use client';
 import React from "react";
+import Link from "next/link"; // Import Link from Next.js
 import { motion } from "framer-motion";
-import { Star } from "lucide-react";  
+import { Star } from "lucide-react";
 
 const features = [
   {
@@ -22,7 +23,7 @@ const features = [
   {
     title: "Digital Wardrobe",
     description:
-      "Every try-on is saved. Revisit your past looks, reflect on your style, and decide when you're ready. Your wardrobe, always with you — wherever you go.",
+      "Upload and organize your clothes, plan outfits virtually, and track what you wear to simplify your style and declutter with ease.",
   },
   {
     title: "Exclusive Outfits",
@@ -65,6 +66,15 @@ export default function Features() {
           <p className="mt-4 text-base md:text-lg text-gray-300 max-w-2xl mx-auto">
             FYUSE is where technology meets personal style. We go beyond tools — we help you feel confident, expressive, and effortlessly you.
           </p>
+
+          {/* Back to Home Button */}
+          <div className="flex justify-center mt-8">
+            <Link href="/" passHref>
+              <button className="bg-gradient-to-r from-indigo-500 to-blue-500 text-white px-6 py-3 rounded-full shadow-md hover:scale-105 transition-transform text-lg">
+                ← Back to Home
+              </button>
+            </Link>
+          </div>
         </div>
 
         {/* Feature Grid */}

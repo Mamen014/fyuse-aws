@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link'; // Import Link from Next.js
 import { motion } from 'framer-motion';
 
 export default function Contact() {
@@ -21,6 +22,15 @@ export default function Contact() {
             Have questions, feedback, or just want to say hi? We’d love to hear from you!
           </p>
         </motion.div>
+
+        {/* Back to Home Button */}
+        <div className="flex justify-center mb-8">
+          <Link href="/" passHref>
+            <button className="bg-gradient-to-r from-indigo-500 to-blue-500 text-white px-6 py-3 rounded-full shadow-md hover:scale-105 transition-transform text-lg">
+              ← Back to Home
+            </button>
+          </Link>
+        </div>
 
         {/* Contact Info Card */}
         <motion.div

@@ -5,11 +5,11 @@ export default function LearnMoreElite() {
       <p className="text-purple-300 text-base">Coming Soon</p>
       <p className="text-base">Ideal For: Power users, influencers & fashion creators</p>
       <ul className="list-disc ml-6 space-y-2 text-purple-200">
-        <li>✅ Unlimited Try-Ons + Matching Analysis</li>
-        <li>✅ Unlimited Personalized Stylist Assistant</li>
-        <li>✅ Wardrobe Tracker + Body Tracker</li>
+        <li>✅ Unlimited Try-Ons including Matching Analysis</li>
+        <li>✅ Unlimited Personalized Styling Recommendations</li>
         <li>✅ Unlimited Styles in the Digital Wardrobe</li>
-        <li>✅ Exclusive Outfits</li>
+        <li>✅ Wardrobe & Body Tracker to track your evolving style and body</li>
+        <li>✅ Exclusive Outfits curated just for you</li>
       </ul>
       <p className="text-yellow-400 text-base">💬 Be the first to experience Elite benefits</p>
     </div>

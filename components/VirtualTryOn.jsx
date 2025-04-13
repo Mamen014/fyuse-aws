@@ -4,27 +4,16 @@ import { useAuth } from "react-oidc-context";
 import PricingPlans from "@/components/PricingPlanCard";
 import AnalysisModal from "@/components/AnalysisModal";
 import PrivacyPolicyModal from "@/components/PrivacyPolicyModal";
-import LoginModal from "@/components/LoginModal"
+import LoginModal from "@/components/LoginModal";
 
 const VirtualTryOn = () => {
   const { user, signinRedirect } = useAuth();
   const userEmail = user?.profile?.email;
 
-  const handleSignUp = () => {
-    const clientId = process.env.NEXT_PUBLIC_CLIENTID
-    const domain = process.env.NEXT_PUBLIC_DOMAIN;
-    const redirectUri = typeof window !== 'undefined' ? window.location.origin + '/' : 'http://localhost:3000/';
-    const signUpUrl = `https://${domain}/signup?client_id=${clientId}&response_type=code&scope=openid+profile+email&redirect_uri=${encodeURIComponent(redirectUri)}`;
-  
-    sessionStorage.setItem('cameFromSignup', 'true'); // 🔑 Set flag
-    window.location.href = signUpUrl;
-  };
-
   const [userImage, setUserImage] = useState(null);
   const [apparelImage, setApparelImage] = useState(null);
   const [userImagePreview, setUserImagePreview] = useState(null);
   const [apparelImagePreview, setApparelImagePreview] = useState(null);
-
   const [loading, setLoading] = useState(false);
   const [resultImageUrl, setResultImageUrl] = useState(null);
   const [error, setError] = useState(null);
@@ -33,7 +22,6 @@ const VirtualTryOn = () => {
   const [pollIntervalId, setPollIntervalId] = useState(null);
   const [tryOnCount, setTryOnCount] = useState(0);
   const [agreeToPrivacy, setAgreeToPrivacy] = useState(false);
-
   const [showPricingPlans, setShowPricingPlans] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [matchingAnalysis, setMatchingAnalysis] = useState(null);
@@ -44,7 +32,6 @@ const VirtualTryOn = () => {
 
   useEffect(() => {
     if (!userEmail) return;
-
     const storedCount = sessionStorage.getItem("tryOnCount");
     if (storedCount) {
       setTryOnCount(parseInt(storedCount));
@@ -58,7 +45,6 @@ const VirtualTryOn = () => {
         })
         .catch((err) => console.error("Error fetching try-on count:", err));
     }
-
     const storedAgreement = localStorage.getItem(`privacyAgreement:${userEmail}`);
     if (storedAgreement === "true") {
       setAgreeToPrivacy(true);
@@ -133,27 +119,41 @@ const VirtualTryOn = () => {
     if (!agreeToPrivacy) return setError("You must agree to the Privacy Policy.");
     if (!user) return setIsLoginModalOpen(true);
     if (tryOnCount >= 3) return setShowPricingPlans(true);
-
+  
     try {
       setLoading(true);
       setError(null);
       setResultImageUrl(null);
       setMatchingAnalysis(null);
-
+  
+      // Upload images
       const userImageUrl = await uploadImageToS3(userImage, `${API_BASE_URL}/upload-user-image`);
       const apparelImageUrl = await uploadImageToS3(apparelImage, `${API_BASE_URL}/upload-apparel-image`);
-
+  
+      // Submit try-on task
       const response = await axios.post(`${API_BASE_URL}/tryon-image`, {
         person_image_url: userImageUrl,
         garment_image_url: apparelImageUrl,
         userEmail,
       });
-
+  
       if (response?.data?.taskId) {
-        setTaskId(response.data.taskId);
-        pollTryonStatus(response.data.taskId);
-        await axios.post(`${API_BASE_URL}/tryontrack`, { userEmail });
-        setTryOnCount((prev) => prev + 1);
+        const taskId = response.data.taskId; // Capture the task ID
+        setTaskId(taskId);
+        pollTryonStatus(taskId);
+  
+        // Trigger matching analysis with the same task ID
+        const analysisResponse = await axios.post(`${API_BASE_URL}/MatchingAnalyzer`, {
+          userImage: userImageUrl,
+          apparelImageUrl,
+          userEmail,
+          analysisType: "direct",
+          taskId, // Pass the task ID to the matching analysis
+        });
+  
+        setMatchingAnalysis(analysisResponse.data);
+        setIsModalOpen(true);
+  
       }
     } catch (err) {
       if (err.response?.status === 403) {
@@ -166,90 +166,24 @@ const VirtualTryOn = () => {
     }
   };
 
-  const handleMatchingAnalysis = async () => {
-    if (!window.generatedImageUrl) return setError("Missing generated try-on image.");
-    if (!user) return setIsLoginModalOpen(true);
-
-    try {
-      setLoading(true);
-      setMatchingAnalysis(null);
-      setError(null);
-
-      const response = await axios.post(`${API_BASE_URL}/MatchingAnalyzer`, {
-        generatedImageUrl: window.generatedImageUrl,
-        apparelImageUrl: apparelImagePreview,
-        userEmail,
-        analysisType: "virtual",
-      });
-
-      setMatchingAnalysis(response.data);
-      setIsModalOpen(true);
-    } catch (err) {
-      setError(err.response?.data?.error || "Matching Analysis failed.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const aloneMatchingAnalysis = async () => {
-    if (!userImage || !apparelImage) return setError("Please upload both images.");
-    if (!user) return setIsLoginModalOpen(true);
-    try {
-      setLoading(true);
-      setMatchingAnalysis(null);
-      setError(null);
-
-      const userImageUrl = await uploadImageToS3(userImage, `${API_BASE_URL}/upload-user-image`);
-      const apparelImageUrl = await uploadImageToS3(apparelImage, `${API_BASE_URL}/upload-apparel-image`);
-
-      const response = await axios.post(`${API_BASE_URL}/MatchingAnalyzer`, {
-        userImage: userImageUrl,
-        apparelImageUrl,
-        userEmail,
-        analysisType: "direct",
-      });
-
-      setMatchingAnalysis(response.data);
-      setIsModalOpen(true);
-    } catch (err) {
-      setError(err.response?.data?.error || "Matching Analysis failed.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handlePlanSelect = (planName) => {
-    alert(`You selected: ${planName}`);
-    setShowPricingPlans(false);
-  };
-
-  const handlePrivacyCheckbox = (e) => {
-    const checked = e.target.checked;
-    setAgreeToPrivacy(checked);
-    if (userEmail) {
-      localStorage.setItem(`privacyAgreement:${userEmail}`, checked.toString());
-    }
-  };
-
   return (
     <div className="bg-[#1a1a2f] text-white px-6">
       <header className="text-center mb-8">
         <h1 className="text-4xl font-bold text-gray-100">Digital Fitting Room</h1>
         <p className="text-gray-300 mt-2">Experience the perfect fit.</p>
       </header>
-  
+
       {showPricingPlans && (
         <PricingPlans
           isOpen={showPricingPlans}
           onClose={() => setShowPricingPlans(false)}
-          onSelectPlan={handlePlanSelect}
+          onSelectPlan={(planName) => alert(`You selected: ${planName}`)}
         />
       )}
-  
+
       {!showPricingPlans && (
         <div className="bg-[#1a1a2f] w-full max-w-4xl space-y-6">
           <h2 className="text-2xl font-medium text-gray-100 text-center mb-4">Upload Your Photos</h2>
-  
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="border border-[#848CB1]-700 rounded-lg p-6 text-center">
               <h3 className="text-lg font-medium text-gray-100 mb-4">Your Photo</h3>
@@ -258,13 +192,10 @@ const VirtualTryOn = () => {
                 {userImagePreview ? (
                   <img src={userImagePreview} alt="User Preview" className="mx-auto max-h-48 object-contain rounded-lg" />
                 ) : (
-                  <div className="flex flex-col items-center justify-center h-48 text-gray-300">
-                    Click to upload
-                  </div>
+                  <div className="flex flex-col items-center justify-center h-48 text-gray-300">Click to upload</div>
                 )}
               </label>
             </div>
-  
             <div className="border border-[#848CB1]-700 rounded-lg p-6 text-center">
               <h3 className="text-lg font-medium text-gray-100 mb-4">Clothing Item</h3>
               <input type="file" accept="image/*" onChange={handleApparelImageChange} className="hidden" id="apparelPhoto" />
@@ -272,28 +203,31 @@ const VirtualTryOn = () => {
                 {apparelImagePreview ? (
                   <img src={apparelImagePreview} alt="Apparel Preview" className="mx-auto max-h-48 object-contain rounded-lg" />
                 ) : (
-                  <div className="flex flex-col items-center justify-center h-48 text-gray-300">
-                    Click to upload
-                  </div>
+                  <div className="flex flex-col items-center justify-center h-48 text-gray-300">Click to upload</div>
                 )}
               </label>
             </div>
           </div>
-  
           <div className="flex items-center justify-center mt-2 space-x-2">
             <input
               type="checkbox"
               id="privacyConsent"
               checked={agreeToPrivacy}
-              onChange={handlePrivacyCheckbox}
+              onChange={(e) => {
+                const checked = e.target.checked;
+                setAgreeToPrivacy(checked);
+                if (userEmail) {
+                  localStorage.setItem(`privacyAgreement:${userEmail}`, checked.toString());
+                }
+              }}
               className="w-4 h-4 accent-blue-500"
             />
             <label htmlFor="privacyConsent" className="text-sm text-gray-300">
               I agree to the{" "}
               <button
                 onClick={(e) => {
-                  e.preventDefault(); // Prevent default link behavior
-                  setIsPrivacyModalOpen(true); // Open the Privacy Policy Modal
+                  e.preventDefault();
+                  setIsPrivacyModalOpen(true);
                 }}
                 className="underline text-blue-400 cursor-pointer"
               >
@@ -301,12 +235,10 @@ const VirtualTryOn = () => {
               </button>
             </label>
           </div>
-  
           <div className="flex justify-center items-center mt-4 space-x-2">
-            {/* Try-On Button */}
             <button
               onClick={() => {
-                if (!user) return setIsLoginModalOpen(true); // Show Login Modal
+                if (!user) return setIsLoginModalOpen(true);
                 handleSubmit();
               }}
               disabled={!agreeToPrivacy}
@@ -316,30 +248,7 @@ const VirtualTryOn = () => {
             >
               Try-On
             </button>
-  
-            {/* Fit Analysis Button */}
-            <button
-              onClick={() => {
-                if (!user) return setIsLoginModalOpen(true); // Show Login Modal
-                setIsModalOpen(true);
-                aloneMatchingAnalysis();
-              }}
-              disabled={!agreeToPrivacy}
-              className={`px-6 py-3 rounded-lg font-medium text-white ${
-                agreeToPrivacy ? "bg-gradient-to-r from-pink-600 to-indigo-500 hover:scale-105" : "bg-gray-500 cursor-not-allowed"
-              }`}
-            >
-              Fit Analysis
-            </button>
           </div>
-  
-          <AnalysisModal
-            isOpen={isModalOpen}
-            onClose={() => setIsModalOpen(false)}
-            analysisData={matchingAnalysis}
-            loading={loading}
-          />
-  
           {polling && !resultImageUrl && (
             <p className="text-yellow-500 text-center mt-4">Waiting for result... polling server.</p>
           )}
@@ -347,38 +256,42 @@ const VirtualTryOn = () => {
           {error && <p className="text-red-500 text-center">{error}</p>}
         </div>
       )}
-    
+
       {resultImageUrl && (
         <div className="mt-8 w-full max-w-4xl bg-white rounded-lg shadow-md p-8 space-y-6">
           <h2 className="text-2xl font-medium text-gray-800 text-center">Try-On Result</h2>
           <img src={resultImageUrl} alt="Try-On Result" className="rounded-lg shadow-md mx-auto max-h-96 object-contain" />
-          <div className="text-center">
-            <button
-              type="button"
-              onClick={handleMatchingAnalysis}
-              className="bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 mt-4"
-            >
-              Virtual Fit Analysis
-            </button>
-          </div>
         </div>
       )}
-  
-      {/* Privacy Policy Modal */}
+
+      <AnalysisModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        analysisData={matchingAnalysis}
+        loading={loading}
+        tryOnImage={resultImageUrl} // Pass the try-on image to the modal
+      />
+
       {isPrivacyModalOpen && (
         <PrivacyPolicyModal
           isOpen={isPrivacyModalOpen}
           onClose={() => setIsPrivacyModalOpen(false)}
         />
       )}
-  
-      {/* Login Modal */}
+
       {isLoginModalOpen && (
         <LoginModal
           isOpen={isLoginModalOpen}
           onClose={() => setIsLoginModalOpen(false)}
           onSignIn={signinRedirect}
-          onSignUp={handleSignUp}
+          onSignUp={() => {
+            const clientId = process.env.NEXT_PUBLIC_CLIENTID;
+            const domain = process.env.NEXT_PUBLIC_DOMAIN;
+            const redirectUri = typeof window !== 'undefined' ? window.location.origin + '/' : 'http://localhost:3000/';
+            const signUpUrl = `https://${domain}/signup?client_id=${clientId}&response_type=code&scope=openid+profile+email&redirect_uri=${encodeURIComponent(redirectUri)}`;
+            sessionStorage.setItem('cameFromSignup', 'true');
+            window.location.href = signUpUrl;
+          }}
         />
       )}
     </div>

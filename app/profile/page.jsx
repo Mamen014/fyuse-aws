@@ -23,23 +23,23 @@ export default function ProfilePage() {
 
   const fetchHistory = async () => {
     if (!auth?.user?.profile?.email) return;
-    
+
     try {
       const lambdaUrl = process.env.NEXT_PUBLIC_HISTORY_HANDLER;
-  
+
       const res = await fetch(`${lambdaUrl}?email=${encodeURIComponent(auth.user.profile.email)}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
         },
       });
-  
+
       if (!res.ok) throw new Error(`Failed to fetch history: ${res.status}`);
-  
+
       const data = await res.json();
       const allItems = Array.isArray(data.items) ? data.items : [];
       const wardrobeItems = allItems.filter((item) => item.isInWardrobe === true);
-  
+
       setTryOnHistory(wardrobeItems);
     } catch (err) {
       console.error("❌ Error fetching wardrobe history:", err);
@@ -49,7 +49,6 @@ export default function ProfilePage() {
       setLoading(false);
     }
   };
-  
 
   useEffect(() => {
     if (auth?.isAuthenticated) {
@@ -70,16 +69,15 @@ export default function ProfilePage() {
     setActionLoading(taskId);
 
     try {
-      const response = await fetch(
-        'https://fzfl586ufb.execute-api.ap-southeast-2.amazonaws.com/dev/remove',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ taskId }),
-        }
-      );
+      const removeEndpoint = process.env.NEXT_PUBLIC_REMOVE_ENDPOINT;
+
+      const response = await fetch(removeEndpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ taskId }),
+      });
 
       if (!response.ok) {
         const errorBody = await response.text();
