@@ -270,7 +270,6 @@ const VirtualTryOn = () => {
         analysisData={matchingAnalysis}
         loading={loading}
         tryOnImage={resultImageUrl} 
-        userEmail={session?.user?.email}
       />
 
       {isPrivacyModalOpen && (
