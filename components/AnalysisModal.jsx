@@ -28,26 +28,14 @@ const AnalysisModal = ({ isOpen, onClose, analysisData, loading, tryOnImage, use
 
   const COLORS = ["#F38980", "#848CB1"];
 
-  // Function to handle adding the try-on result to the user's collection
+  // Function to handle adding the try-on result to the user's wardrobe
   const handleAddToCollection = async () => {
-    if (!userEmail) {
-      console.error("User email not found. Please log in.");
-      toast.error("Please log in to add this item to your collection.", {
-        position: "top-right",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
-      return;
-    }
 
     try {
       // Make the POST request to the /tryontrack endpoint
       await axios.post(`${process.env.NEXT_PUBLIC_FYUSEAPI}/tryontrack`, {
         userEmail,
-        imageUrl: tryOnImage, // Pass the try-on image URL
+        generatedImageUrl: tryOnImage, // Pass the try-on image URL
       });
 
       // Show success toast notification
