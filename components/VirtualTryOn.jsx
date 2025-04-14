@@ -102,6 +102,14 @@ const VirtualTryOn = () => {
           setResultImageUrl(response.data.generatedImageUrl);
           window.generatedImageUrl = response.data.generatedImageUrl;
           setPolling(false);
+          toast.success("Added to your wardrobe!", {
+            position: "top-right",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+          });
         }
       } catch (err) {
         console.error("Polling error:", err);

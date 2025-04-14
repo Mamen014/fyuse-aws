@@ -144,10 +144,7 @@ export default function ProfilePage() {
         <ul className="space-y-4">
           {tryOnHistory.map((item) => (
             <li key={item.taskId} className="border border-gray-600 p-4 rounded-xl bg-[#121222]">
-              <p><strong>Date:</strong> {item.timestamp ? new Date(item.timestamp).toLocaleString() : 'N/A'}</p>
-              <p><strong>Body Shape:</strong> {item.bodyShape || '-'}</p>
-              <p><strong>Skin Tone:</strong> {item.skinTone || '-'}</p>
-              <p><strong>Matching %:</strong> {item.matchingPercentage || '0'}%</p>
+              <p><strong>Matching:</strong> {item.matchingPercentage || '0'}%</p>
 
               {item.generatedImageUrl && (
                 <img
