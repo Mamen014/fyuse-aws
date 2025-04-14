@@ -97,23 +97,29 @@ const VirtualTryOn = () => {
     const intervalId = setInterval(async () => {
       try {
         const response = await axios.get(`${API_BASE_URL}/process-tryon-result?taskId=${taskId}`);
-        if (response.data.status === "succeed") {
-          clearInterval(intervalId);
-          setResultImageUrl(response.data.generatedImageUrl);
-          window.generatedImageUrl = response.data.generatedImageUrl;
-          setPolling(false);
-          toast.success("Added to your wardrobe!", {
-            position: "top-right",
-            autoClose: 5000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-          });
-        }
+        const data = response.data;
+
+      if (data.status === "succeed" && data.generatedImageUrl) {
+        clearInterval(intervalId);
+        setResultImageUrl(data.generatedImageUrl);
+        window.generatedImageUrl = data.generatedImageUrl;
+        setPolling(false);
+        toast.success("Added to your wardrobe!", {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+      } else if (data.status === "failed") {
+        clearInterval(intervalId);
+        setPolling(false);
+        setError("Try-on failed. Please try again.");
+      }
       } catch (err) {
-        console.error("Polling error:", err);
-        setError("Error checking try-on status.");
+        console.error("Polling error:", err?.response?.data || err.message);
+        setError("Network error while checking try-on status.");
         clearInterval(intervalId);
         setPolling(false);
       }
@@ -262,13 +268,6 @@ const VirtualTryOn = () => {
           )}
           {loading && <p className="text-gray-400 text-center animate-pulse">Processing...</p>}
           {error && <p className="text-red-500 text-center">{error}</p>}
-        </div>
-      )}
-
-      {resultImageUrl && (
-        <div className="mt-8 w-full max-w-4xl bg-white rounded-lg shadow-md p-8 space-y-6">
-          <h2 className="text-2xl font-medium text-gray-800 text-center">Try-On Result</h2>
-          <img src={resultImageUrl} alt="Try-On Result" className="rounded-lg shadow-md mx-auto max-h-96 object-contain" />
         </div>
       )}
 

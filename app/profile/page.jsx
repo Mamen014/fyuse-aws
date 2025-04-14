@@ -115,7 +115,7 @@ export default function ProfilePage() {
     <div className="p-6 max-w-3xl mx-auto text-white">
       <Toaster position="top-center" />
 
-      <h2 className="text-2xl font-bold mb-4">👤 Digital Wardrobe</h2>
+      <h2 className="text-2xl font-bold mb-4">Digital Wardrobe</h2>
 
       {/* Back to Home Button */}
       <div className="mb-6">
@@ -131,9 +131,6 @@ export default function ProfilePage() {
         <p><strong>Name:</strong> {auth.user?.profile?.name || 'N/A'}</p>
         <p><strong>Email:</strong> {auth.user?.profile?.email}</p>
       </div>
-
-      <h3 className="text-xl font-semibold mb-3">👚 Digital Wardrobe</h3>
-
       {loading ? (
         <p className="text-gray-400">Loading wardrobe...</p>
       ) : tryOnHistory.length === 0 ? (

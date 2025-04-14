@@ -157,26 +157,6 @@ const AnalysisModal = ({ isOpen, onClose, analysisData, loading, tryOnImage, use
           </div>
         )}
 
-        {/* Buttons */}
-        {(!loading && tryOnImage) && (
-          <div className="mt-6 flex justify-end gap-4">
-            {/* Add to My wardrobe Button */}
-            <button
-              className="bg-[#FF6B6B] text-white px-4 py-2 rounded-lg"
-              onClick={handleAddToCollection}
-            >
-              Add to My Wardrobe
-            </button>
-            {/* Close Button */}
-            <button
-              className="bg-[#FF6B6B] text-white px-4 py-2 rounded-lg"
-              onClick={onClose}
-            >
-              Close
-            </button>
-          </div>
-        )}
-
         {/* Toast Notification Container */}
         <ToastContainer />
       </div>
