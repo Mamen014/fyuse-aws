@@ -28,9 +28,24 @@ const AnalysisModal = ({ isOpen, onClose, analysisData, loading, tryOnImage, use
 
   const COLORS = ["#F38980", "#848CB1"];
 
-  // Function to handle adding the try-on result to the user's wardrobe
+  // Function to handle adding the try-on result to the user's collection
   const handleAddToCollection = async () => {
-
+    if (!userEmail) {
+      console.error("User email not found. Please log in.");
+      toast.error("Please log in to add this item to your wardrobe.", {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+      return;
+    }
+    console.log("Submitting to wardrobe:", {
+      userEmail,
+      generatedImageUrl: tryOnImage,
+    });    
     try {
       // Make the POST request to the /tryontrack endpoint
       await axios.post(`${process.env.NEXT_PUBLIC_FYUSEAPI}/tryontrack`, {
@@ -39,7 +54,7 @@ const AnalysisModal = ({ isOpen, onClose, analysisData, loading, tryOnImage, use
       });
 
       // Show success toast notification
-      toast.success("Added to your collection!", {
+      toast.success("Added to your wardrobe!", {
         position: "top-right",
         autoClose: 5000,
         hideProgressBar: false,
@@ -48,8 +63,8 @@ const AnalysisModal = ({ isOpen, onClose, analysisData, loading, tryOnImage, use
         draggable: true,
       });
     } catch (error) {
-      console.error("Error adding to collection:", error);
-      toast.error("An error occurred while adding this item to your collection.", {
+      console.error("Error adding to wardrobe:", error);
+      toast.error("An error occurred while adding this item to your wardrobe.", {
         position: "top-right",
         autoClose: 5000,
         hideProgressBar: false,
@@ -145,7 +160,7 @@ const AnalysisModal = ({ isOpen, onClose, analysisData, loading, tryOnImage, use
         {/* Buttons */}
         {(!loading && tryOnImage) && (
           <div className="mt-6 flex justify-end gap-4">
-            {/* Add to My Collection Button */}
+            {/* Add to My wardrobe Button */}
             <button
               className="bg-[#FF6B6B] text-white px-4 py-2 rounded-lg"
               onClick={handleAddToCollection}

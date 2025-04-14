@@ -269,7 +269,8 @@ const VirtualTryOn = () => {
         onClose={() => setIsModalOpen(false)}
         analysisData={matchingAnalysis}
         loading={loading}
-        tryOnImage={resultImageUrl} 
+        tryOnImage={resultImageUrl}
+        userEmail={user?.email}
       />
 
       {isPrivacyModalOpen && (
