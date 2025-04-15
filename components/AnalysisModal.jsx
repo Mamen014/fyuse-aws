@@ -7,7 +7,7 @@ import "react-toastify/dist/ReactToastify.css";
 // Dynamically import the client-side chart component
 const ClientChart = dynamic(() => import("./ClientChart"), { ssr: false });
 
-const AnalysisModal = ({ isOpen, onClose, analysisData, loading, tryOnImage, userEmail }) => {
+const AnalysisModal = ({ isOpen, onClose, analysisData, loading, tryOnImage, userEmail, errorMessage }) => {
   if (!isOpen) return null;
 
   const {
@@ -162,9 +162,6 @@ const AnalysisModal = ({ isOpen, onClose, analysisData, loading, tryOnImage, use
             </div>
           </div>
         )}
-
-        {/* Toast Notification Container */}
-        <ToastContainer />
       </div>
     </div>
   );

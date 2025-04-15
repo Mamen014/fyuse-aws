@@ -5,6 +5,7 @@ import PricingPlans from "@/components/PricingPlanCard";
 import AnalysisModal from "@/components/AnalysisModal";
 import PrivacyPolicyModal from "@/components/PrivacyPolicyModal";
 import LoginModal from "@/components/LoginModal";
+import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -30,6 +31,8 @@ const VirtualTryOn = () => {
   const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [userImageError, setUserImageError] = useState(null);
+  const [isValidUserImage, setIsValidUserImage] = useState(false);
+  const [isValidApparelImage, setIsValidApparelImage] = useState(false);
   const [apparelImageError, setApparelImageError] = useState(null);
 
 
@@ -48,6 +51,8 @@ const VirtualTryOn = () => {
 
     return isAllowedType && isAllowedSize && hasMinResolution;
   };
+
+
 
 
   useEffect(() => {
@@ -86,6 +91,7 @@ const VirtualTryOn = () => {
       setUserImageError("Invalid image. Only JPG, JPEG, WEBP under 10MB with min 300x300px are allowed.");
       return;
     }
+    setIsValidUserImage(isValid);
     setUserImageError(null);
     setUserImage(file);
     setUserImagePreview(URL.createObjectURL(file));
@@ -102,6 +108,7 @@ const VirtualTryOn = () => {
       setApparelImageError("Invalid image. Only JPG, JPEG, WEBP under 10MB with min 300x300px are allowed.");
       return;
     }
+    setIsValidApparelImage(isValid);
     setApparelImageError(null);
     setApparelImage(file);
     setApparelImagePreview(URL.createObjectURL(file));
@@ -170,13 +177,31 @@ const VirtualTryOn = () => {
   };
 
   const handleSubmit = async () => {
-    if (!userImage || !apparelImage) return setError("Please upload both user and apparel images.");
-    if (!agreeToPrivacy) return setError("You must agree to the Privacy Policy.");
+    if (!userImage || !apparelImage) {
+      toast.error("Please upload both user and apparel images.");
+      return;
+    }
+    if (!agreeToPrivacy) {
+      toast.error("You must agree to the Privacy Policy.");
+        return ;
+    }
     if (!user) return setIsLoginModalOpen(true);
     if (tryOnCount >= 3) return setShowPricingPlans(true);
+    if (!userImage || !apparelImage || !isValidUserImage || !isValidApparelImage) {
+      toast.error("Please upload the accepted image.");
+      return;
+    }
   
     try {
       setLoading(true);
+      toast.info("Processing started. This may take up to 3 minutes.", {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });      
       setError(null);
       setResultImageUrl(null);
       setMatchingAnalysis(null);
@@ -308,7 +333,7 @@ const VirtualTryOn = () => {
                 if (!user) return setIsLoginModalOpen(true);
                 handleSubmit();
               }}
-              disabled={!agreeToPrivacy}
+              disabled={!userImage || !apparelImage || !isValidUserImage || !isValidApparelImage || !agreeToPrivacy}
               className={`px-6 py-3 rounded-lg font-medium text-white ${
                 agreeToPrivacy ? "bg-gradient-to-r from-indigo-500 to-pink-600 hover:scale-105" : "bg-gray-500 cursor-not-allowed"
               }`}
