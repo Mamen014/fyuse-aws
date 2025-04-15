@@ -1,7 +1,7 @@
 import React from "react";
 import dynamic from "next/dynamic";
 import axios from "axios";
-import { ToastContainer, toast } from "react-toastify";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 // Dynamically import the client-side chart component
@@ -106,6 +106,7 @@ const AnalysisModal = ({ isOpen, onClose, analysisData, loading, tryOnImage, use
           <div className="flex flex-col items-center justify-center h-64">
             <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-[#FF6B6B]"></div>
             <p className="text-gray-400 mt-4">Loading...</p>
+            <p className="text-gray-400 mt-4">This may up to 3 minutes</p>
           </div>
       ) : (
           // Loaded State

@@ -35,7 +35,6 @@ const VirtualTryOn = () => {
   const [isValidApparelImage, setIsValidApparelImage] = useState(false);
   const [apparelImageError, setApparelImageError] = useState(null);
 
-
   const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
 
   const allowedTypes = ["image/jpeg", "image/jpg", "image/webp"];
@@ -51,9 +50,6 @@ const VirtualTryOn = () => {
 
     return isAllowedType && isAllowedSize && hasMinResolution;
   };
-
-
-
 
   useEffect(() => {
     if (!userEmail) return;
@@ -124,12 +120,17 @@ const VirtualTryOn = () => {
 
   const uploadImageToS3 = async (imageFile, endpoint) => {
     const base64 = await toBase64(imageFile);
-    const contentType = imageFile.type;
+    const contentType = imageFile.type; 
     const fileName = imageFile.name;
     const response = await axios.post(endpoint, {
       fileName,
+      userEmail,
       fileDataBase64: base64,
       contentType,
+    }, {
+      headers: {
+        "Content-Type": "application/json",
+      },
     });
     return response.data?.imageUrl;
   };
@@ -333,12 +334,12 @@ const VirtualTryOn = () => {
                 if (!user) return setIsLoginModalOpen(true);
                 handleSubmit();
               }}
-              disabled={!userImage || !apparelImage || !isValidUserImage || !isValidApparelImage || !agreeToPrivacy}
+              disabled
               className={`px-6 py-3 rounded-lg font-medium text-white ${
-                agreeToPrivacy ? "bg-gradient-to-r from-indigo-500 to-pink-600 hover:scale-105" : "bg-gray-500 cursor-not-allowed"
+                agreeToPrivacy ? "bg-gray-500 cursor-not-allowed" : "bg-gray-500 cursor-not-allowed"
               }`}
             >
-              Try-On
+              Try-On Temporary Unavailable
             </button>
           </div>
           {polling && !resultImageUrl && (

@@ -1,5 +1,3 @@
-import { useState } from "react";
-
 export default function PrivacyPolicyModal({ isOpen, onClose }) {
   if (!isOpen) return null;
 
