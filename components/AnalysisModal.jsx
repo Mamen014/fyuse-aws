@@ -95,13 +95,19 @@ const AnalysisModal = ({ isOpen, onClose, analysisData, loading, tryOnImage, use
         </button>
 
         {/* Main Content */}
-        {loading || !tryOnImage ? (
+        {errorMessage ? (
+          // Show error
+          <div className="text-center py-12 text-red-400">
+            <h3 className="text-2xl font-semibold">Something went wrong</h3>
+            <p className="mt-2">{errorMessage}</p>
+          </div>
+        ) : loading || !tryOnImage ? (  
           // Loading State
           <div className="flex flex-col items-center justify-center h-64">
             <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-[#FF6B6B]"></div>
             <p className="text-gray-400 mt-4">Loading...</p>
           </div>
-        ) : (
+      ) : (
           // Loaded State
           <div className="flex flex-col md:flex-row gap-6">
             {/* Try-On Image */}

@@ -104,6 +104,7 @@ const VirtualTryOn = () => {
         setResultImageUrl(data.generatedImageUrl);
         window.generatedImageUrl = data.generatedImageUrl;
         setPolling(false);
+        setLoading(false);
         toast.success("Added to your wardrobe!", {
           position: "top-right",
           autoClose: 5000,
@@ -115,13 +116,17 @@ const VirtualTryOn = () => {
       } else if (data.status === "failed") {
         clearInterval(intervalId);
         setPolling(false);
-        setError("Try-on failed. Please try again.");
+        setLoading(false);
+        setError(data.errorMessage || "Try-on failed. Please try again.");
+        setIsModalOpen(true);
       }
       } catch (err) {
-        console.error("Polling error:", err?.response?.data || err.message);
-        setError("Network error while checking try-on status.");
         clearInterval(intervalId);
         setPolling(false);
+        setLoading(false);
+        console.error("Polling error:", err?.response?.data || err.message);
+        setError("Network error while checking try-on status.");
+        setIsModalOpen(true);
       }
     }, 5000);
     setPollIntervalId(intervalId);
@@ -201,7 +206,7 @@ const VirtualTryOn = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="border border-[#848CB1]-700 rounded-lg p-6 text-center">
               <h3 className="text-lg font-medium text-gray-100 mb-4">Your Photo</h3>
-              <input type="file" accept="image/*" onChange={handleUserImageChange} className="hidden" id="userPhoto" />
+              <input type="file" accept=".jpg,.jpeg,.webp" onChange={handleUserImageChange} className="hidden" id="userPhoto" />
               <label htmlFor="userPhoto" className="cursor-pointer">
                 {userImagePreview ? (
                   <img src={userImagePreview} alt="User Preview" className="mx-auto max-h-48 object-contain rounded-lg" />
@@ -209,10 +214,13 @@ const VirtualTryOn = () => {
                   <div className="flex flex-col items-center justify-center h-48 text-gray-300">Click to upload</div>
                 )}
               </label>
+              <p className="text-xs text-gray-400 mt-2">
+              Accepted formats: JPG, JPEG, WEBP. Max size: 10MB. Min resolution: 300×300px.
+              </p>
             </div>
             <div className="border border-[#848CB1]-700 rounded-lg p-6 text-center">
               <h3 className="text-lg font-medium text-gray-100 mb-4">Clothing Item</h3>
-              <input type="file" accept="image/*" onChange={handleApparelImageChange} className="hidden" id="apparelPhoto" />
+              <input type="file" accept=".jpg,.jpeg,.webp" onChange={handleApparelImageChange} className="hidden" id="apparelPhoto" />
               <label htmlFor="apparelPhoto" className="cursor-pointer">
                 {apparelImagePreview ? (
                   <img src={apparelImagePreview} alt="Apparel Preview" className="mx-auto max-h-48 object-contain rounded-lg" />
@@ -220,6 +228,9 @@ const VirtualTryOn = () => {
                   <div className="flex flex-col items-center justify-center h-48 text-gray-300">Click to upload</div>
                 )}
               </label>
+              <p className="text-xs text-gray-400 mt-2">
+              Accepted formats: JPG, JPEG, WEBP. Max size: 10MB. Min resolution: 300×300px.
+              </p>
             </div>
           </div>
           <div className="flex items-center justify-center mt-2 space-x-2">
@@ -278,6 +289,7 @@ const VirtualTryOn = () => {
         loading={loading}
         tryOnImage={resultImageUrl}
         userEmail={user?.email}
+        errorMessage={error}
       />
 
       {isPrivacyModalOpen && (
