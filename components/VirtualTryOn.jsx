@@ -5,6 +5,8 @@ import PricingPlans from "@/components/PricingPlanCard";
 import AnalysisModal from "@/components/AnalysisModal";
 import PrivacyPolicyModal from "@/components/PrivacyPolicyModal";
 import LoginModal from "@/components/LoginModal";
+import { ToastContainer } from "react-toastify";
+import 'react-toastify/dist/ReactToastify.css';
 
 const VirtualTryOn = () => {
   const { user, signinRedirect } = useAuth();
@@ -27,8 +29,26 @@ const VirtualTryOn = () => {
   const [matchingAnalysis, setMatchingAnalysis] = useState(null);
   const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [userImageError, setUserImageError] = useState(null);
+  const [apparelImageError, setApparelImageError] = useState(null);
+
 
   const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
+
+  const allowedTypes = ["image/jpeg", "image/jpg", "image/webp"];
+  const maxSizeMB = 10;
+  const minResolution = 300;
+
+  const validateImage = async (file) => {
+    const isAllowedType = allowedTypes.includes(file.type);
+    const isAllowedSize = file.size <= maxSizeMB * 1024 * 1024;
+
+    const imageBitmap = await createImageBitmap(file);
+    const hasMinResolution = imageBitmap.width >= minResolution && imageBitmap.height >= minResolution;
+
+    return isAllowedType && isAllowedSize && hasMinResolution;
+  };
+
 
   useEffect(() => {
     if (!userEmail) return;
@@ -57,20 +77,34 @@ const VirtualTryOn = () => {
     };
   }, [pollIntervalId]);
 
-  const handleUserImageChange = (e) => {
+  const handleUserImageChange = async (e) => {
     const file = e.target.files[0];
     if (file) {
-      setUserImage(file);
-      setUserImagePreview(URL.createObjectURL(file));
     }
+    const isValid = await validateImage(file);
+    if (!isValid) {
+      setUserImageError("Invalid image. Only JPG, JPEG, WEBP under 10MB with min 300x300px are allowed.");
+      return;
+    }
+    setUserImageError(null);
+    setUserImage(file);
+    setUserImagePreview(URL.createObjectURL(file));
   };
 
-  const handleApparelImageChange = (e) => {
+  const handleApparelImageChange = async (e) => {
     const file = e.target.files[0];
     if (file) {
       setApparelImage(file);
       setApparelImagePreview(URL.createObjectURL(file));
     }
+        const isValid = await validateImage(file);
+    if (!isValid) {
+      setApparelImageError("Invalid image. Only JPG, JPEG, WEBP under 10MB with min 300x300px are allowed.");
+      return;
+    }
+    setApparelImageError(null);
+    setApparelImage(file);
+    setApparelImagePreview(URL.createObjectURL(file));
   };
 
   const toBase64 = (file) =>
@@ -125,7 +159,9 @@ const VirtualTryOn = () => {
         setPolling(false);
         setLoading(false);
         console.error("Polling error:", err?.response?.data || err.message);
-        setError("Network error while checking try-on status.");
+        const message = err?.response?.data?.error || "Network error while checking try-on status.";
+        setError(message);
+        toast.error(message);
         setIsModalOpen(true);
       }
     }, 5000);
@@ -217,6 +253,9 @@ const VirtualTryOn = () => {
               <p className="text-xs text-gray-400 mt-2">
               Accepted formats: JPG, JPEG, WEBP. Max size: 10MB. Min resolution: 300×300px.
               </p>
+              {userImageError && (
+                <p className="text-red-400 text-sm mt-2">{userImageError}</p>
+              )}
             </div>
             <div className="border border-[#848CB1]-700 rounded-lg p-6 text-center">
               <h3 className="text-lg font-medium text-gray-100 mb-4">Clothing Item</h3>
@@ -231,6 +270,9 @@ const VirtualTryOn = () => {
               <p className="text-xs text-gray-400 mt-2">
               Accepted formats: JPG, JPEG, WEBP. Max size: 10MB. Min resolution: 300×300px.
               </p>
+              {apparelImageError && (
+                <p className="text-red-400 text-sm mt-2">{apparelImageError}</p>
+              )}
             </div>
           </div>
           <div className="flex items-center justify-center mt-2 space-x-2">
@@ -313,7 +355,19 @@ const VirtualTryOn = () => {
             window.location.href = signUpUrl;
           }}
         />
-      )}
+      )} 
+      {/* ✅ ToastContainer must be inside the returned JSX */}
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="dark"
+      />
     </div>
   );
 };
