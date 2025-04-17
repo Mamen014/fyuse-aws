@@ -105,8 +105,8 @@ const AnalysisModal = ({ isOpen, onClose, analysisData, loading, tryOnImage, use
           // Loading State
           <div className="flex flex-col items-center justify-center h-64">
             <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-[#FF6B6B]"></div>
-            <p className="text-gray-400 mt-4">Loading...</p>
-            <p className="text-gray-400 mt-4">This may up to 3 minutes</p>
+            <p className="text-gray-400 mt-4">Please wait...</p>
+            <p className="text-gray-400 mt-4">This may take up to 3 minutes</p>
           </div>
       ) : (
           // Loaded State
