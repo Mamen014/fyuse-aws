@@ -12,7 +12,8 @@ import 'react-toastify/dist/ReactToastify.css';
 const VirtualTryOn = () => {
   const { user, signinRedirect } = useAuth();
   const userEmail = user?.profile?.email;
-
+  const [polling, setPolling] = useState(false);
+  const [pollIntervalId, setPollIntervalId] = useState(null);
   const [userImage, setUserImage] = useState(null);
   const [apparelImage, setApparelImage] = useState(null);
   const [userImagePreview, setUserImagePreview] = useState(null);
@@ -21,8 +22,6 @@ const VirtualTryOn = () => {
   const [resultImageUrl, setResultImageUrl] = useState(null);
   const [error, setError] = useState(null);
   const [taskId, setTaskId] = useState(null);
-  const [polling, setPolling] = useState(false);
-  const [pollIntervalId, setPollIntervalId] = useState(null);
   const [tryOnCount, setTryOnCount] = useState(0);
   const [agreeToPrivacy, setAgreeToPrivacy] = useState(false);
   const [showPricingPlans, setShowPricingPlans] = useState(false);
@@ -37,7 +36,7 @@ const VirtualTryOn = () => {
 
   const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
 
-  const allowedTypes = ["image/jpeg", "image/jpg", "image/webp"];
+  const allowedTypes = ["image/jpeg", "image/jpg"];
   const maxSizeMB = 10;
   const minResolution = 300;
 
@@ -79,35 +78,81 @@ const VirtualTryOn = () => {
   }, [pollIntervalId]);
 
   const handleUserImageChange = async (e) => {
-    const file = e.target.files[0];
-    if (file) {
-    }
-    const isValid = await validateImage(file);
-    if (!isValid) {
-      setUserImageError("Invalid image. Only JPG, JPEG, WEBP under 10MB with min 300x300px are allowed.");
+    const file = e.target.files?.[0]; // Safely extract the first file (use optional chaining)
+  
+    if (!file) {
+      // If no file is selected, reset state and exit early
+      setUserImage(null);
+      setUserImagePreview(null);
+      setUserImageError(null);
+      setIsValidUserImage(false);
+  
+      // Clear the file input field
+      const inputElement = document.getElementById("userPhoto");
+      if (inputElement) {
+        inputElement.value = "";
+      }
       return;
     }
-    setIsValidUserImage(isValid);
-    setUserImageError(null);
-    setUserImage(file);
-    setUserImagePreview(URL.createObjectURL(file));
+  
+    // Validate the file
+    try {
+      const isValid = await validateImage(file);
+      if (!isValid) {
+        setUserImageError("Invalid image. Only JPG or JPEG under 10MB with min 300x300px are allowed.");
+        setIsValidUserImage(false);
+        return;
+      }
+  
+      // Update state with the valid file
+      setUserImage(file);
+      setUserImagePreview(URL.createObjectURL(file));
+      setUserImageError(null);
+      setIsValidUserImage(true);
+    } catch (err) {
+      console.error("Error validating image:", err.message);
+      setUserImageError("An error occurred while validating the image.");
+      setIsValidUserImage(false);
+    }
   };
 
   const handleApparelImageChange = async (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setApparelImage(file);
-      setApparelImagePreview(URL.createObjectURL(file));
-    }
-        const isValid = await validateImage(file);
-    if (!isValid) {
-      setApparelImageError("Invalid image. Only JPG, JPEG, WEBP under 10MB with min 300x300px are allowed.");
+    const file = e.target.files?.[0]; // Safely extract the first file
+  
+    if (!file) {
+      // If no file is selected, reset state and exit early
+      setApparelImage(null);
+      setApparelImagePreview(null);
+      setApparelImageError(null);
+      setIsValidApparelImage(false);
+  
+      // Clear the file input field
+      const inputElement = document.getElementById("apparelPhoto");
+      if (inputElement) {
+        inputElement.value = "";
+      }
       return;
     }
-    setIsValidApparelImage(isValid);
-    setApparelImageError(null);
-    setApparelImage(file);
-    setApparelImagePreview(URL.createObjectURL(file));
+  
+    // Validate the file
+    try {
+      const isValid = await validateImage(file);
+      if (!isValid) {
+        setApparelImageError("Invalid image. Only JPG or JPEG under 10MB with min 300x300px are allowed.");
+        setIsValidApparelImage(false);
+        return;
+      }
+  
+      // Update state with the valid file
+      setApparelImage(file);
+      setApparelImagePreview(URL.createObjectURL(file));
+      setApparelImageError(null);
+      setIsValidApparelImage(true);
+    } catch (err) {
+      console.error("Error validating image:", err.message);
+      setApparelImageError("An error occurred while validating the image.");
+      setIsValidApparelImage(false);
+    }
   };
 
   const toBase64 = (file) =>
@@ -222,7 +267,7 @@ const VirtualTryOn = () => {
         const taskId = response.data.taskId; // Capture the task ID
         setTaskId(taskId);
         pollTryonStatus(taskId);
-  
+        
         // Trigger matching analysis with the same task ID
         const analysisResponse = await axios.post(`${API_BASE_URL}/MatchingAnalyzer`, {
           userImage: userImageUrl,
@@ -234,7 +279,6 @@ const VirtualTryOn = () => {
   
         setMatchingAnalysis(analysisResponse.data);
         setIsModalOpen(true);
-  
       }
     } catch (err) {
       if (err.response?.status === 403) {
@@ -268,7 +312,7 @@ const VirtualTryOn = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="border border-[#848CB1]-700 rounded-lg p-6 text-center">
               <h3 className="text-lg font-medium text-gray-100 mb-4">Your Photo</h3>
-              <input type="file" accept=".jpg,.jpeg,.webp" onChange={handleUserImageChange} className="hidden" id="userPhoto" />
+              <input type="file" accept=".jpg,.jpeg" onChange={handleUserImageChange} className="hidden" id="userPhoto" />
               <label htmlFor="userPhoto" className="cursor-pointer">
                 {userImagePreview ? (
                   <img src={userImagePreview} alt="User Preview" className="mx-auto max-h-48 object-contain rounded-lg" />
@@ -277,7 +321,7 @@ const VirtualTryOn = () => {
                 )}
               </label>
               <p className="text-xs text-gray-400 mt-2">
-              Accepted formats: JPG, JPEG, WEBP. Max size: 10MB. Min resolution: 300×300px.
+              Accepted formats: JPG or JPEG. Max size: 10MB. Min resolution: 300×300px.
               </p>
               {userImageError && (
                 <p className="text-red-400 text-sm mt-2">{userImageError}</p>
@@ -285,7 +329,7 @@ const VirtualTryOn = () => {
             </div>
             <div className="border border-[#848CB1]-700 rounded-lg p-6 text-center">
               <h3 className="text-lg font-medium text-gray-100 mb-4">Clothing Item</h3>
-              <input type="file" accept=".jpg,.jpeg,.webp" onChange={handleApparelImageChange} className="hidden" id="apparelPhoto" />
+              <input type="file" accept=".jpg,.jpeg" onChange={handleApparelImageChange} className="hidden" id="apparelPhoto" />
               <label htmlFor="apparelPhoto" className="cursor-pointer">
                 {apparelImagePreview ? (
                   <img src={apparelImagePreview} alt="Apparel Preview" className="mx-auto max-h-48 object-contain rounded-lg" />
@@ -294,7 +338,7 @@ const VirtualTryOn = () => {
                 )}
               </label>
               <p className="text-xs text-gray-400 mt-2">
-              Accepted formats: JPG, JPEG, WEBP. Max size: 10MB. Min resolution: 300×300px.
+              Accepted formats: JPG or JPEG. Max size: 10MB. Min resolution: 300×300px.
               </p>
               {apparelImageError && (
                 <p className="text-red-400 text-sm mt-2">{apparelImageError}</p>
@@ -334,19 +378,23 @@ const VirtualTryOn = () => {
                 if (!user) return setIsLoginModalOpen(true);
                 handleSubmit();
               }}
-              disabled
+              disabled={loading || !agreeToPrivacy || !isValidUserImage || !isValidApparelImage}
               className={`px-6 py-3 rounded-lg font-medium text-white ${
-                agreeToPrivacy ? "bg-gray-500 cursor-not-allowed" : "bg-gray-500 cursor-not-allowed"
+                loading
+                ? "bg-gray-500 cursor-not-allowed"
+                : agreeToPrivacy && isValidUserImage && isValidApparelImage
+                ? "bg-blue-500 hover:bg-blue-600" 
+                : "bg-gray-500 cursor-not-allowed"
               }`}
             >
-              Try-On Temporary Unavailable
+              {loading ? "Processing..." : "Try-On"}
             </button>
           </div>
           {polling && !resultImageUrl && (
             <p className="text-yellow-500 text-center mt-4">Waiting for result... polling server.</p>
           )}
-          {loading && <p className="text-gray-400 text-center animate-pulse">Processing...</p>}
           {error && <p className="text-red-500 text-center">{error}</p>}
+          {loading && <p className="text-gray-400 text-center animate-pulse">Processing...</p>}
         </div>
       )}
 
