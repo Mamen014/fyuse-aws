@@ -222,6 +222,19 @@ const VirtualTryOn = () => {
     setPolling(true);
   };
 
+  const refreshTryOnCount = () => {
+    axios
+      .get(`${API_BASE_URL}/getrack?userEmail=${userEmail}`)
+      .then((res) => {
+        const updatedCount = res.data.tryOnCount || 0;
+        setTryOnCount(updatedCount);
+        sessionStorage.setItem("tryOnCount", updatedCount);
+      })
+      .catch((err) => {
+        console.error("Error updating try-on count:", err);
+      });
+  };
+  
   const handleSubmit = async () => {
     if (!userImage || !apparelImage) {
       toast.error("Please upload both user and apparel images.");
@@ -288,6 +301,7 @@ const VirtualTryOn = () => {
       }
     } finally {
       setLoading(false);
+      refreshTryOnCount();
     }
   };
 
