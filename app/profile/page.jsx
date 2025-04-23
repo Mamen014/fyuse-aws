@@ -1,8 +1,8 @@
-'use client';
-import { useEffect, useState } from 'react';
-import { useAuth } from 'react-oidc-context';
-import { useRouter } from 'next/navigation';
-import { Toaster, toast } from 'react-hot-toast';
+"use client";
+import { useEffect, useState } from "react";
+import { useAuth } from "react-oidc-context";
+import { useRouter } from "next/navigation";
+import { Toaster, toast } from "react-hot-toast";
 
 export default function ProfilePage() {
   const auth = useAuth();
@@ -13,10 +13,10 @@ export default function ProfilePage() {
 
   // Debugging localStorage if needed
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const storedUser = localStorage.getItem('loggedInUser');
+    if (typeof window !== "undefined") {
+      const storedUser = localStorage.getItem("loggedInUser");
       if (storedUser) {
-        console.log('🪵 Stored local user:', JSON.parse(storedUser));
+        console.log("🪵 Stored local user:", JSON.parse(storedUser));
       }
     }
   }, []);
@@ -27,18 +27,23 @@ export default function ProfilePage() {
     try {
       const lambdaUrl = process.env.NEXT_PUBLIC_HISTORY_HANDLER;
 
-      const res = await fetch(`${lambdaUrl}?email=${encodeURIComponent(auth.user.profile.email)}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
+      const res = await fetch(
+        `${lambdaUrl}?email=${encodeURIComponent(auth.user.profile.email)}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
         },
-      });
+      );
 
       if (!res.ok) throw new Error(`Failed to fetch history: ${res.status}`);
 
       const data = await res.json();
       const allItems = Array.isArray(data.items) ? data.items : [];
-      const wardrobeItems = allItems.filter((item) => item.isInWardrobe === true);
+      const wardrobeItems = allItems.filter(
+        (item) => item.isInWardrobe === true,
+      );
 
       setTryOnHistory(wardrobeItems);
     } catch (err) {
@@ -72,9 +77,9 @@ export default function ProfilePage() {
       const removeEndpoint = process.env.NEXT_PUBLIC_REMOVE_ENDPOINT;
 
       const response = await fetch(removeEndpoint, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ taskId }),
       });
@@ -85,15 +90,20 @@ export default function ProfilePage() {
       }
 
       const result = await response.json();
-      console.log('✅ Removed from wardrobe:', result);
-      toast.success('Item removed from wardrobe!');
+      console.log("✅ Removed from wardrobe:", result);
+      toast.success("Item removed from wardrobe!", {
+        style: {
+          background: "#A1E3B5", // Success state color
+          color: "#0B1F63", // Primary text color
+        },
+      });
       await fetchHistory();
     } catch (err) {
-      console.error('❌ Failed to remove wardrobe item:', err);
-      if (err.message.includes('Failed to fetch')) {
-        toast.error('Network error or CORS issue. Check console for details.');
+      console.error("❌ Failed to remove wardrobe item:", err);
+      if (err.message.includes("Failed to fetch")) {
+        toast.error("Network error or CORS issue. Check console for details.");
       } else {
-        toast.error(err.message || 'Unexpected error removing item.');
+        toast.error(err.message || "Unexpected error removing item.");
       }
     } finally {
       setActionLoading(null);
@@ -102,7 +112,7 @@ export default function ProfilePage() {
 
   if (!auth?.isAuthenticated) {
     return (
-      <div className="p-6 max-w-3xl mx-auto text-white">
+      <div className="p-6 max-w-3xl mx-auto text-foreground">
         <Toaster position="top-center" />
         <p className="text-center text-gray-400">
           🔐 Please sign in to view your profile and wardrobe.
@@ -112,25 +122,33 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="p-6 max-w-3xl mx-auto text-white">
+    <div className="bg-background p-6 max-w-3xl mx-auto text-foreground">
       <Toaster position="top-center" />
 
-      <h2 className="text-2xl font-bold mb-4">Digital Wardrobe</h2>
+      {/* Heading */}
+      <h2 className="text-2xl font-bold mb-4 text-primary">Digital Wardrobe</h2>
 
       {/* Back to Home Button */}
       <div className="mb-6">
         <button
-          onClick={() => router.push('/')}
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-all"
+          onClick={() => router.push("/")}
+          className="px-4 py-2 bg-cta hover:bg-primary text-cta-foreground rounded-md transition-all"
         >
           ← Back to Home
         </button>
       </div>
 
-      <div className="bg-[#1a1a2f] p-4 rounded-xl mb-6">
-        <p><strong>Name:</strong> {auth.user?.profile?.name || 'N/A'}</p>
-        <p><strong>Email:</strong> {auth.user?.profile?.email}</p>
+      {/* User Profile Section */}
+      <div className="bg-background p-4 rounded-xl mb-6 border border-cta shadow-lg">
+        <p>
+          <strong>Name:</strong> {auth.user?.profile?.name || "N/A"}
+        </p>
+        <p>
+          <strong>Email:</strong> {auth.user?.profile?.email}
+        </p>
       </div>
+
+      {/* Wardrobe Items */}
       {loading ? (
         <p className="text-gray-400">Loading wardrobe...</p>
       ) : tryOnHistory.length === 0 ? (
@@ -140,8 +158,13 @@ export default function ProfilePage() {
       ) : (
         <ul className="space-y-4">
           {tryOnHistory.map((item) => (
-            <li key={item.taskId} className="border border-gray-600 p-4 rounded-xl bg-[#121222]">
-              <p><strong>Matching:</strong> {item.matchingPercentage || '0'}%</p>
+            <li
+              key={item.taskId}
+              className="border border-cta p-4 rounded-xl bg-background"
+            >
+              <p>
+                <strong>Matching:</strong> {item.matchingPercentage || "0"}%
+              </p>
 
               {item.generatedImageUrl && (
                 <img
@@ -151,13 +174,16 @@ export default function ProfilePage() {
                 />
               )}
 
+              {/* Remove from Wardrobe Button */}
               <div className="mt-3">
                 <button
                   onClick={() => handleRemoveFromWardrobe(item.taskId)}
                   disabled={actionLoading === item.taskId}
-                  className="px-4 py-2 rounded text-sm bg-red-600 hover:bg-red-700 transition-all"
+                  className="px-4 py-2 rounded text-sm bg-cta hover:bg-primary text-cta-foreground transition-all disabled:bg-gray-500 disabled:cursor-not-allowed"
                 >
-                  {actionLoading === item.taskId ? 'Processing...' : 'Remove from Wardrobe'}
+                  {actionLoading === item.taskId
+                    ? "Processing..."
+                    : "Remove from Wardrobe"}
                 </button>
               </div>
             </li>

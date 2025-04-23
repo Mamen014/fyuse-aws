@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import React from 'react';
-import Link from 'next/link'; // Import Link from Next.js
-import { motion } from 'framer-motion';
+import React from "react";
+import Link from "next/link";
+import { motion } from "framer-motion";
 
 export default function Contact() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#0f0c29] via-[#302b63] to-[#24243e] text-white">
+    <div className="min-h-screen bg-background text-foreground">
       <main className="pt-24 pb-20 px-6 max-w-4xl mx-auto font-sans space-y-12">
         {/* Title */}
         <motion.div
@@ -15,21 +15,23 @@ export default function Contact() {
           transition={{ duration: 0.6 }}
           className="text-center"
         >
-          <h1 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500">
+          <h1 className="text-4xl md:text-5xl font-bold text-primary">
             Contact FYUSE
           </h1>
-          <p className="mt-4 text-lg text-gray-300 max-w-2xl mx-auto">
-            Have questions, feedback, or just want to say hi? We’d love to hear from you!
+          <p className="mt-4 text-lg text-foreground max-w-2xl mx-auto">
+            Have questions, feedback, or just want to say hi? We’d love to hear
+            from you!
           </p>
         </motion.div>
 
-        {/* Back to Home Button */}
+        {/* Send Us an Email Button */}
         <div className="flex justify-center mb-8">
-          <Link href="/" passHref>
-            <button className="bg-gradient-to-r from-indigo-500 to-blue-500 text-white px-6 py-3 rounded-full shadow-md hover:scale-105 transition-transform text-lg">
-              ← Back to Home
-            </button>
-          </Link>
+          <a
+            href="mailto:ryaniaska14@gmail.com"
+            className="bg-cta hover:bg-primary text-cta-foreground px-6 py-3 rounded-full shadow-lg hover:scale-105 transition-transform text-lg"
+          >
+            Send Us an Email 📩
+          </a>
         </div>
 
         {/* Contact Info Card */}
@@ -37,25 +39,31 @@ export default function Contact() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="bg-[#1f1b3a] rounded-2xl shadow-xl p-8 space-y-6"
+          className="bg-background border border-cta rounded-2xl shadow-xl p-8 space-y-6"
         >
-          <h2 className="text-2xl font-semibold text-purple-300">Get in Touch</h2>
+          <h2 className="text-2xl font-semibold text-primary">Get in Touch</h2>
 
-          <div className="space-y-4 text-lg text-gray-300">
-            <p><span className="font-semibold text-white">Contact Person:</span> Ryan Iaska, Founder of FYUSE</p>
+          <div className="space-y-4 text-lg text-foreground">
             <p>
-              <span className="font-semibold text-white">Email:</span>{' '}
-              <a href="mailto:ryaniaska14@gmail.com" className="text-purple-400 hover:underline">
+              <span className="font-semibold text-primary">Contact Person:</span>{" "}
+              Ryan Iaska, Founder of FYUSE
+            </p>
+            <p>
+              <span className="font-semibold text-primary">Email:</span>{" "}
+              <a
+                href="mailto:ryaniaska14@gmail.com"
+                className="text-cta hover:underline"
+              >
                 ryaniaska14@gmail.com
               </a>
             </p>
             <p>
-              <span className="font-semibold text-white">WhatsApp:</span>{' '}
+              <span className="font-semibold text-primary">WhatsApp:</span>{" "}
               <a
                 href="https://wa.me/6281384481108"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-purple-400 hover:underline"
+                className="text-cta hover:underline"
               >
                 +62 813 8448 1108
               </a>
@@ -63,21 +71,27 @@ export default function Contact() {
           </div>
         </motion.div>
 
-        {/* Optional CTA */}
-        <div className="text-center pt-10">
-          <a
-            href="mailto:ryaniaska14@gmail.com"
-            className="bg-gradient-to-r from-purple-600 to-pink-500 text-white px-6 py-3 rounded-full shadow-lg hover:scale-105 transition-transform"
+        {/* Back to Home (Arrow Icon) */}
+        <Link href="/" passHref>
+          <button
+            className="text-foreground text-lg hover:text-cta transition-colors flex items-center gap-2"
+            aria-label="Back to Home"
           >
-            Send Us an Email 📩
-          </a>
-        </div>
+            ← Back to Home
+          </button>
+        </Link>
       </main>
 
-      <footer className="bg-[#0f0c29] border-t border-gray-700 py-8 text-center text-purple-200">
+      {/* Footer */}
+      <footer className="bg-background border-t border-primary py-8 text-center text-foreground">
         <p>&copy; 2025 FYUSE. All rights reserved.</p>
         <div className="mt-4 flex justify-center space-x-6">
-          <a href="https://www.instagram.com/fyuse.id/" className="hover:text-white">Instagram</a>
+          <a
+            href="https://www.instagram.com/fyuse.id/"
+            className="hover:text-cta"
+          >
+            Instagram
+          </a>
         </div>
       </footer>
     </div>

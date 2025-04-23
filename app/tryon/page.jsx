@@ -1,4 +1,7 @@
+'use client';
+
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import axios from "axios";
 import { useAuth } from "react-oidc-context";
 import PricingPlans from "@/components/PricingPlanCard";
@@ -9,7 +12,7 @@ import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-const VirtualTryOn = () => {
+export default function VirtualTryOn() {
   const { user, signinRedirect } = useAuth();
   const userEmail = user?.profile?.email;
   const [polling, setPolling] = useState(false);
@@ -338,12 +341,12 @@ const VirtualTryOn = () => {
   };
 
   return (
-    <div className="bg-[#1a1a2f] text-white px-6">
+    <div className="bg-background w-full max-w-4xl mx-auto px-6 py-12 space-y-6">
       <header className="text-center mb-8">
-        <h1 className="text-4xl font-bold text-gray-100">
+        <h1 className="text-4xl font-bold text-primary-100">
           Digital Fitting Room
         </h1>
-        <p className="text-gray-300 mt-2">Experience the perfect fit.</p>
+        <p className="text-primary-300 mt-2">Experience the perfect fit.</p>
       </header>
 
       {showPricingPlans && (
@@ -355,13 +358,13 @@ const VirtualTryOn = () => {
       )}
 
       {!showPricingPlans && (
-        <div className="bg-[#1a1a2f] w-full max-w-4xl space-y-6">
-          <h2 className="text-2xl font-medium text-gray-100 text-center mb-4">
+        <div className="bg-background w-full max-w-4xl space-y-6">
+          <h2 className="text-2xl font-medium text-primary-100 text-center mb-4">
             Upload Your Photos
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="border border-[#848CB1]-700 rounded-lg p-6 text-center">
-              <h3 className="text-lg font-medium text-gray-100 mb-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-20">
+            <div className="border border-cta rounded-lg p-6 text-center">
+              <h3 className="text-lg font-medium text-primary-100 mb-4">
                 Your Photo
               </h3>
               <input
@@ -379,12 +382,12 @@ const VirtualTryOn = () => {
                     className="mx-auto max-h-48 object-contain rounded-lg"
                   />
                 ) : (
-                  <div className="flex flex-col items-center justify-center h-48 text-gray-300">
+                  <div className="flex flex-col items-center justify-center h-48 text-primary-300">
                     Click to upload
                   </div>
                 )}
               </label>
-              <p className="text-xs text-gray-400 mt-2">
+              <p className="text-xs text-primary-400 mt-2">
                 Accepted formats: JPG or JPEG. Max size: 10MB. Min resolution:
                 300×300px.
               </p>
@@ -392,8 +395,8 @@ const VirtualTryOn = () => {
                 <p className="text-red-400 text-sm mt-2">{userImageError}</p>
               )}
             </div>
-            <div className="border border-[#848CB1]-700 rounded-lg p-6 text-center">
-              <h3 className="text-lg font-medium text-gray-100 mb-4">
+            <div className="border border-cta rounded-lg p-6 text-center">
+              <h3 className="text-lg font-medium text-primary-100 mb-4">
                 Clothing Item
               </h3>
               <input
@@ -411,12 +414,12 @@ const VirtualTryOn = () => {
                     className="mx-auto max-h-48 object-contain rounded-lg"
                   />
                 ) : (
-                  <div className="flex flex-col items-center justify-center h-48 text-gray-300">
+                  <div className="flex flex-col items-center justify-center h-48 text-primary-300">
                     Click to upload
                   </div>
                 )}
               </label>
-              <p className="text-xs text-gray-400 mt-2">
+              <p className="text-xs text-primary-400 mt-2">
                 Accepted formats: JPG or JPEG. Max size: 10MB. Min resolution:
                 300×300px.
               </p>
@@ -442,7 +445,7 @@ const VirtualTryOn = () => {
               }}
               className="w-4 h-4 accent-blue-500"
             />
-            <label htmlFor="privacyConsent" className="text-sm text-gray-300">
+            <label htmlFor="privacyConsent" className="text-sm text-primary-300">
               I agree to the{" "}
               <button
                 onClick={(e) => {
@@ -471,7 +474,7 @@ const VirtualTryOn = () => {
                 loading
                   ? "bg-gray-500 cursor-not-allowed"
                   : agreeToPrivacy && isValidUserImage && isValidApparelImage
-                    ? "bg-blue-500 hover:bg-blue-600"
+                    ? "bg-cta hover:bg-blue-600"
                     : "bg-gray-500 cursor-not-allowed"
               }`}
             >
@@ -489,6 +492,27 @@ const VirtualTryOn = () => {
               Processing...
             </p>
           )}
+        <div className="bottom-0 left-0 right-0 bg-background py-8 px-2 flex justify-between items-center">
+          {/* Back to Home (Arrow Icon) */}
+          <Link href="/" passHref>
+            <button
+              className="text-foreground text-xl hover:text-cta transition-colors"
+              aria-label="Back to Home"
+            >
+              ← Back to Home
+            </button>
+          </Link>
+
+          {/* Link to /styling */}
+          <Link href="/profile" passHref>
+            <button
+              className="text-foreground text-xl hover:text-cta transition-colors"
+              aria-label="View Profile Page"
+            >
+              Digital Wardrobe →
+            </button>
+          </Link>
+        </div>          
         </div>
       )}
 
@@ -542,5 +566,3 @@ const VirtualTryOn = () => {
     </div>
   );
 };
-
-export default VirtualTryOn;

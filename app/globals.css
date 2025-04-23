@@ -20,52 +20,52 @@ body {
 
 @layer base {
   :root {
-    --background: #1C0C1D; /* Dark purple background */
-    --foreground: #F38980; /* Warm orange-red text */
+    --background: #FAFAFA; /* Background */
+    --foreground: #0B1F63; /* Primary Text & Logo */
 
     /* Card Colors */
-    --card: #1B0D1E; /* Slightly lighter dark purple */
-    --card-foreground: #F38980; /* Warm orange-red */
+    --card: #FAFAFA; /* Light background */
+    --card-foreground: #0B1F63; /* Primary text */
 
     /* Primary Colors */
-    --primary: #848CB1; /* Light blue */
-    --primary-foreground: #1C0C1D; /* Dark purple */
+    --primary: #005EB8; /* CTA Button */
+    --primary-foreground: #FAFAFA; /* White text for CTA buttons */
 
     /* Secondary Colors */
-    --secondary: #434259; /* Deep blue-purple */
-    --secondary-foreground: #F38980; /* Warm orange-red */
+    --secondary: #A1E3B5; /* Success States */
+    --secondary-foreground: #0B1F63; /* Primary text on success states */
 
     /* Muted Colors */
-    --muted: #1A0C1D; /* Very dark purple */
-    --muted-foreground: #8A4A57; /* Muted red-brown */
+    --muted: #FAFAFA; /* Light background */
+    --muted-foreground: #0B1F63; /* Primary text */
 
     /* Accent Colors */
-    --accent: #F38980; /* Warm orange-red */
-    --accent-foreground: #1C0C1D; /* Dark purple */
+    --accent: #005EB8; /* CTA Button */
+    --accent-foreground: #FAFAFA; /* White text for accents */
 
     /* Destructive Colors */
-    --destructive: #8A4A57; /* Muted red-brown */
-    --destructive-foreground: #F38980; /* Warm orange-red */
+    --destructive: #FF4D4D; /* Red for destructive actions */
+    --destructive-foreground: #FAFAFA; /* White text for destructive actions */
 
     /* Border and Input Colors */
-    --border: #1E111E; /* Dark purple */
-    --input: #1E0D1E; /* Similar dark purple */
+    --border: #005EB8; /* CTA Button for borders */
+    --input: #FAFAFA; /* Light background for inputs */
 
     /* Ring Color */
-    --ring: #848CB1; /* Light blue */
+    --ring: #005EB8; /* CTA Button for focus rings */
 
     /* Chart Colors */
-    --chart-1: #848CB1; /* Light blue */
-    --chart-2: #F38980; /* Warm orange-red */
-    --chart-3: #434259; /* Deep blue-purple */
-    --chart-4: #8A4A57; /* Muted red-brown */
-    --chart-5: #1B0D1E; /* Slightly lighter dark purple */
+    --chart-1: #005EB8; /* CTA Button */
+    --chart-2: #A1E3B5; /* Success States */
+    --chart-3: #0B1F63; /* Primary Text & Logo */
+    --chart-4: #FAFAFA; /* Background */
+    --chart-5: #005EB8; /* CTA Button */
 
     --radius: 0.5rem; /* Rounded corners */
   }
 
   body {
-    @apply bg-[#1C0C1D] text-[#F38980]; /* Background and text colors */
+    @apply bg-[#FAFAFA] text-[#0B1F63]; /* Background and text colors */
   }
 }
 
@@ -79,10 +79,14 @@ body {
   overflow-y: auto; /* Enable vertical scrolling */
   padding: 1rem; /* Default padding */
   border-radius: var(--radius); /* Rounded corners */
+  background-color: var(--card); /* Use light background */
+  color: var(--card-foreground); /* Use primary text */
+  border: 1px solid var(--border); /* Use CTA Button for borders */
 }
 
 .background-overlay {
   z-index: 40; /* Background overlay behind the modal */
+  background-color: rgba(11, 31, 99, 0.8); /* Semi-transparent primary text */
 }
 
 /* Responsive Design */
@@ -125,7 +129,10 @@ body {
 /* Medium Screens */
 @media (min-width: 768px) and (max-width: 1024px) {
   .grid-cols-2 {
-    grid-template-columns: repeat(2, minmax(0, 1fr)); /* Two columns for medium screens */
+    grid-template-columns: repeat(
+      2,
+      minmax(0, 1fr)
+    ); /* Two columns for medium screens */
   }
 
   .gap-6 {
@@ -136,7 +143,10 @@ body {
 /* Large Screens */
 @media (min-width: 1024px) {
   .grid-cols-3 {
-    grid-template-columns: repeat(3, minmax(0, 1fr)); /* Three columns for large screens */
+    grid-template-columns: repeat(
+      3,
+      minmax(0, 1fr)
+    ); /* Three columns for large screens */
   }
 
   .gap-6 {

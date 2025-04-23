@@ -7,7 +7,15 @@ import "react-toastify/dist/ReactToastify.css";
 // Dynamically import the client-side chart component
 const ClientChart = dynamic(() => import("./ClientChart"), { ssr: false });
 
-const AnalysisModal = ({ isOpen, onClose, analysisData, loading, tryOnImage, userEmail, errorMessage }) => {
+const AnalysisModal = ({
+  isOpen,
+  onClose,
+  analysisData,
+  loading,
+  tryOnImage,
+  userEmail,
+  errorMessage,
+}) => {
   if (!isOpen) return null;
 
   const {
@@ -26,7 +34,7 @@ const AnalysisModal = ({ isOpen, onClose, analysisData, loading, tryOnImage, use
     { name: "Unmatched", value: 100 - matchingPercentageNum },
   ];
 
-  const COLORS = ["#F38980", "#848CB1"];
+  const COLORS = ["#A1E3B5", "#848CB1"];
 
   // Function to handle adding the try-on result to the user's collection
   const handleAddToCollection = async () => {
@@ -45,7 +53,7 @@ const AnalysisModal = ({ isOpen, onClose, analysisData, loading, tryOnImage, use
     console.log("Submitting to wardrobe:", {
       userEmail,
       generatedImageUrl: tryOnImage,
-    });    
+    });
     try {
       // Make the POST request to the /tryontrack endpoint
       await axios.post(`${process.env.NEXT_PUBLIC_FYUSEAPI}/tryontrack`, {
@@ -64,54 +72,43 @@ const AnalysisModal = ({ isOpen, onClose, analysisData, loading, tryOnImage, use
       });
     } catch (error) {
       console.error("Error adding to wardrobe:", error);
-      toast.error("An error occurred while adding this item to your wardrobe.", {
-        position: "top-right",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
+      toast.error(
+        "An error occurred while adding this item to your wardrobe.",
+        {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        },
+      );
     }
   };
 
   return (
-    <div
-      className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50"
-      aria-modal="true"
-      role="dialog"
-    >
-      <div
-        className="bg-[#1E1E2C] rounded-lg w-full max-w-2xl p-6 shadow-lg relative overflow-y-auto max-h-screen"
-        style={{ maxWidth: "90vw" }} // Ensure the modal doesn't exceed the viewport width
-      >
-        {/* Close Button */}
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" role="dialog">
+      <div className="bg-background text-foreground rounded-lg w-full max-w-2xl p-6 shadow-lg overflow-y-auto max-h-screen">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-white hover:text-red-500 text-xl font-bold focus:outline-none"
+          className="text-xl font-bold text-destructive hover:text-red-600 focus:outline-none"
           aria-label="Close modal"
         >
           &times;
         </button>
 
-        {/* Main Content */}
         {errorMessage ? (
-          // Show error
-          <div className="text-center py-12 text-red-400">
+          <div className="text-center py-12 text-destructive">
             <h3 className="text-2xl font-semibold">Something went wrong</h3>
             <p className="mt-2">{errorMessage}</p>
           </div>
-        ) : loading || !tryOnImage ? (  
-          // Loading State
+        ) : loading || !tryOnImage ? (
           <div className="flex flex-col items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-[#FF6B6B]"></div>
-            <p className="text-gray-400 mt-4">Please wait...</p>
-            <p className="text-gray-400 mt-4">This may take up to 3 minutes</p>
+            <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-cta"></div>
+            <p className="text-muted-foreground mt-4">Please wait...<br />This may take up to 3 minutes</p>
           </div>
-      ) : (
-          // Loaded State
+        ) : (
           <div className="flex flex-col md:flex-row gap-6">
-            {/* Try-On Image */}
             <div className="w-full md:w-1/2 flex flex-col gap-4">
               <div className="bg-white rounded-lg overflow-hidden shadow-md">
                 {tryOnImage ? (
@@ -121,16 +118,12 @@ const AnalysisModal = ({ isOpen, onClose, analysisData, loading, tryOnImage, use
                     className="w-full h-auto object-cover"
                   />
                 ) : (
-                  <div className="p-8 text-center text-gray-400">
-                    No try-on image available
-                  </div>
+                  <div className="p-8 text-center text-muted-foreground">No try-on image available</div>
                 )}
               </div>
-
-              {/* User Appearance */}
-              <div className="bg-[#1E1E2C] border border-[#FFFFFF1A] rounded-lg p-4">
-                <h3 className="text-white font-medium mb-2">User Appearance</h3>
-                <ul className="list-disc pl-4 text-gray-400">
+              <div className="bg-background border border-border rounded-md p-4">
+                <h3 className="text-lg font-medium text-foreground mb-2">User Appearance</h3>
+                <ul className="list-disc pl-4 text-muted-foreground">
                   <li>Gender: {gender}</li>
                   <li>Body Shape: {bodyShape}</li>
                   <li>Skin Tone: {skinTone}</li>
@@ -138,24 +131,18 @@ const AnalysisModal = ({ isOpen, onClose, analysisData, loading, tryOnImage, use
               </div>
             </div>
 
-            {/* Matching Percentage and Clothing Item */}
             <div className="w-full md:w-1/2 flex flex-col gap-4">
-              {/* Matching Percentage */}
-              <div className="bg-white rounded-lg overflow-hidden shadow-md p-4 flex flex-col items-center justify-center">
+              <div className="bg-transparent rounded-lg shadow-md p-4 flex flex-col items-center">
                 {ClientChart && (
                   <>
                     <ClientChart data={data} COLORS={COLORS} />
-                    <span className="text-4xl font-bold mt-2" style={{ color: "#8A4A57" }}>
-                      {matchingPercentageNum}%
-                    </span>
+                    <span className="text-4xl font-bold text-accent mt-2">{matchingPercentageNum}%</span>
                   </>
                 )}
               </div>
-
-              {/* Clothing Item */}
-              <div className="bg-[#1E1E2C] border border-[#FFFFFF1A] rounded-lg p-4">
-                <h3 className="text-white font-medium mb-2">Clothing Item</h3>
-                <ul className="list-disc pl-4 text-gray-400">
+              <div className="bg-background border border-border rounded-md p-4">
+                <h3 className="text-lg font-medium text-foreground mb-2">Clothing Item</h3>
+                <ul className="list-disc pl-4 text-muted-foreground">
                   <li>Fit: {clothingFit}</li>
                   <li>Color: {clothingColor}</li>
                 </ul>

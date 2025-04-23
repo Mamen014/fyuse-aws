@@ -1,8 +1,7 @@
-'use client';
+"use client";
 import React from "react";
 import Link from "next/link"; // Import Link from Next.js
 import { motion } from "framer-motion";
-import { Star } from "lucide-react";
 
 const features = [
   {
@@ -41,16 +40,16 @@ const FeatureCard = ({ title, description }) => (
   <motion.div
     whileHover={{ y: -4, scale: 1.02 }}
     transition={{ duration: 0.3 }}
-    className="bg-[#1d1a2e]/80 backdrop-blur-lg border border-purple-800/30 text-white rounded-2xl p-6 shadow-xl hover:shadow-purple-700/30 transition-all"
+    className="bg-background border border-cta/30 text-foreground rounded-2xl p-6 shadow-xl hover:shadow-cta/30 transition-all"
   >
-    <h3 className="text-lg md:text-xl font-semibold text-purple-300 mb-3">{title}</h3>
-    <p className="text-sm md:text-base text-gray-300">{description}</p>
+    <h3 className="text-lg md:text-xl font-semibold text-cta mb-3">{title}</h3>
+    <p className="text-sm md:text-base text-foreground">{description}</p>
   </motion.div>
 );
 
 export default function Features() {
   return (
-    <section className="min-h-screen bg-gradient-to-b from-[#0f0c29] via-[#302b63] to-[#24243e] py-20 px-6 text-white font-sans">
+    <section className="min-h-screen bg-background py-20 px-6 text-foreground font-sans">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-center mb-14 px-4">
@@ -58,23 +57,14 @@ export default function Features() {
             initial={{ opacity: 0, y: -15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="text-3xl md:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent flex justify-center items-center gap-2"
+            className="text-3xl md:text-4xl font-extrabold tracking-tight text-primary"
           >
-            <Star className="w-7 h-7 text-purple-400" />
             More Than Features — A Whole New Way to Dress
           </motion.h2>
-          <p className="mt-4 text-base md:text-lg text-gray-300 max-w-2xl mx-auto">
-            FYUSE is where technology meets personal style. We go beyond tools — we help you feel confident, expressive, and effortlessly you.
+          <p className="mt-4 text-base md:text-lg text-foreground max-w-2xl mx-auto">
+            FYUSE is where technology meets personal style. We go beyond tools
+            — we help you feel confident, expressive, and effortlessly you.
           </p>
-
-          {/* Back to Home Button */}
-          <div className="flex justify-center mt-8">
-            <Link href="/" passHref>
-              <button className="bg-gradient-to-r from-indigo-500 to-blue-500 text-white px-6 py-3 rounded-full shadow-md hover:scale-105 transition-transform text-lg">
-                ← Back to Home
-              </button>
-            </Link>
-          </div>
         </div>
 
         {/* Feature Grid */}
@@ -87,6 +77,16 @@ export default function Features() {
             />
           ))}
         </div>
+
+        {/* Back to Home (Arrow Icon) */}
+        <Link href="/" passHref>
+          <button
+            className="text-foreground text-lg hover:text-cta transition-colors flex items-center gap-2 mt-10"
+            aria-label="Back to Home"
+          >
+            ← Back to Home
+          </button>
+        </Link>
       </div>
     </section>
   );
