@@ -3,11 +3,15 @@
 import React from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 
 export default function About() {
   return (
+    
     <div className="min-h-screen bg-background text-foreground">
       <main className="pt-24 pb-16 px-6 max-w-5xl mx-auto space-y-14 font-sans">
+        <Navbar />
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -117,18 +121,7 @@ export default function About() {
         </div>
       </main>
 
-      {/* Footer */}
-      <footer className="bg-background border-t border-primary py-8 text-center text-foreground">
-        <p>&copy; 2025 FYUSE. All rights reserved.</p>
-        <div className="mt-4 flex justify-center space-x-6">
-          <a
-            href="https://www.instagram.com/fyuse.id/"
-            className="hover:text-cta"
-          >
-            Instagram
-          </a>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

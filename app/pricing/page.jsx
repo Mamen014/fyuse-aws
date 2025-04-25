@@ -8,6 +8,7 @@ import LearnMoreModal from "@/components/LearnMoreModal";
 import LearnMoreLite from "@/components/LearnMoreLite";
 import LearnMorePro from "@/components/LearnMorePro";
 import LearnMoreElite from "@/components/LearnMoreElite";
+import Navbar from "@/components/Navbar";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
 
@@ -18,28 +19,28 @@ export default function PricingPlans() {
 
   const handleTrack = async (action, planName) => {
     console.log(`User selected plan: ${planName}`);
-  const payload = {
-    userEmail,
-    action,
-    planName,
-    timestamp: new Date().toISOString(),
+    const payload = {
+      userEmail,
+      action,
+      planName,
+      timestamp: new Date().toISOString(),
+    };
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/trackevent`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const result = await res.json();
+      console.log("Tracking result:", result);
+    } catch (err) {
+      console.error("Failed to track user event:", err);
+    }
   };
-
-  try {
-    const res = await fetch(`${API_BASE_URL}/trackevent`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
-
-    const result = await res.json();
-    console.log("Tracking result:", result);
-  } catch (err) {
-    console.error("Failed to track user event:", err);
-  }
-};
 
   const plans = [
     // New Basic Plan
@@ -98,7 +99,8 @@ export default function PricingPlans() {
   return (
     <>
       {/* Full-page Pricing Plans */}
-      <div className="bg-background text-foreground min-h-screen p-8">
+      <Navbar />
+      <div className="bg-background text-foreground mt-20 min-h-screen p-8">
         <h2 className="text-3xl md:text-4xl font-bold text-center mb-8 text-primary">
           Choose Your Plan
         </h2>
@@ -160,27 +162,27 @@ export default function PricingPlans() {
             </div>
           ))}
         </div>
-        <div className="bottom-0 left-0 right-0 bg-background py-8 px-2 flex justify-between items-center">
-          {/* Back to Home (Arrow Icon) */}
-          <Link href="/" passHref>
+        {/* <div className="bottom-0 left-0 right-0 bg-background py-8 px-2 flex justify-between items-center"> */}
+        {/* Back to Home (Arrow Icon) */}
+        {/* <Link href="/" passHref>
             <button
               className="text-foreground text-xl hover:text-cta transition-colors"
               aria-label="Back to Home"
             >
               ← Back to Home
             </button>
-          </Link>
+          </Link> */}
 
-          {/* Link to /features */}
-          <Link href="/features" passHref>
+        {/* Link to /features */}
+        {/* <Link href="/features" passHref>
             <button
               className="text-foreground text-xl hover:text-cta transition-colors"
               aria-label="View Features Page"
             >
               View Features →
             </button>
-          </Link>
-        </div>
+          </Link> */}
+        {/* </div> */}
       </div>
 
       {/* Learn More Modal */}

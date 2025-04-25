@@ -1,0 +1,114 @@
+"use client";
+
+import { useEffect } from "react";
+import Link from "next/link";
+import { useAuth } from "react-oidc-context";
+
+export default function AuthActionsInNavbar() {
+  const auth = useAuth();
+
+  const handleSignUp = () => {
+    const clientId = process.env.NEXT_PUBLIC_CLIENTID;
+    const domain = process.env.NEXT_PUBLIC_DOMAIN;
+    const redirectUri =
+      typeof window !== "undefined"
+        ? window.location.origin + "/"
+        : "http://localhost:3000/";
+    const signUpUrl = `https://${domain}/signup?client_id=${clientId}&response_type=code&scope=openid+profile+email&redirect_uri=${encodeURIComponent(redirectUri)}`;
+    sessionStorage.setItem("cameFromSignup", "true");
+    window.location.href = signUpUrl;
+  };
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const searchParams = new URLSearchParams(window.location.search);
+    const hasAuthCode = searchParams.get("code");
+    const cameFromSignup = sessionStorage.getItem("cameFromSignup") === "true";
+    if (
+      hasAuthCode &&
+      cameFromSignup &&
+      !localStorage.getItem("loggedInUser")
+    ) {
+      alert("🎉 Signup complete! Now please log in to start using FYUSE.");
+      sessionStorage.removeItem("cameFromSignup");
+      searchParams.delete("code");
+      const newUrl = `${window.location.origin}${window.location.pathname}?${searchParams.toString()}`;
+      window.history.replaceState({}, document.title, newUrl);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (auth?.isAuthenticated && auth?.user?.profile?.email) {
+      const userData = {
+        email: auth.user.profile.email,
+        name: auth.user.profile.name || "",
+        idToken: auth.user.id_token,
+        accessToken: auth.user.access_token,
+        refreshToken: auth.user.refresh_token,
+        profile: auth.user.profile,
+      };
+      localStorage.setItem("loggedInUser", JSON.stringify(userData));
+    }
+    if (!auth?.isAuthenticated) {
+      localStorage.removeItem("loggedInUser");
+    }
+  }, [auth?.isAuthenticated, auth?.user]);
+
+  const handleSignOut = () => {
+    localStorage.removeItem("loggedInUser");
+    sessionStorage.clear();
+    const origin =
+      typeof window !== "undefined"
+        ? window.location.origin
+        : "http://localhost:3000";
+    const logoutUrl = `https://ap-southeast-2imonu7fwb.auth.ap-southeast-2.amazoncognito.com/logout?client_id=4l7l5ebjj2io1vap6qohbl2i7l&logout_uri=${encodeURIComponent(origin + "/")}`;
+    window.location.href = logoutUrl;
+  };
+
+  if (auth.isLoading) return null;
+
+  if (auth.isAuthenticated) {
+    const username = auth.user?.profile?.name || auth.user?.profile?.email;
+    return (
+      <div className="flex items-center space-x-4">
+        <span className="text-sm text-primary-foreground whitespace-nowrap">
+          Welcome, {username}
+        </span>
+        <Link href="/profile" passHref>
+          <button
+            type="button"
+            className="bg-success text-success-foreground text-sm px-4 py-2 rounded-md shadow"
+          >
+            Digital Wardrobe
+          </button>
+        </Link>
+        <button
+          type="button"
+          onClick={handleSignOut}
+          className="bg-destructive text-destructive-foreground text-sm px-4 py-2 rounded-md"
+        >
+          Sign Out
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-4">
+      <button
+        type="button"
+        onClick={() => auth.signinRedirect()}
+        className="bg-cta text-cta-foreground text-sm px-4 py-2 rounded-md"
+      >
+        Sign In
+      </button>
+      <button
+        type="button"
+        onClick={handleSignUp}
+        className="bg-accent text-accent-foreground text-sm px-4 py-2 rounded-md"
+      >
+        Sign Up
+      </button>
+    </div>
+  );
+}
