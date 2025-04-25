@@ -36,6 +36,9 @@ export default function VirtualTryOn() {
   const [isValidUserImage, setIsValidUserImage] = useState(false);
   const [isValidApparelImage, setIsValidApparelImage] = useState(false);
   const [apparelImageError, setApparelImageError] = useState(null);
+  const [isUserPhotoGuidanceOpen, setIsUserPhotoGuidanceOpen] = useState(false);
+  const [isApparelPhotoGuidanceOpen, setIsApparelPhotoGuidanceOpen] = useState(false);
+
 
   const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
 
@@ -394,6 +397,53 @@ export default function VirtualTryOn() {
               {userImageError && (
                 <p className="text-red-400 text-sm mt-2">{userImageError}</p>
               )}
+              {/* Trigger for the Modal */}
+              <p>
+                <button
+                  onClick={() => setIsUserPhotoGuidanceOpen(true)}
+                  className="underline text-blue-400 cursor-pointer"
+                >
+                  Upload User Photo Guidance
+                </button>
+              </p>
+            </div>
+            {/* Modal for Upload User Photo Guidance */}
+            <div
+              className={`fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 ${
+                isUserPhotoGuidanceOpen ? "block" : "hidden"
+              }`}
+            >
+              <div className="bg-background w-full max-w-md p-6 rounded-lg shadow-lg">
+                <h3 className="text-lg font-medium text-primary-100 mb-4">
+                  Upload User Photo Guidance
+                </h3>
+                <div className="flex justify-center space-x-4">
+                  {/* Good Example */}
+                  <div className="flex flex-col items-center">
+                    <img
+                      src="/examples/user/good.png"
+                      alt="Good Example"
+                      className="w-48 h-48 object-cover border-2 border-green-500 rounded-lg"
+                    />
+                    <span className="text-green-500 text-xs mt-2">✔ Good</span>
+                  </div>
+                  {/* Bad Example */}
+                  <div className="flex flex-col items-center">
+                    <img
+                      src="/examples/user/bad.png"
+                      alt="Bad Example"
+                      className="w-48 h-48 object-cover border-2 border-red-500 rounded-lg"
+                    />
+                    <span className="text-red-500 text-xs mt-2">✘ Bad</span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setIsUserPhotoGuidanceOpen(false)}
+                  className="mt-4 px-4 py-2 bg-cta text-white rounded-lg hover:bg-blue-600 transition-colors"
+                >
+                  Close
+                </button>
+              </div>
             </div>
             <div className="border border-cta rounded-lg p-6 text-center">
               <h3 className="text-lg font-medium text-primary-100 mb-4">
@@ -426,6 +476,53 @@ export default function VirtualTryOn() {
               {apparelImageError && (
                 <p className="text-red-400 text-sm mt-2">{apparelImageError}</p>
               )}
+              {/* Trigger for the Modal */}
+              <p>
+                <button
+                  onClick={() => setIsApparelPhotoGuidanceOpen(true)}
+                  className="underline text-blue-400 cursor-pointer"
+                >
+                  Upload Apparel Photo Guidance
+                </button>
+              </p>
+            </div>
+            {/* Modal for Upload Apparel Photo Guidance */}
+            <div
+              className={`fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 ${
+                isApparelPhotoGuidanceOpen ? "block" : "hidden"
+              }`}
+            >
+              <div className="bg-background w-full max-w-md p-6 rounded-lg shadow-lg">
+                <h3 className="text-lg font-medium text-primary-100 mb-4">
+                  Upload Apparel Photo Guidance
+                </h3>
+                <div className="flex justify-center space-x-4">
+                  {/* Good Example */}
+                  <div className="flex flex-col items-center">
+                    <img
+                      src="/examples/apparel/good.png"
+                      alt="Good Example"
+                      className="w-48 h-48 object-cover border-2 border-green-500 rounded-lg"
+                    />
+                    <span className="text-green-500 text-xs mt-2">✔ Good</span>
+                  </div>
+                  {/* Bad Example */}
+                  <div className="flex flex-col items-center">
+                    <img
+                      src="/examples/apparel/bad.png"
+                      alt="Bad Example"
+                      className="w-48 h-48 object-cover border-2 border-red-500 rounded-lg"
+                    />
+                    <span className="text-red-500 text-xs mt-2">✘ Bad</span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setIsApparelPhotoGuidanceOpen(false)}
+                  className="mt-4 px-4 py-2 bg-cta text-white rounded-lg hover:bg-blue-600 transition-colors"
+                >
+                  Close
+                </button>
+              </div>
             </div>
           </div>
           <div className="flex items-center justify-center mt-2 space-x-2">
