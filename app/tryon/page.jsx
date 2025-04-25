@@ -11,6 +11,8 @@ import LoginModal from "@/components/LoginModal";
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import Footer from "@/components/Footer";
+import Navbar from "@/components/Navbar";
 
 export default function VirtualTryOn() {
   const { user, signinRedirect } = useAuth();
@@ -345,6 +347,7 @@ export default function VirtualTryOn() {
 
   return (
     <div className="bg-background w-full max-w-4xl mx-auto px-6 py-12 space-y-6">
+      <Navbar />
       <header className="text-center mb-8">
         <h1 className="text-4xl font-bold text-primary-100">
           Digital Fitting Room
@@ -660,6 +663,7 @@ export default function VirtualTryOn() {
         pauseOnHover
         theme="dark"
       />
+      <Footer />
     </div>
   );
 };
