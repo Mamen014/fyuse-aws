@@ -34,7 +34,7 @@ export default function ProfilePage() {
           headers: {
             "Content-Type": "application/json",
           },
-        },
+        }
       );
 
       if (!res.ok) throw new Error(`Failed to fetch history: ${res.status}`);
@@ -42,7 +42,7 @@ export default function ProfilePage() {
       const data = await res.json();
       const allItems = Array.isArray(data.items) ? data.items : [];
       const wardrobeItems = allItems.filter(
-        (item) => item.isInWardrobe === true,
+        (item) => item.isInWardrobe === true
       );
 
       setTryOnHistory(wardrobeItems);
@@ -131,6 +131,7 @@ export default function ProfilePage() {
       {/* Back to Home Button */}
       <div className="mb-6">
         <button
+          type="button"
           onClick={() => router.push("/")}
           className="px-4 py-2 bg-cta hover:bg-primary text-cta-foreground rounded-md transition-all"
         >
@@ -177,6 +178,7 @@ export default function ProfilePage() {
               {/* Remove from Wardrobe Button */}
               <div className="mt-3">
                 <button
+                  type="button"
                   onClick={() => handleRemoveFromWardrobe(item.taskId)}
                   disabled={actionLoading === item.taskId}
                   className="px-4 py-2 rounded text-sm bg-cta hover:bg-primary text-cta-foreground transition-all disabled:bg-gray-500 disabled:cursor-not-allowed"

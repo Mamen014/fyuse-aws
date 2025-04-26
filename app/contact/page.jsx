@@ -3,10 +3,13 @@
 import React from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import Footer from "@/components/Footer";
+import Navbar from "@/components/Navbar";
 
 export default function Contact() {
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <Navbar />
       <main className="pt-24 pb-20 px-6 max-w-4xl mx-auto font-sans space-y-12">
         {/* Title */}
         <motion.div
@@ -45,7 +48,9 @@ export default function Contact() {
 
           <div className="space-y-4 text-lg text-foreground">
             <p>
-              <span className="font-semibold text-primary">Contact Person:</span>{" "}
+              <span className="font-semibold text-primary">
+                Contact Person:
+              </span>{" "}
               Ryan Iaska, Founder of FYUSE
             </p>
             <p>
@@ -82,18 +87,7 @@ export default function Contact() {
         </Link>
       </main>
 
-      {/* Footer */}
-      <footer className="bg-background border-t border-primary py-8 text-center text-foreground">
-        <p>&copy; 2025 FYUSE. All rights reserved.</p>
-        <div className="mt-4 flex justify-center space-x-6">
-          <a
-            href="https://www.instagram.com/fyuse.id/"
-            className="hover:text-cta"
-          >
-            Instagram
-          </a>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }
