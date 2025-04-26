@@ -9,6 +9,7 @@ import LearnMoreLite from "@/components/LearnMoreLite";
 import LearnMorePro from "@/components/LearnMorePro";
 import LearnMoreElite from "@/components/LearnMoreElite";
 import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
 
@@ -184,6 +185,7 @@ export default function PricingPlans() {
           </Link> */}
         {/* </div> */}
       </div>
+      <Footer />
 
       {/* Learn More Modal */}
       {openLearnMoreIndex !== null &&

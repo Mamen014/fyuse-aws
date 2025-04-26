@@ -51,47 +51,39 @@ const FeatureCard = ({ title, description }) => (
 
 export default function Features() {
   return (
-    <section className="min-h-screen bg-background py-20 px-6 text-foreground font-sans">
-      <div className="max-w-7xl mx-auto">
-        <Navbar />
-        {/* Header */}
-        <div className="text-center mt-8 mb-14 px-4">
-          <motion.h2
-            initial={{ opacity: 0, y: -15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-3xl md:text-4xl font-extrabold tracking-tight text-primary"
-          >
-            More Than Features — A Whole New Way to Dress
-          </motion.h2>
-          <p className="mt-4 text-base md:text-lg text-foreground max-w-2xl mx-auto">
-            FYUSE is where technology meets personal style. We go beyond tools —
-            we help you feel confident, expressive, and effortlessly you.
-          </p>
-        </div>
+    <div>
+      <section className="min-h-screen bg-background py-20 px-6 text-foreground font-sans">
+        <div className="max-w-7xl mx-auto">
+          <Navbar />
+          {/* Header */}
+          <div className="text-center mt-8 mb-14 px-4">
+            <motion.h2
+              initial={{ opacity: 0, y: -15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="text-3xl md:text-4xl font-extrabold tracking-tight text-primary"
+            >
+              More Than Features — A Whole New Way to Dress
+            </motion.h2>
+            <p className="mt-4 text-base md:text-lg text-foreground max-w-2xl mx-auto">
+              FYUSE is where technology meets personal style. We go beyond tools
+              — we help you feel confident, expressive, and effortlessly you.
+            </p>
+          </div>
 
-        {/* Feature Grid */}
-        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 px-4">
-          {features.map((feature, index) => (
-            <FeatureCard
-              key={index}
-              title={feature.title}
-              description={feature.description}
-            />
-          ))}
+          {/* Feature Grid */}
+          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 px-4">
+            {features.map((feature, index) => (
+              <FeatureCard
+                key={index}
+                title={feature.title}
+                description={feature.description}
+              />
+            ))}
+          </div>
         </div>
-
-        {/* Back to Home (Arrow Icon) */}
-        {/* <Link href="/" passHref>
-          <button
-            className="text-foreground text-lg hover:text-cta transition-colors flex items-center gap-2 mt-10"
-            aria-label="Back to Home"
-          >
-            ← Back to Home
-          </button>
-        </Link> */}
-        <Footer />
-      </div>
-    </section>
+      </section>
+      <Footer />
+    </div>
   );
 }

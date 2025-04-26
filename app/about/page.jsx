@@ -8,7 +8,6 @@ import Footer from "@/components/Footer";
 
 export default function About() {
   return (
-    
     <div className="min-h-screen bg-background text-foreground">
       <main className="pt-24 pb-16 px-6 max-w-5xl mx-auto space-y-14 font-sans">
         <Navbar />
@@ -78,7 +77,9 @@ export default function About() {
           </p>
           <ul className="mt-4 space-y-2 list-disc pl-5 text-foreground">
             <li>
-              <span className="font-semibold text-primary">Clothes are personal:</span>{" "}
+              <span className="font-semibold text-primary">
+                Clothes are personal:
+              </span>{" "}
               So we make the experience feel personal too.
             </li>
             <li>
@@ -102,6 +103,7 @@ export default function About() {
           {/* Back to Home (Arrow Icon) */}
           <Link href="/" passHref>
             <button
+              type="button"
               className="text-foreground text-xl hover:text-cta transition-colors"
               aria-label="Back to Home"
             >
@@ -112,6 +114,7 @@ export default function About() {
           {/* Link to /features */}
           <Link href="/features" passHref>
             <button
+              type="button"
               className="text-foreground text-xl hover:text-cta transition-colors"
               aria-label="View Features Page"
             >
