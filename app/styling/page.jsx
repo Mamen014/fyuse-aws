@@ -313,7 +313,6 @@ export default function StylingTips() {
                   {loading ? "Generating..." : "Get Styling Tips"}
                 </button>
               </div>
-  
               {error && (
                 <p className="text-destructive mt-4 text-center">{error}</p>
               )}
