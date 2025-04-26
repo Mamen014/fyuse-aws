@@ -5,6 +5,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import Script from 'next/script';
 import { useAuth } from 'react-oidc-context';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function AuthActionsInNavbar() {
   const auth = useAuth();
@@ -24,7 +26,14 @@ function AuthActionsInNavbar() {
     const hasAuthCode = searchParams.get('code');
     const cameFromSignup = sessionStorage.getItem('cameFromSignup') === 'true';
     if (hasAuthCode && cameFromSignup && !localStorage.getItem('loggedInUser')) {
-      alert('🎉 Signup complete! Now please log in to start using FYUSE.');
+      toast.success('🎉 Signup complete! Now please log in to start using FYUSE.', {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
       sessionStorage.removeItem('cameFromSignup');
       searchParams.delete('code');
       const newUrl = `${window.location.origin}${window.location.pathname}?${searchParams.toString()}`;
@@ -79,8 +88,7 @@ function AuthActionsInNavbar() {
 
   return (
     <div className="flex items-center gap-4">
-      <button onClick={() => auth.signinRedirect()} className="bg-cta text-cta-foreground text-sm px-4 py-2 rounded-md">Sign In</button>
-      <button onClick={handleSignUp} className="bg-accent text-accent-foreground text-sm px-4 py-2 rounded-md">Sign Up</button>
+      <button onClick={() => auth.signinRedirect()} className="bg-cta text-cta-foreground text-sm px-4 py-2 rounded-md">Sign In / Register</button>
     </div>
   );
 }
@@ -171,6 +179,17 @@ export default function Home() {
             <Link href="/features">Features</Link>
           </div>
         </footer>
+        <ToastContainer
+          position="top-right" // Position of the toast notifications
+          autoClose={5000}     // Auto-close after 5 seconds
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+        />
       </div>
     </>
   );

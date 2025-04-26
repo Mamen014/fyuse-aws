@@ -7,7 +7,6 @@ import { useAuth } from "react-oidc-context";
 import PricingPlans from "@/components/PricingPlanCard";
 import AnalysisModal from "@/components/AnalysisModal";
 import PrivacyPolicyModal from "@/components/PrivacyPolicyModal";
-import LoginModal from "@/components/LoginModal";
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -31,7 +30,6 @@ export default function VirtualTryOn() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [matchingAnalysis, setMatchingAnalysis] = useState(null);
   const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [userImageError, setUserImageError] = useState(null);
   const [isValidUserImage, setIsValidUserImage] = useState(false);
   const [isValidApparelImage, setIsValidApparelImage] = useState(false);
@@ -87,6 +85,10 @@ export default function VirtualTryOn() {
   }, [pollIntervalId]);
 
   const handleUserImageChange = async (e) => {
+    if (!user) {
+      toast.error("Please log in to upload photos.");
+      return signinRedirect();
+    }
     const file = e.target.files?.[0]; // Safely extract the first file (use optional chaining)
 
     if (!file) {
@@ -128,6 +130,10 @@ export default function VirtualTryOn() {
   };
 
   const handleApparelImageChange = async (e) => {
+    if (!user) {
+      toast.error("Please log in to upload photos.");
+      return signinRedirect();
+    }
     const file = e.target.files?.[0]; // Safely extract the first file
 
     if (!file) {
@@ -265,7 +271,7 @@ export default function VirtualTryOn() {
       toast.error("You must agree to the Privacy Policy.");
       return;
     }
-    if (!user) return setIsLoginModalOpen(true);
+    if (!user) return signinRedirect();
     if (tryOnCount >= 3) return setShowPricingPlans(true);
     if (
       !userImage ||
@@ -339,7 +345,7 @@ export default function VirtualTryOn() {
       }
     } finally {
       setLoading(false);
-      refreshTryOnCount();
+      await refreshTryOnCount();
     }
   };
 
@@ -558,7 +564,7 @@ export default function VirtualTryOn() {
           <div className="flex justify-center items-center mt-4 space-x-2">
             <button
               onClick={() => {
-                if (!user) return setIsLoginModalOpen(true);
+                if (!user) return signinRedirect();
                 handleSubmit();
               }}
               disabled={
@@ -627,25 +633,6 @@ export default function VirtualTryOn() {
         <PrivacyPolicyModal
           isOpen={isPrivacyModalOpen}
           onClose={() => setIsPrivacyModalOpen(false)}
-        />
-      )}
-
-      {isLoginModalOpen && (
-        <LoginModal
-          isOpen={isLoginModalOpen}
-          onClose={() => setIsLoginModalOpen(false)}
-          onSignIn={signinRedirect}
-          onSignUp={() => {
-            const clientId = process.env.NEXT_PUBLIC_CLIENTID;
-            const domain = process.env.NEXT_PUBLIC_DOMAIN;
-            const redirectUri =
-              typeof window !== "undefined"
-                ? window.location.origin + "/"
-                : "http://localhost:3000/";
-            const signUpUrl = `https://${domain}/signup?client_id=${clientId}&response_type=code&scope=openid+profile+email&redirect_uri=${encodeURIComponent(redirectUri)}`;
-            sessionStorage.setItem("cameFromSignup", "true");
-            window.location.href = signUpUrl;
-          }}
         />
       )}
       {/* ✅ ToastContainer must be inside the returned JSX */}
