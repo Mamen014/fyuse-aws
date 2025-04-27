@@ -352,305 +352,302 @@ export default function VirtualTryOn() {
   };
 
   return (
-    <div className="bg-background w-full max-w-4xl mx-auto px-6 py-12 space-y-6">
+    <div className="flex flex-col min-h-screen bg-background text-foreground">
       <Navbar />
-      <header className="text-center mb-8">
-        <h1 className="text-4xl font-bold text-primary-100">
-          Digital Fitting Room
-        </h1>
-        <p className="text-primary-300 mt-2">Experience the perfect fit.</p>
-      </header>
-
-      {showPricingPlans && (
-        <PricingPlans
-          isOpen={showPricingPlans}
-          onClose={() => setShowPricingPlans(false)}
-          onSelectPlan={(planName) => alert(`You selected: ${planName}`)}
-        />
-      )}
-
-      {!showPricingPlans && (
-        <div className="bg-background w-full max-w-4xl space-y-6">
-          <h2 className="text-2xl font-medium text-primary-100 text-center mb-4">
-            Upload Your Photos
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-20">
-            <div className="border border-cta rounded-lg p-6 text-center">
-              <h3 className="text-lg font-medium text-primary-100 mb-4">
-                Your Photo
-              </h3>
-              <input
-                type="file"
-                accept=".jpg,.jpeg"
-                onChange={handleUserImageChange}
-                className="hidden"
-                id="userPhoto"
-              />
-              <label htmlFor="userPhoto" className="cursor-pointer">
-                {userImagePreview ? (
-                  <img
-                    src={userImagePreview}
-                    alt="User Preview"
-                    className="mx-auto max-h-48 object-contain rounded-lg"
-                  />
-                ) : (
-                  <div className="flex flex-col items-center justify-center h-48 text-primary-300">
-                    Click to upload
-                  </div>
-                )}
-              </label>
-              <p className="text-xs text-primary-400 mt-2">
-                Accepted formats: JPG or JPEG. Max size: 10MB. Min resolution:
-                300×300px.
-              </p>
-              {userImageError && (
-                <p className="text-red-400 text-sm mt-2">{userImageError}</p>
-              )}
-              {/* Trigger for the Modal */}
-              <p>
-                <button
-                  onClick={() => setIsUserPhotoGuidanceOpen(true)}
-                  className="underline text-blue-400 cursor-pointer"
-                >
-                  Upload User Photo Guidance
-                </button>
-              </p>
-            </div>
-            {/* Modal for Upload User Photo Guidance */}
-            <div
-              className={`fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 ${
-                isUserPhotoGuidanceOpen ? "block" : "hidden"
-              }`}
-            >
-              <div className="bg-background w-full max-w-md p-6 rounded-lg shadow-lg">
+      <main className="bg-background w-full max-w-4xl mx-auto px-6 pt-20 md:pt-24 pb-12 space-y-6">
+        <header className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-primary-100">
+            Digital Fitting Room
+          </h1>
+          <p className="text-primary-300 mt-2">Experience the perfect fit.</p>
+        </header>
+        {showPricingPlans && (
+          <PricingPlans
+            isOpen={showPricingPlans}
+            onClose={() => setShowPricingPlans(false)}
+            onSelectPlan={(planName) => alert(`You selected: ${planName}`)}
+          />
+        )}
+        {!showPricingPlans && (
+          <div className="bg-background w-full max-w-4xl space-y-6">
+            <h2 className="text-2xl font-medium text-primary-100 text-center mb-4">
+              Upload Your Photos
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-20">
+              <div className="border border-cta rounded-lg p-6 text-center">
                 <h3 className="text-lg font-medium text-primary-100 mb-4">
-                  Upload User Photo Guidance
+                  Your Photo
                 </h3>
-                <div className="flex justify-center space-x-4">
-                  {/* Good Example */}
-                  <div className="flex flex-col items-center">
+                <input
+                  type="file"
+                  accept=".jpg,.jpeg"
+                  onChange={handleUserImageChange}
+                  className="hidden"
+                  id="userPhoto"
+                />
+                <label htmlFor="userPhoto" className="cursor-pointer">
+                  {userImagePreview ? (
                     <img
-                      src="/examples/user/good.png"
-                      alt="Good Example"
-                      className="w-48 h-48 object-cover border-2 border-green-500 rounded-lg"
+                      src={userImagePreview}
+                      alt="User Preview"
+                      className="mx-auto max-h-48 object-contain rounded-lg"
                     />
-                    <span className="text-green-500 text-xs mt-2">✔ Good</span>
-                  </div>
-                  {/* Bad Example */}
-                  <div className="flex flex-col items-center">
-                    <img
-                      src="/examples/user/bad.png"
-                      alt="Bad Example"
-                      className="w-48 h-48 object-cover border-2 border-red-500 rounded-lg"
-                    />
-                    <span className="text-red-500 text-xs mt-2">✘ Bad</span>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setIsUserPhotoGuidanceOpen(false)}
-                  className="mt-4 px-4 py-2 bg-cta text-white rounded-lg hover:bg-blue-600 transition-colors"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-            <div className="border border-cta rounded-lg p-6 text-center">
-              <h3 className="text-lg font-medium text-primary-100 mb-4">
-                Clothing Item
-              </h3>
-              <input
-                type="file"
-                accept=".jpg,.jpeg"
-                onChange={handleApparelImageChange}
-                className="hidden"
-                id="apparelPhoto"
-              />
-              <label htmlFor="apparelPhoto" className="cursor-pointer">
-                {apparelImagePreview ? (
-                  <img
-                    src={apparelImagePreview}
-                    alt="Apparel Preview"
-                    className="mx-auto max-h-48 object-contain rounded-lg"
-                  />
-                ) : (
-                  <div className="flex flex-col items-center justify-center h-48 text-primary-300">
-                    Click to upload
-                  </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-48 text-primary-300">
+                      Click to upload
+                    </div>
+                  )}
+                </label>
+                <p className="text-xs text-primary-400 mt-2">
+                  Accepted formats: JPG or JPEG. Max size: 10MB. Min resolution:
+                  300×300px.
+                </p>
+                {userImageError && (
+                  <p className="text-red-400 text-sm mt-2">{userImageError}</p>
                 )}
-              </label>
-              <p className="text-xs text-primary-400 mt-2">
-                Accepted formats: JPG or JPEG. Max size: 10MB. Min resolution:
-                300×300px.
-              </p>
-              {apparelImageError && (
-                <p className="text-red-400 text-sm mt-2">{apparelImageError}</p>
-              )}
-              {/* Trigger for the Modal */}
-              <p>
-                <button
-                  onClick={() => setIsApparelPhotoGuidanceOpen(true)}
-                  className="underline text-blue-400 cursor-pointer"
-                >
-                  Upload Apparel Photo Guidance
-                </button>
-              </p>
-            </div>
-            {/* Modal for Upload Apparel Photo Guidance */}
-            <div
-              className={`fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 ${
-                isApparelPhotoGuidanceOpen ? "block" : "hidden"
-              }`}
-            >
-              <div className="bg-background w-full max-w-md p-6 rounded-lg shadow-lg">
-                <h3 className="text-lg font-medium text-primary-100 mb-4">
-                  Upload Apparel Photo Guidance
-                </h3>
-                <div className="flex justify-center space-x-4">
-                  {/* Good Example */}
-                  <div className="flex flex-col items-center">
-                    <img
-                      src="/examples/apparel/good.png"
-                      alt="Good Example"
-                      className="w-48 h-48 object-cover border-2 border-green-500 rounded-lg"
-                    />
-                    <span className="text-green-500 text-xs mt-2">✔ Good</span>
-                  </div>
-                  {/* Bad Example */}
-                  <div className="flex flex-col items-center">
-                    <img
-                      src="/examples/apparel/bad.png"
-                      alt="Bad Example"
-                      className="w-48 h-48 object-cover border-2 border-red-500 rounded-lg"
-                    />
-                    <span className="text-red-500 text-xs mt-2">✘ Bad</span>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setIsApparelPhotoGuidanceOpen(false)}
-                  className="mt-4 px-4 py-2 bg-cta text-white rounded-lg hover:bg-blue-600 transition-colors"
-                >
-                  Close
-                </button>
+                {/* Trigger for the Modal */}
+                <p>
+                  <button
+                    onClick={() => setIsUserPhotoGuidanceOpen(true)}
+                    className="underline text-blue-400 cursor-pointer"
+                  >
+                    Upload User Photo Guidance
+                  </button>
+                </p>
               </div>
-            </div>
-          </div>
-          <div className="flex items-center justify-center mt-2 space-x-2">
-            <input
-              type="checkbox"
-              id="privacyConsent"
-              checked={agreeToPrivacy}
-              onChange={(e) => {
-                const checked = e.target.checked;
-                setAgreeToPrivacy(checked);
-                if (userEmail) {
-                  localStorage.setItem(
-                    `privacyAgreement:${userEmail}`,
-                    checked.toString(),
-                  );
-                }
-              }}
-              className="w-4 h-4 accent-blue-500"
-            />
-            <label htmlFor="privacyConsent" className="text-sm text-primary-300">
-              I agree to the{" "}
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  setIsPrivacyModalOpen(true);
-                }}
-                className="underline text-blue-400 cursor-pointer"
+              {/* Modal for Upload User Photo Guidance */}
+              <div
+                className={`fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 ${
+                  isUserPhotoGuidanceOpen ? "block" : "hidden"
+                }`}
               >
-                Privacy Policy Agreement
+                <div className="bg-background w-full max-w-md p-6 rounded-lg shadow-lg">
+                  <h3 className="text-lg font-medium text-primary-100 mb-4">
+                    Upload User Photo Guidance
+                  </h3>
+                  <div className="flex justify-center space-x-4">
+                    {/* Good Example */}
+                    <div className="flex flex-col items-center">
+                      <img
+                        src="/examples/user/good.png"
+                        alt="Good Example"
+                        className="w-48 h-48 object-cover border-2 border-green-500 rounded-lg"
+                      />
+                      <span className="text-green-500 text-xs mt-2">✔ Good</span>
+                    </div>
+                    {/* Bad Example */}
+                    <div className="flex flex-col items-center">
+                      <img
+                        src="/examples/user/bad.png"
+                        alt="Bad Example"
+                        className="w-48 h-48 object-cover border-2 border-red-500 rounded-lg"
+                      />
+                      <span className="text-red-500 text-xs mt-2">✘ Bad</span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setIsUserPhotoGuidanceOpen(false)}
+                    className="mt-4 px-4 py-2 bg-cta text-white rounded-lg hover:bg-blue-600 transition-colors"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+              <div className="border border-cta rounded-lg p-6 text-center">
+                <h3 className="text-lg font-medium text-primary-100 mb-4">
+                  Clothing Item
+                </h3>
+                <input
+                  type="file"
+                  accept=".jpg,.jpeg"
+                  onChange={handleApparelImageChange}
+                  className="hidden"
+                  id="apparelPhoto"
+                />
+                <label htmlFor="apparelPhoto" className="cursor-pointer">
+                  {apparelImagePreview ? (
+                    <img
+                      src={apparelImagePreview}
+                      alt="Apparel Preview"
+                      className="mx-auto max-h-48 object-contain rounded-lg"
+                    />
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-48 text-primary-300">
+                      Click to upload
+                    </div>
+                  )}
+                </label>
+                <p className="text-xs text-primary-400 mt-2">
+                  Accepted formats: JPG or JPEG. Max size: 10MB. Min resolution:
+                  300×300px.
+                </p>
+                {apparelImageError && (
+                  <p className="text-red-400 text-sm mt-2">{apparelImageError}</p>
+                )}
+                {/* Trigger for the Modal */}
+                <p>
+                  <button
+                    onClick={() => setIsApparelPhotoGuidanceOpen(true)}
+                    className="underline text-blue-400 cursor-pointer"
+                  >
+                    Upload Apparel Photo Guidance
+                  </button>
+                </p>
+              </div>
+              {/* Modal for Upload Apparel Photo Guidance */}
+              <div
+                className={`fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 ${
+                  isApparelPhotoGuidanceOpen ? "block" : "hidden"
+                }`}
+              >
+                <div className="bg-background w-full max-w-md p-6 rounded-lg shadow-lg">
+                  <h3 className="text-lg font-medium text-primary-100 mb-4">
+                    Upload Apparel Photo Guidance
+                  </h3>
+                  <div className="flex justify-center space-x-4">
+                    {/* Good Example */}
+                    <div className="flex flex-col items-center">
+                      <img
+                        src="/examples/apparel/good.png"
+                        alt="Good Example"
+                        className="w-48 h-48 object-cover border-2 border-green-500 rounded-lg"
+                      />
+                      <span className="text-green-500 text-xs mt-2">✔ Good</span>
+                    </div>
+                    {/* Bad Example */}
+                    <div className="flex flex-col items-center">
+                      <img
+                        src="/examples/apparel/bad.png"
+                        alt="Bad Example"
+                        className="w-48 h-48 object-cover border-2 border-red-500 rounded-lg"
+                      />
+                      <span className="text-red-500 text-xs mt-2">✘ Bad</span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setIsApparelPhotoGuidanceOpen(false)}
+                    className="mt-4 px-4 py-2 bg-cta text-white rounded-lg hover:bg-blue-600 transition-colors"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center justify-center mt-2 space-x-2">
+              <input
+                type="checkbox"
+                id="privacyConsent"
+                checked={agreeToPrivacy}
+                onChange={(e) => {
+                  const checked = e.target.checked;
+                  setAgreeToPrivacy(checked);
+                  if (userEmail) {
+                    localStorage.setItem(
+                      `privacyAgreement:${userEmail}`,
+                      checked.toString(),
+                    );
+                  }
+                }}
+                className="w-4 h-4 accent-blue-500"
+              />
+              <label htmlFor="privacyConsent" className="text-sm text-primary-300">
+                I agree to the{" "}
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setIsPrivacyModalOpen(true);
+                  }}
+                  className="underline text-blue-400 cursor-pointer"
+                >
+                  Privacy Policy Agreement
+                </button>
+              </label>
+            </div>
+            <div className="flex justify-center items-center mt-4 space-x-2">
+              <button
+                onClick={() => {
+                  if (!user) return signinRedirect();
+                  handleSubmit();
+                }}
+                disabled={
+                  loading ||
+                  !agreeToPrivacy ||
+                  !isValidUserImage ||
+                  !isValidApparelImage
+                }
+                className={`px-6 py-3 rounded-lg font-medium text-white ${
+                  loading
+                    ? "bg-gray-500 cursor-not-allowed"
+                    : agreeToPrivacy && isValidUserImage && isValidApparelImage
+                      ? "bg-cta hover:bg-blue-600"
+                      : "bg-gray-500 cursor-not-allowed"
+                }`}
+              >
+                {loading ? "Processing..." : "Try-On"}
               </button>
-            </label>
+            </div>
+            {polling && !resultImageUrl && (
+              <p className="text-yellow-500 text-center mt-4">
+                Waiting for result... polling server.
+              </p>
+            )}
+            {error && <p className="text-red-500 text-center">{error}</p>}
+            {loading && (
+              <p className="text-gray-400 text-center animate-pulse">
+                Processing...
+              </p>
+            )}
+          <div className="bottom-0 left-0 right-0 bg-background py-8 px-2 flex justify-between items-center">
+            {/* Back to Home (Arrow Icon) */}
+            <Link href="/" passHref>
+              <button
+                className="text-foreground text-xl hover:text-cta transition-colors"
+                aria-label="Back to Home"
+              >
+                ← Back to Home
+              </button>
+            </Link>
+
+            {/* Link to /styling */}
+            <Link href="/profile" passHref>
+              <button
+                className="text-foreground text-xl hover:text-cta transition-colors"
+                aria-label="View Profile Page"
+              >
+                Digital Wardrobe →
+              </button>
+            </Link>
+          </div>          
           </div>
-          <div className="flex justify-center items-center mt-4 space-x-2">
-            <button
-              onClick={() => {
-                if (!user) return signinRedirect();
-                handleSubmit();
-              }}
-              disabled={
-                loading ||
-                !agreeToPrivacy ||
-                !isValidUserImage ||
-                !isValidApparelImage
-              }
-              className={`px-6 py-3 rounded-lg font-medium text-white ${
-                loading
-                  ? "bg-gray-500 cursor-not-allowed"
-                  : agreeToPrivacy && isValidUserImage && isValidApparelImage
-                    ? "bg-cta hover:bg-blue-600"
-                    : "bg-gray-500 cursor-not-allowed"
-              }`}
-            >
-              {loading ? "Processing..." : "Try-On"}
-            </button>
-          </div>
-          {polling && !resultImageUrl && (
-            <p className="text-yellow-500 text-center mt-4">
-              Waiting for result... polling server.
-            </p>
-          )}
-          {error && <p className="text-red-500 text-center">{error}</p>}
-          {loading && (
-            <p className="text-gray-400 text-center animate-pulse">
-              Processing...
-            </p>
-          )}
-        <div className="bottom-0 left-0 right-0 bg-background py-8 px-2 flex justify-between items-center">
-          {/* Back to Home (Arrow Icon) */}
-          <Link href="/" passHref>
-            <button
-              className="text-foreground text-xl hover:text-cta transition-colors"
-              aria-label="Back to Home"
-            >
-              ← Back to Home
-            </button>
-          </Link>
-
-          {/* Link to /styling */}
-          <Link href="/profile" passHref>
-            <button
-              className="text-foreground text-xl hover:text-cta transition-colors"
-              aria-label="View Profile Page"
-            >
-              Digital Wardrobe →
-            </button>
-          </Link>
-        </div>          
-        </div>
-      )}
-
-      <AnalysisModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        analysisData={matchingAnalysis}
-        loading={loading}
-        tryOnImage={resultImageUrl}
-        userEmail={user?.email}
-        errorMessage={error}
-      />
-
-      {isPrivacyModalOpen && (
-        <PrivacyPolicyModal
-          isOpen={isPrivacyModalOpen}
-          onClose={() => setIsPrivacyModalOpen(false)}
+        )}
+        <AnalysisModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          analysisData={matchingAnalysis}
+          loading={loading}
+          tryOnImage={resultImageUrl}
+          userEmail={user?.email}
+          errorMessage={error}
         />
-      )}
-      {/* ✅ ToastContainer must be inside the returned JSX */}
-      <ToastContainer
-        position="top-right"
-        autoClose={5000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="dark"
-      />
+        {isPrivacyModalOpen && (
+          <PrivacyPolicyModal
+            isOpen={isPrivacyModalOpen}
+            onClose={() => setIsPrivacyModalOpen(false)}
+          />
+        )}
+        <ToastContainer
+          position="top-right"
+          autoClose={5000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="dark"
+        />
+      </main>
       <Footer />
-    </div>
+    </div>  
   );
 };

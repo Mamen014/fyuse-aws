@@ -7,36 +7,6 @@ import { useAuth } from "react-oidc-context";
 export default function AuthActionsInNavbar() {
   const auth = useAuth();
 
-  const handleSignUp = () => {
-    const clientId = process.env.NEXT_PUBLIC_CLIENTID;
-    const domain = process.env.NEXT_PUBLIC_DOMAIN;
-    const redirectUri =
-      typeof window !== "undefined"
-        ? window.location.origin + "/"
-        : "http://localhost:3000/";
-    const signUpUrl = `https://${domain}/signup?client_id=${clientId}&response_type=code&scope=openid+profile+email&redirect_uri=${encodeURIComponent(redirectUri)}`;
-    sessionStorage.setItem("cameFromSignup", "true");
-    window.location.href = signUpUrl;
-  };
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const searchParams = new URLSearchParams(window.location.search);
-    const hasAuthCode = searchParams.get("code");
-    const cameFromSignup = sessionStorage.getItem("cameFromSignup") === "true";
-    if (
-      hasAuthCode &&
-      cameFromSignup &&
-      !localStorage.getItem("loggedInUser")
-    ) {
-      alert("🎉 Signup complete! Now please log in to start using FYUSE.");
-      sessionStorage.removeItem("cameFromSignup");
-      searchParams.delete("code");
-      const newUrl = `${window.location.origin}${window.location.pathname}?${searchParams.toString()}`;
-      window.history.replaceState({}, document.title, newUrl);
-    }
-  }, []);
-
   useEffect(() => {
     if (auth?.isAuthenticated && auth?.user?.profile?.email) {
       const userData = {
@@ -100,14 +70,7 @@ export default function AuthActionsInNavbar() {
         onClick={() => auth.signinRedirect()}
         className="bg-cta text-cta-foreground text-sm px-4 py-2 rounded-md"
       >
-        Sign In
-      </button>
-      <button
-        type="button"
-        onClick={handleSignUp}
-        className="bg-accent text-accent-foreground text-sm px-4 py-2 rounded-md"
-      >
-        Sign Up
+        Sign In / Register
       </button>
     </div>
   );

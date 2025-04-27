@@ -175,8 +175,3 @@ body {
   min-width: 48px;
   min-height: 48px;
 }
-
-.VirtualTryOnWrapper,
-.StylingTips {
-  width: 100%;
-}

@@ -1,11 +1,12 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import Link from "next/link";
 import axios from "axios";
 import { useAuth } from "react-oidc-context";
 import { Dialog } from "@headlessui/react";
 import PrivacyPolicyModal from "@/components/PrivacyPolicyModal";
 import PricingPlans from "@/components/PricingPlanCard";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
 const BODY_SHAPES = {
@@ -22,7 +23,7 @@ export default function StylingTips() {
   const [selectedStyles, setSelectedStyles] = useState([]);
   const { user, signinRedirect } = useAuth();
   const userEmail = user?.profile?.email;
-  const [useSavedPreferences, setUseSavedPreferences] = useState(true);
+  const [useSavedPreferences, setUseSavedPreferences] = useState(false);
   const [gender, setGender] = useState("male");
   const [selectedOccasion, setSelectedOccasion] = useState("casual");
   const [stylingTips, setStylingTips] = useState(null);
@@ -150,236 +151,247 @@ export default function StylingTips() {
 
   return (
     <>
-      <div className="bg-background w-full max-w-4xl mx-auto px-6 py-12 space-y-6">
-        <header className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-primary-background">
-            Personalized Styling Tips
-          </h1>
-          <p className="text-primary-300 mt-2">Find your perfect look.</p>
-        </header>
-  
-        {/* Show PricingPlans modal if active */}
-        {showPricingPlans && (
-          <PricingPlans
-            isOpen={showPricingPlans}
-            onClose={() => setShowPricingPlans(false)}
-            onSelectPlan={(planName) => alert(`You selected: ${planName}`)}
-          />
-        )}
-  
-        {/* Main content if PricingPlans not open */}
-        {!showPricingPlans && (
-          <>
-            <section className="bg-background text-primary-background space-y-8">
-              <div className="flex justify-center gap-6 mb-6">
-                <label className="flex items-center gap-2">
-                  <input
-                    type="radio"
-                    name="preferences"
-                    value="saved"
-                    checked={useSavedPreferences}
-                    onChange={() => setUseSavedPreferences(true)}
-                  />
-                  Use saved preferences
-                </label>
-                <label className="flex items-center gap-2">
-                  <input
-                    type="radio"
-                    name="preferences"
-                    value="new"
-                    checked={!useSavedPreferences}
-                    onChange={() => setUseSavedPreferences(false)}
-                  />
-                  Enter new preferences
-                </label>
-              </div>
-  
-              {!useSavedPreferences && (
-                <>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-                    <div>
-                      <label className="block mb-1">Gender</label>
-                      <select
-                        value={gender}
-                        onChange={(e) => setGender(e.target.value)}
-                        className="w-full p-2 border border-cta rounded-md bg-input text-foreground"
-                      >
-                        <option value="female">Female</option>
-                        <option value="male">Male</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block mb-1">Body Shape</label>
-                      <select
-                        name="bodyShape"
-                        className="w-full p-2 border border-cta rounded-md bg-input text-foreground"
-                      >
-                        {BODY_SHAPES[gender].map((shape) => (
-                          <option key={shape} value={shape}>
-                            {shape}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block mb-1">Skin Tone</label>
-                      <select
-                        name="skinTone"
-                        className="w-full p-2 border border-cta rounded-md bg-input text-foreground"
-                      >
-                        {SKIN_TONES.map((tone) => (
-                          <option key={tone} value={tone}>
-                            {tone}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-  
-                  <div className="mb-6">
-                    <label className="block mb-2">Style Preferences</label>
-                    <div className="flex flex-wrap gap-2">
-                      {STYLE_OPTIONS.map((style) => (
-                        <button
-                          key={style}
-                          onClick={() => handleStyleToggle(style)}
-                          className={`px-4 py-2 rounded-md text-sm font-medium border transition-all ${
-                            selectedStyles.includes(style)
-                              ? "bg-cta border-cta text-white"
-                              : "bg-background border-cta text-foreground"
-                          }`}
+    <div className="flex flex-col min-h-screen bg-background text-foreground">
+        <Navbar />
+        <main className="flex-grow bg-background w-full max-w-4xl mx-auto px-6 pt-20 md:pt-24 pb-12 space-y-6">
+          <header className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-primary-background">
+              Personalized Styling Tips
+            </h1>
+            <p className="text-primary-300 mt-2">Find your perfect look.</p>
+          </header>
+    
+          {/* Show PricingPlans modal if active */}
+          {showPricingPlans && (
+            <PricingPlans
+              isOpen={showPricingPlans}
+              onClose={() => setShowPricingPlans(false)}
+              onSelectPlan={(planName) => alert(`You selected: ${planName}`)}
+            />
+          )}
+    
+          {/* Main content if PricingPlans not open */}
+          {!showPricingPlans && (
+            <>
+              <section className="bg-background text-primary-background space-y-8">
+                <div className="flex justify-center gap-6 mb-6">
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="preferences"
+                      value="saved"
+                      checked={useSavedPreferences}
+                      onChange={() => setUseSavedPreferences(true)}
+                    />
+                    Use saved preferences
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="preferences"
+                      value="new"
+                      checked={!useSavedPreferences}
+                      onChange={() => setUseSavedPreferences(false)}
+                    />
+                    Enter new preferences
+                  </label>
+                </div>
+    
+                {!useSavedPreferences && (
+                  <>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                      <div>
+                        <label className="block mb-1">Gender</label>
+                        <select
+                          value={gender}
+                          onChange={(e) => setGender(e.target.value)}
+                          className="w-full p-2 border border-cta rounded-md bg-input text-foreground"
                         >
-                          {style}
-                        </button>
-                      ))}
+                          <option value="female">Female</option>
+                          <option value="male">Male</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block mb-1">Body Shape</label>
+                        <select
+                          name="bodyShape"
+                          className="w-full p-2 border border-cta rounded-md bg-input text-foreground"
+                        >
+                          {BODY_SHAPES[gender].map((shape) => (
+                            <option key={shape} value={shape}>
+                              {shape}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block mb-1">Skin Tone</label>
+                        <select
+                          name="skinTone"
+                          className="w-full p-2 border border-cta rounded-md bg-input text-foreground"
+                        >
+                          {SKIN_TONES.map((tone) => (
+                            <option key={tone} value={tone}>
+                              {tone}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
                     </div>
-                  </div>
-                </>
-              )}
-  
-              <div className="mb-6">
-                <label className="block mb-1">Occasion</label>
-                <select
-                  value={selectedOccasion}
-                  onChange={(e) => setSelectedOccasion(e.target.value)}
-                  className="w-full p-2 border border-cta rounded-md bg-input text-foreground"
-                >
-                  {OCCASIONS.map((o) => (
-                    <option key={o} value={o}>
-                      {o}
-                    </option>
-                  ))}
-                </select>
-              </div>
-  
-              <div className="flex items-center justify-center mt-2 space-x-2">
-                <input
-                  type="checkbox"
-                  id="privacyConsent"
-                  checked={agreeToPrivacy}
-                  onChange={handlePrivacyCheckbox}
-                  className="w-4 h-4 accent-blue-500"
-                />
-                <label
-                  htmlFor="privacyConsent"
-                  className="text-sm text-muted-foreground"
-                >
-                  I agree to the{" "}
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setIsPrivacyModalOpen(true);
-                    }}
-                    className="underline text-blue-400 cursor-pointer"
+    
+                    <div className="mb-6">
+                      <label className="block mb-2">Style Preferences</label>
+                      <div className="flex flex-wrap gap-2">
+                        {STYLE_OPTIONS.map((style) => (
+                          <button
+                            key={style}
+                            onClick={() => handleStyleToggle(style)}
+                            className={`px-4 py-2 rounded-md text-sm font-medium border transition-all ${
+                              selectedStyles.includes(style)
+                                ? "bg-cta border-cta text-white"
+                                : "bg-background border-cta text-foreground"
+                            }`}
+                          >
+                            {style}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
+    
+                <div className="mb-6">
+                  <label className="block mb-1">Occasion</label>
+                  <select
+                    value={selectedOccasion}
+                    onChange={(e) => setSelectedOccasion(e.target.value)}
+                    className="w-full p-2 border border-cta rounded-md bg-input text-foreground"
                   >
-                    Privacy Policy Agreement
-                  </button>
-                </label>
-              </div>
-  
-              <div className="flex justify-center items-center mt-4 space-x-2">
-                <button
-                  onClick={() => {
-                    if (!user) return signinRedirect();
-                    handleGetStylingTips();
-                  }}
-                  disabled={!agreeToPrivacy || loading}
-                  className={`px-6 py-3 rounded-md font-medium text-background transition-transform shadow-md ${
-                    agreeToPrivacy
-                      ? "bg-cta hover:scale-105"
-                      : "bg-muted-foreground text-muted cursor-not-allowed"
-                  }`}
-                >
-                  {loading ? "Generating..." : "Get Styling Tips"}
-                </button>
-              </div>
-              {error && (
-                <p className="text-destructive mt-4 text-center">{error}</p>
-              )}
-            </section>
-  
-            {/* Styling Tips Dialog */}
-            <Dialog
-              open={isModalOpen}
-              onClose={() => setIsModalOpen(false)}
-              className="fixed z-50 inset-0 overflow-y-auto"
-            >
-              <div className="flex items-center justify-center min-h-screen px-4">
-                <Dialog.Panel className="bg-background text-foreground max-w-lg w-full rounded-2xl p-6 shadow-2xl border border-cta">
-                  <Dialog.Title className="text-xl font-bold mb-4">
-                    Your Styling Tips
-                  </Dialog.Title>
-                  <ul className="list-disc pl-6 space-y-6 text-foreground justify-between">
-                    {stylingTips?.map((tip, index) => (
-                      <li
-                        key={index}
-                        className="flex items-center justify-center space-x-10"
-                      >
-                        <div>
-                          <strong>{tip.style}:</strong> {tip.description}
-                        </div>
-                        <button
-                          onClick={async () => {
-                            await handleLikeStyle(tip.style);
-                            setStylingTips((prev) =>
-                              prev.filter((_, i) => i !== index)
-                            );
-                          }}
-                          className="px-3 py-1 rounded-md text-sm bg-success"
-                        >
-                          Like
-                        </button>
-                      </li>
+                    {OCCASIONS.map((o) => (
+                      <option key={o} value={o}>
+                        {o}
+                      </option>
                     ))}
-                  </ul>
-                  <div className="mt-6 text-right">
+                  </select>
+                </div>
+    
+                <div className="flex items-center justify-center mt-2 space-x-2">
+                  <input
+                    type="checkbox"
+                    id="privacyConsent"
+                    checked={agreeToPrivacy}
+                    onChange={handlePrivacyCheckbox}
+                    className="w-4 h-4 accent-blue-500"
+                  />
+                  <label
+                    htmlFor="privacyConsent"
+                    className="text-sm text-muted-foreground"
+                  >
+                    I agree to the{" "}
                     <button
-                      onClick={() => setIsModalOpen(false)}
-                      className="bg-background border border-cta px-4 py-2 rounded-md"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setIsPrivacyModalOpen(true);
+                      }}
+                      className="underline text-blue-400 cursor-pointer"
                     >
-                      Close
+                      Privacy Policy Agreement
                     </button>
-                  </div>
-                </Dialog.Panel>
+                  </label>
+                </div>
+    
+                <div className="flex justify-center items-center mt-4 space-x-2">
+                  <button
+                    onClick={() => {
+                      if (!user) return signinRedirect();
+                      handleGetStylingTips();
+                    }}
+                    disabled={!agreeToPrivacy || loading}
+                    className={`px-6 py-3 rounded-md font-medium text-background transition-transform shadow-md ${
+                      agreeToPrivacy
+                        ? "bg-cta hover:scale-105"
+                        : "bg-muted-foreground text-muted cursor-not-allowed"
+                    }`}
+                  >
+                    {loading ? (
+                      <div className="flex items-center gap-2">
+                        <span className="animate-spin inline-block w-4 h-4 border-t-2 border-b-2 border-white rounded-full"></span>
+                        Generating...
+                      </div>
+                    ) : (
+                      "Get Styling Tips"
+                    )}
+                  </button>
+                </div>
+                {error && (
+                  <p className="text-destructive mt-4 text-center">{error}</p>
+                )}
+              </section>
+    
+              {/* Styling Tips Dialog */}
+              <Dialog
+                open={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                className="fixed z-50 inset-0 overflow-y-auto"
+              >
+                <div className="flex items-center justify-center min-h-screen px-4">
+                  <Dialog.Panel className="bg-background text-foreground max-w-lg w-full rounded-2xl p-6 shadow-2xl border border-cta">
+                    <Dialog.Title className="text-xl font-bold mb-4">
+                      Your Styling Tips
+                    </Dialog.Title>
+                    <ul className="list-disc pl-6 space-y-6 text-foreground justify-between">
+                      {stylingTips?.map((tip, index) => (
+                        <li
+                          key={index}
+                          className="flex items-center justify-center space-x-10"
+                        >
+                          <div>
+                            <strong>{tip.style}:</strong> {tip.description}
+                          </div>
+                          <button
+                            onClick={async () => {
+                              await handleLikeStyle(tip.style);
+                              setStylingTips((prev) =>
+                                prev.filter((_, i) => i !== index)
+                              );
+                            }}
+                            className="px-3 py-1 rounded-md text-sm bg-success"
+                          >
+                            Like
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                    <div className="mt-6 text-right">
+                      <button
+                        onClick={() => setIsModalOpen(false)}
+                        className="bg-background border border-cta px-4 py-2 rounded-md"
+                      >
+                        Close
+                      </button>
+                    </div>
+                  </Dialog.Panel>
+                </div>
+              </Dialog>
+    
+              {/* Navigation buttons */}
+              <div className="flex justify-between mt-4">
+                <a href="/" className="text-foreground text-xl hover:text-cta transition-colors">← Back to Home</a>
+                <a href="/tryon" className="text-foreground text-xl hover:text-cta transition-colors">Digital Fitting Room →</a>
               </div>
-            </Dialog>
-  
-            {/* Navigation buttons */}
-            <div className="flex justify-between mt-4">
-              <a href="/" className="text-foreground text-xl hover:text-cta transition-colors">← Back to Home</a>
-              <a href="/fitting-room" className="text-foreground text-xl hover:text-cta transition-colors">Digital Fitting Room →</a>
-            </div>
-          </>
-        )}
-  
-        {/* Privacy Policy Modal */}
-        {isPrivacyModalOpen && (
-          <PrivacyPolicyModal
-            isOpen={isPrivacyModalOpen}
-            onClose={() => setIsPrivacyModalOpen(false)}
-          />
-        )}
-      </div>
+            </>
+          )}
+    
+          {/* Privacy Policy Modal */}
+          {isPrivacyModalOpen && (
+            <PrivacyPolicyModal
+              isOpen={isPrivacyModalOpen}
+              onClose={() => setIsPrivacyModalOpen(false)}
+            />
+          )}
+        </main>
+        <Footer />
+    </div>
     </>
   );  
 }

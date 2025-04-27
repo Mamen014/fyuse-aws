@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import Link from "next/link"; // Import Link from Next.js
+import Link from "next/link";
 import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -83,6 +83,17 @@ export default function Features() {
           </div>
         </div>
       </section>
+      <div className="bottom-0 left-0 right-0 bg-background py-8 px-2 flex justify-between items-center border-t border-primary">
+          <Link href="/" passHref>
+            <button
+              type="button"
+              className="text-foreground text-xl hover:text-cta transition-colors"
+              aria-label="Back to Home"
+            >
+              ← Back to Home
+            </button>
+          </Link>
+        </div>      
       <Footer />
     </div>
   );

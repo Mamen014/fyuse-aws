@@ -15,10 +15,10 @@ export default function Navbar() {
           <Image
             src="/favicon.PNG"
             alt="FYUSE Logo"
-            width={120}
-            height={20}
+            width={1024}
+            height={273}
             priority
-            className="cursor-pointer rounded-xl"
+            className="cursor-pointer rounded-xl w-32 h-auto"
           />
         </Link>
         <div className="hidden md:flex items-center space-x-8">
@@ -58,7 +58,8 @@ export default function Navbar() {
           <button
             type="button"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="text-primary-foreground focus:outline-none"
+            className="text-primary-foreground focus:outline-none text-2xl"
+            style={{ padding: "10px", lineHeight: 1 }}
           >
             {isMenuOpen ? "✖" : "☰"}
           </button>

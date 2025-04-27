@@ -135,10 +135,10 @@ export default function ProfilePage() {
       <div className="mb-6">
         <button
           type="button"
-          onClick={() => router.push("/")}
+          onClick={() => router.push("/tryon")}
           className="px-4 py-2 bg-cta hover:bg-primary text-cta-foreground rounded-md transition-all"
         >
-          ← Back to Home
+          ← Digital Fitting Room
         </button>
       </div>
 

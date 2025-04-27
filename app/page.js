@@ -11,18 +11,6 @@ import "react-toastify/dist/ReactToastify.css";
 function AuthActionsInNavbar() {
   const auth = useAuth();
 
-  const handleSignUp = () => {
-    const clientId = process.env.NEXT_PUBLIC_CLIENTID;
-    const domain = process.env.NEXT_PUBLIC_DOMAIN;
-    const redirectUri =
-      typeof window !== "undefined"
-        ? window.location.origin + "/"
-        : "http://localhost:3000/";
-    const signUpUrl = `https://${domain}/signup?client_id=${clientId}&response_type=code&scope=openid+profile+email&redirect_uri=${encodeURIComponent(redirectUri)}`;
-    sessionStorage.setItem("cameFromSignup", "true");
-    window.location.href = signUpUrl;
-  };
-
   useEffect(() => {
     if (typeof window === "undefined") return;
     const searchParams = new URLSearchParams(window.location.search);
@@ -122,7 +110,8 @@ function AuthActionsInNavbar() {
 
 export default function Home() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-
+  const { user, signinRedirect } = useAuth();
+  const userEmail = user?.profile?.email;
   return (
     <>
       <Script
@@ -138,12 +127,12 @@ export default function Home() {
           <div className="container mx-auto px-6 py-4 flex justify-between items-center">
             <Link href="/" passHref>
               <Image
-                src="/favicon.PNG" // Path to the logo in the public folder
+                src="/favicon.PNG"
                 alt="FYUSE Logo"
-                width={120} // Adjust width as needed
-                height={20} // Adjust height as needed
+                width={1024}
+                height={273}
                 priority
-                className="cursor-pointer rounded-xl"
+                className="cursor-pointer rounded-xl w-32 h-auto"
               />
             </Link>
             <div className="hidden md:flex items-center space-x-8">
@@ -181,8 +170,10 @@ export default function Home() {
             </div>
             <div className="md:hidden">
               <button
+                type="button"
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="text-primary-foreground focus:outline-none"
+                className="text-primary-foreground focus:outline-none text-2xl"
+                style={{ padding: "10px", lineHeight: 1 }}
               >
                 {isMenuOpen ? "✖" : "☰"}
               </button>
@@ -211,41 +202,68 @@ export default function Home() {
         </nav>
 
         <main className="flex-grow mt-20 space-y-20 px-6">
-          <section className="bg-background text-foreground px-6 py-12 md:flex md:items-start md:justify-center md:space-x-16">
-            <div className="max-w-xl text-center">
-              <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
-                Digital Fitting Room
-              </h2>
-              <p className="text-base md:text-lg lg:text-xl mb-4">
-                No more crowded malls or long fitting room lines. Try on clothes
-                virtually from anywhere, anytime. It's your private fitting
-                room, reimagined.
-              </p>
-              <Link href="/tryon">
-                <button className="bg-cta text-cta-foreground font-bold py-2 px-6 rounded-md">
-                  Try-on Now
-                </button>
-              </Link>
-            </div>
-
-            <div className="max-w-xl mt-12 md:mt-0 text-center">
-              <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 text-primary">
-                Personalized Styling
-              </h2>
-              <p className="text-base md:text-lg lg:text-xl mb-4">
-                Need a quick style boost? We suggest looks based on your body
-                shape, skin tone, and vibe. Fashion advice that’s fast,
-                friendly, and focused on <em>'you'</em>.
-              </p>
-              <Link href="/styling">
-                <button className="bg-accent text-accent-foreground font-bold py-2 px-6 rounded-md">
-                  Style Me
-                </button>
-              </Link>
-            </div>
-          </section>
+        <section className="bg-background text-foreground px-6 py-12 md:flex md:items-start md:justify-center md:space-x-16">
+          <div className="max-w-xl text-center">
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">Digital Fitting Room</h2>
+            <p className="text-base md:text-lg lg:text-xl mb-4">
+              No more crowded malls or long fitting room lines. Try on clothes virtually from anywhere, anytime.
+            </p>
+            <button 
+              onClick={() => {
+                if (!user) {
+                  toast.error("Please sign in to use the Try-on feature.", {
+                    position: "top-right",
+                    autoClose: 1500,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                    theme: "colored",
+                  });
+                  setTimeout(() => signinRedirect(), 1500); // ⏳ slight delay before redirect
+                } else {
+                  window.location.href = '/tryon';
+                }
+              }}
+              className="bg-cta text-cta-foreground font-bold py-2 px-6 rounded-md"
+            >
+              Try-on Now
+            </button>
+          </div>
+        </section>
+        <section className="bg-background text-foreground px-6 py-12 md:flex md:items-start md:justify-center md:space-x-16">
+          <div className="max-w-xl text-center">
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">Personalized Styling</h2>
+            <p className="text-base md:text-lg lg:text-xl mb-4">
+              Need a quick style boost? We suggest looks based on your body
+              shape, skin tone, and vibe. Fashion advice that’s fast,
+              friendly, and focused on <em>'you'</em>.
+            </p>
+            <button 
+              onClick={() => {
+                if (!user) {
+                  toast.error("Please sign in to use the Styling feature.", {
+                    position: "top-right",
+                    autoClose: 1500,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                    theme: "colored",
+                  });
+                  setTimeout(() => signinRedirect(), 1500);
+                } else {
+                  window.location.href = '/styling';
+                }
+              }}
+              className="bg-cta text-cta-foreground font-bold py-2 px-6 rounded-md"
+            >
+              Style Me
+            </button>
+          </div>
+        </section>
         </main>
-
+        <ToastContainer />        
         <footer className="bg-primary text-primary-foreground py-8 text-center">
           <p>&copy; 2025 FYUSE. All rights reserved.</p>
           <div className="mt-4 flex justify-center space-x-6 text-sm">
@@ -255,17 +273,6 @@ export default function Home() {
             <Link href="/features">Features</Link>
           </div>
         </footer>
-        <ToastContainer
-          position="top-right" // Position of the toast notifications
-          autoClose={5000} // Auto-close after 5 seconds
-          hideProgressBar={false}
-          newestOnTop={false}
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-        />
       </div>
     </>
   );
