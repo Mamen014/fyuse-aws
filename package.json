@@ -2,6 +2,10 @@
   "name": "fyuse-frontend",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=20",
+    "npm": ">=10"
+  },
   "type": "module",
   "scripts": {
     "dev": "next dev --turbopack",
@@ -61,14 +65,9 @@
     "uuid": "^11.1.0"
   },
   "devDependencies": {
-    "@aws-amplify/backend": "^1.14.3",
-    "@aws-amplify/backend-cli": "^1.5.0",
     "@eslint/eslintrc": "^3",
     "@types/react": "^19.0.10",
     "autoprefixer": "^10.4.20",
-    "aws-cdk": "^2.1003.0",
-    "aws-cdk-lib": "^2.180.0",
-    "constructs": "^10.4.2",
     "esbuild": "^0.25.1",
     "eslint": "^9",
     "eslint-config-next": "15.1.7",
@@ -76,64 +75,5 @@
     "tailwindcss": "^3.4.17",
     "tsx": "^4.19.3",
     "typescript": "^5.8.2"
-  },
-  "Resources": {
-    "Bucket": {
-      "Type": "AWS::S3::Bucket",
-      "Properties": {
-        "BucketName": {
-          "Fn::Sub": "${AWS::StackName}-bucket-${AWS::AccountId}"
-        },
-        "BucketEncryption": {
-          "ServerSideEncryptionConfiguration": [
-            {
-              "ServerSideEncryptionByDefault": {
-                "SSEAlgorithm": "aws:kms",
-                "KMSMasterKeyID": "alias/aws/s3"
-              }
-            }
-          ]
-        },
-        "PublicAccessBlockConfiguration": {
-          "IgnorePublicAcls": true,
-          "RestrictPublicBuckets": true
-        }
-      }
-    },
-    "BucketBucketPolicy": {
-      "Type": "AWS::S3::BucketPolicy",
-      "Properties": {
-        "Bucket": {
-          "Ref": "Bucket"
-        },
-        "PolicyDocument": {
-          "Id": "RequireEncryptionInTransit",
-          "Version": "2012-10-17",
-          "Statement": [
-            {
-              "Principal": "*",
-              "Action": "*",
-              "Effect": "Deny",
-              "Resource": [
-                {
-                  "Fn::GetAtt": [
-                    "Bucket",
-                    "Arn"
-                  ]
-                },
-                {
-                  "Fn::Sub": "${Bucket.Arn}/*"
-                }
-              ],
-              "Condition": {
-                "Bool": {
-                  "aws:SecureTransport": "false"
-                }
-              }
-            }
-          ]
-        }
-      }
-    }
   }
 }
