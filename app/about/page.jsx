@@ -112,7 +112,7 @@ export default function About() {
           </Link>
 
           {/* Link to /features */}
-          <Link href="/features" passHref>
+          {/* <Link href="/features" passHref>
             <button
               type="button"
               className="text-foreground text-xl hover:text-cta transition-colors"
@@ -120,7 +120,7 @@ export default function About() {
             >
               View Features →
             </button>
-          </Link>
+          </Link> */}
         </div>
       </main>
 

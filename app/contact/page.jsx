@@ -80,7 +80,7 @@ export default function Contact() {
           </motion.div>
 
           {/* Back to Home (Arrow Icon) */}
-          <Link href="/" passHref>
+          {/* <Link href="/" passHref>
             <button
               type="button"
               className="text-foreground text-lg hover:text-cta transition-colors flex items-center gap-2"
@@ -88,7 +88,7 @@ export default function Contact() {
             >
               ← Back to Home
             </button>
-          </Link>
+          </Link> */}
         </main>
       </div>
       <Footer />
