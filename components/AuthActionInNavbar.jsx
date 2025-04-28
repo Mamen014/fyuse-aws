@@ -72,17 +72,15 @@ export default function AuthActionsInNavbar() {
   }
 
   return (
-    <div className="flex items-center gap-4">
-      <button
-        type="button"
-        onClick={() => {
-          trackSignInClick();
-          auth.signinRedirect();
-        }}
-        className="bg-cta text-cta-foreground text-sm px-4 py-2 rounded-md"
-      >
-        Sign In / Register
-      </button>
-    </div>
+    <button
+      type="button"
+      onClick={() => {
+        trackSignInClick();
+        auth.signinRedirect();
+      }}
+      className="bg-cta text-cta-foreground text-sm px-4 py-2 rounded-md"
+    >
+      Sign In / Register
+    </button>
   );
 }

@@ -68,7 +68,7 @@ function AuthActionsInNavbar() {
   }
 
   return (
-    <div className="flex items-center gap-4">
+    <div>
       <button
         type="button"
         onClick={() => auth.signinRedirect()}
@@ -189,9 +189,10 @@ export default function Home() {
                   Digital Fitting Room
                 </h2>
                 <p className="text-base md:text-lg lg:text-xl mb-4">
-                  No more crowded malls or long fitting room lines. Try on clothes virtually from anywhere, anytime.
+                  No more crowded malls or long fitting room lines. Try on
+                  clothes virtually from anywhere, anytime.
                 </p>
-                <button 
+                <button
                   onClick={() => {
                     if (!user) {
                       toast.error("Please sign in to use the Try-on feature.", {
@@ -205,7 +206,7 @@ export default function Home() {
                       });
                       setTimeout(() => signinRedirect(), 1500);
                     } else {
-                      window.location.href = '/tryon';
+                      window.location.href = "/tryon";
                     }
                   }}
                   className="bg-cta text-cta-foreground font-bold py-2 px-6 rounded-md"
@@ -234,24 +235,28 @@ export default function Home() {
                   Personalized Styling
                 </h2>
                 <p className="text-base md:text-lg lg:text-xl mb-4">
-                  Need a quick style boost? We suggest looks based on your body shape, skin tone, and vibe. Fashion advice that’s fast,
+                  Need a quick style boost? We suggest looks based on your body
+                  shape, skin tone, and vibe. Fashion advice that’s fast,
                   friendly, and focused on <em>'you'</em>.
                 </p>
-                <button 
+                <button
                   onClick={() => {
                     if (!user) {
-                      toast.error("Please sign in to use the Styling feature.", {
-                        position: "top-right",
-                        autoClose: 1500,
-                        hideProgressBar: false,
-                        closeOnClick: true,
-                        pauseOnHover: true,
-                        draggable: true,
-                        theme: "colored",
-                      });
+                      toast.error(
+                        "Please sign in to use the Styling feature.",
+                        {
+                          position: "top-right",
+                          autoClose: 1500,
+                          hideProgressBar: false,
+                          closeOnClick: true,
+                          pauseOnHover: true,
+                          draggable: true,
+                          theme: "colored",
+                        }
+                      );
                       setTimeout(() => signinRedirect(), 1500);
                     } else {
-                      window.location.href = '/styling';
+                      window.location.href = "/styling";
                     }
                   }}
                   className="bg-cta text-cta-foreground font-bold py-2 px-6 rounded-md"
@@ -263,7 +268,7 @@ export default function Home() {
           </div>
         </main>
 
-        <ToastContainer />        
+        <ToastContainer />
         <footer className="bg-primary text-primary-foreground py-8 text-center">
           <p>&copy; 2025 FYUSE. All rights reserved.</p>
           <div className="mt-4 flex justify-center space-x-6 text-sm">
