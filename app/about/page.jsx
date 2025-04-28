@@ -99,9 +99,9 @@ export default function About() {
         </section>
 
         {/* CTA */}
-        <div className="bottom-0 left-0 right-0 bg-background py-8 px-2 flex justify-between items-center border-t border-primary">
-          {/* Back to Home (Arrow Icon) */}
-          <Link href="/" passHref>
+        {/* <div className="bottom-0 left-0 right-0 bg-background py-8 px-2 flex justify-between items-center border-t border-primary"> */}
+        {/* Back to Home (Arrow Icon) */}
+        {/* <Link href="/" passHref>
             <button
               type="button"
               className="text-foreground text-xl hover:text-cta transition-colors"
@@ -109,10 +109,10 @@ export default function About() {
             >
               ← Back to Home
             </button>
-          </Link>
+          </Link> */}
 
-          {/* Link to /features */}
-          {/* <Link href="/features" passHref>
+        {/* Link to /features */}
+        {/* <Link href="/features" passHref>
             <button
               type="button"
               className="text-foreground text-xl hover:text-cta transition-colors"
@@ -121,7 +121,7 @@ export default function About() {
               View Features →
             </button>
           </Link> */}
-        </div>
+        {/* </div> */}
       </main>
 
       <Footer />

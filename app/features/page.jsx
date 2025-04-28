@@ -83,7 +83,7 @@ export default function Features() {
           </div>
         </div>
       </section>
-      <div className="bottom-0 left-0 right-0 bg-background py-8 px-2 flex justify-between items-center border-t border-primary">
+      {/* <div className="bottom-0 left-0 right-0 bg-background py-8 px-2 flex justify-between items-center border-t border-primary">
           <Link href="/" passHref>
             <button
               type="button"
@@ -93,7 +93,7 @@ export default function Features() {
               ← Back to Home
             </button>
           </Link>
-        </div>      
+        </div>       */}
       <Footer />
     </div>
   );
