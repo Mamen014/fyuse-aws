@@ -179,68 +179,90 @@ export default function Home() {
           )}
         </nav>
 
-        <main className="flex-grow mt-20 space-y-20 px-6">
-        <section className="bg-background text-foreground px-6 py-12 md:flex md:items-start md:justify-center md:space-x-16">
-          <div className="max-w-xl text-center">
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">Digital Fitting Room</h2>
-            <p className="text-base md:text-lg lg:text-xl mb-4">
-              No more crowded malls or long fitting room lines. Try on clothes virtually from anywhere, anytime.
-            </p>
-            <button 
-              onClick={() => {
-                if (!user) {
-                  toast.error("Please sign in to use the Try-on feature.", {
-                    position: "top-right",
-                    autoClose: 1500,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                    theme: "colored",
-                  });
-                  setTimeout(() => signinRedirect(), 1500); // ⏳ slight delay before redirect
-                } else {
-                  window.location.href = '/tryon';
-                }
-              }}
-              className="bg-cta text-cta-foreground font-bold py-2 px-6 rounded-md"
-            >
-              Try-on Now
-            </button>
+        <main className="flex-grow mt-20 px-6">
+          <div className="flex flex-col gap-4">
+            {/* Digital Fitting Room Section */}
+            <section className="bg-background text-foreground px-6 py-8 md:py-12 md:flex md:items-center md:justify-center md:space-x-16">
+              {/* Left Column: Text */}
+              <div className="md:w-1/2 mb-8 md:mb-0 text-center">
+                <h2 className="text-4xl md:text-4xl lg:text-5xl font-bold mb-4">
+                  Digital Fitting Room
+                </h2>
+                <p className="text-base md:text-lg lg:text-xl mb-4">
+                  No more crowded malls or long fitting room lines. Try on clothes virtually from anywhere, anytime.
+                </p>
+                <button 
+                  onClick={() => {
+                    if (!user) {
+                      toast.error("Please sign in to use the Try-on feature.", {
+                        position: "top-right",
+                        autoClose: 1500,
+                        hideProgressBar: false,
+                        closeOnClick: true,
+                        pauseOnHover: true,
+                        draggable: true,
+                        theme: "colored",
+                      });
+                      setTimeout(() => signinRedirect(), 1500);
+                    } else {
+                      window.location.href = '/tryon';
+                    }
+                  }}
+                  className="bg-cta text-cta-foreground font-bold py-2 px-6 rounded-md"
+                >
+                  Try-on Now
+                </button>
+              </div>
+
+              {/* Right Column: Image */}
+              <div className="md:w-1/2 flex justify-center">
+                <Image
+                  src="/images/howitworks.jpg"
+                  alt="How it Works"
+                  width={913}
+                  height={1217}
+                  priority
+                  className="rounded-xl"
+                />
+              </div>
+            </section>
+
+            {/* Personalized Styling Section */}
+            <section className="bg-background text-foreground px-6 pt-0 pb-8 md:pt-12 md:pb-12 md:flex md:items-center md:justify-center md:space-x-16">
+              <div className="max-w-xl text-center">
+                <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
+                  Personalized Styling
+                </h2>
+                <p className="text-base md:text-lg lg:text-xl mb-4">
+                  Need a quick style boost? We suggest looks based on your body shape, skin tone, and vibe. Fashion advice that’s fast,
+                  friendly, and focused on <em>'you'</em>.
+                </p>
+                <button 
+                  onClick={() => {
+                    if (!user) {
+                      toast.error("Please sign in to use the Styling feature.", {
+                        position: "top-right",
+                        autoClose: 1500,
+                        hideProgressBar: false,
+                        closeOnClick: true,
+                        pauseOnHover: true,
+                        draggable: true,
+                        theme: "colored",
+                      });
+                      setTimeout(() => signinRedirect(), 1500);
+                    } else {
+                      window.location.href = '/styling';
+                    }
+                  }}
+                  className="bg-cta text-cta-foreground font-bold py-2 px-6 rounded-md"
+                >
+                  Style Me
+                </button>
+              </div>
+            </section>
           </div>
-        </section>
-        <section className="bg-background text-foreground px-6 py-12 md:flex md:items-start md:justify-center md:space-x-16">
-          <div className="max-w-xl text-center">
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">Personalized Styling</h2>
-            <p className="text-base md:text-lg lg:text-xl mb-4">
-              Need a quick style boost? We suggest looks based on your body
-              shape, skin tone, and vibe. Fashion advice that’s fast,
-              friendly, and focused on <em>'you'</em>.
-            </p>
-            <button 
-              onClick={() => {
-                if (!user) {
-                  toast.error("Please sign in to use the Styling feature.", {
-                    position: "top-right",
-                    autoClose: 1500,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                    theme: "colored",
-                  });
-                  setTimeout(() => signinRedirect(), 1500);
-                } else {
-                  window.location.href = '/styling';
-                }
-              }}
-              className="bg-cta text-cta-foreground font-bold py-2 px-6 rounded-md"
-            >
-              Style Me
-            </button>
-          </div>
-        </section>
         </main>
+
         <ToastContainer />        
         <footer className="bg-primary text-primary-foreground py-8 text-center">
           <p>&copy; 2025 FYUSE. All rights reserved.</p>
