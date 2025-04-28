@@ -6,6 +6,14 @@ import { useAuth } from "react-oidc-context";
 
 export default function AuthActionsInNavbar() {
   const auth = useAuth();
+  const trackSignInClick = () => {
+    if (typeof window !== "undefined" && window.gtag) {
+      window.gtag("event", "click", {
+        event_category: "Authentication",
+        event_label: "Sign In Button",
+      });
+    }
+  };
 
   useEffect(() => {
     if (auth?.isAuthenticated && auth?.user?.profile?.email) {
@@ -67,7 +75,10 @@ export default function AuthActionsInNavbar() {
     <div className="flex items-center gap-4">
       <button
         type="button"
-        onClick={() => auth.signinRedirect()}
+        onClick={() => {
+          trackSignInClick();
+          auth.signinRedirect();
+        }}
         className="bg-cta text-cta-foreground text-sm px-4 py-2 rounded-md"
       >
         Sign In / Register

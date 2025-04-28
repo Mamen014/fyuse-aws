@@ -12,34 +12,6 @@ function AuthActionsInNavbar() {
   const auth = useAuth();
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    const searchParams = new URLSearchParams(window.location.search);
-    const hasAuthCode = searchParams.get("code");
-    const cameFromSignup = sessionStorage.getItem("cameFromSignup") === "true";
-    if (
-      hasAuthCode &&
-      cameFromSignup &&
-      !localStorage.getItem("loggedInUser")
-    ) {
-      toast.success(
-        "🎉 Signup complete! Now please log in to start using FYUSE.",
-        {
-          position: "top-right",
-          autoClose: 5000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-        }
-      );
-      sessionStorage.removeItem("cameFromSignup");
-      searchParams.delete("code");
-      const newUrl = `${window.location.origin}${window.location.pathname}?${searchParams.toString()}`;
-      window.history.replaceState({}, document.title, newUrl);
-    }
-  }, []);
-
-  useEffect(() => {
     if (auth?.isAuthenticated && auth?.user?.profile?.email) {
       const userData = {
         email: auth.user.profile.email,
@@ -114,12 +86,18 @@ export default function Home() {
   const userEmail = user?.profile?.email;
   return (
     <>
+      {/* Google Analytics Script */}
       <Script
         strategy="afterInteractive"
-        src="https://www.googletagmanager.com/gtag/js?id=G-HWPJV516PJ"
+        src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GOOGLE_MEASUREMENT_ID}`}
       />
       <Script id="google-analytics" strategy="afterInteractive">
-        {`window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-HWPJV516PJ');`}
+        {`
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', '${process.env.NEXT_PUBLIC_GOOGLE_MEASUREMENT_ID}');
+        `}
       </Script>
 
       <div className="flex flex-col min-h-screen bg-background text-foreground">
