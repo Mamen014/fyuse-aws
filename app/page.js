@@ -229,40 +229,52 @@ export default function Home() {
             </section>
 
             {/* Personalized Styling Section */}
-            <section className="bg-background text-foreground px-6 pt-0 pb-8 md:pt-12 md:pb-12 md:flex md:items-center md:justify-center md:space-x-16">
-              <div className="max-w-xl text-center">
-                <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
-                  Personalized Styling
-                </h2>
-                <p className="text-base md:text-lg lg:text-xl mb-4">
-                  Need a quick style boost? We suggest looks based on your body
-                  shape, skin tone, and vibe. Fashion advice that’s fast,
-                  friendly, and focused on <em>'you'</em>.
-                </p>
-                <button
-                  onClick={() => {
-                    if (!user) {
-                      toast.error(
-                        "Please sign in to use the Styling feature.",
-                        {
-                          position: "top-right",
-                          autoClose: 1500,
-                          hideProgressBar: false,
-                          closeOnClick: true,
-                          pauseOnHover: true,
-                          draggable: true,
-                          theme: "colored",
-                        }
-                      );
-                      setTimeout(() => signinRedirect(), 1500);
-                    } else {
-                      window.location.href = "/styling";
-                    }
-                  }}
-                  className="bg-cta text-cta-foreground font-bold py-2 px-6 rounded-md"
-                >
-                  Style Me
-                </button>
+            <section className="bg-background text-foreground px-6 py-8 md:py-12 md:flex md:items-center md:justify-center md:space-x-16">
+              {/* left Section */}
+              <div className="md:w-1/2 mb-8 md:mb-0 text-center">
+                <div className="md:w-1/2 mb-8 md:mb-0 text-center">
+                  <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
+                    Personalized Styling
+                  </h2>
+                  <p className="text-base md:text-lg lg:text-xl mb-4">
+                    Need a quick style boost? We suggest looks based on your body shape, skin tone, and vibe. Fashion advice that’s fast, friendly, and focused on <em>'you'</em>.
+                  </p>
+                  <button
+                    onClick={() => {
+                      if (!user) {
+                        toast.error(
+                          "Please sign in to use the Styling feature.",
+                          {
+                            position: "top-right",
+                            autoClose: 1500,
+                            hideProgressBar: false,
+                            closeOnClick: true,
+                            pauseOnHover: true,
+                            draggable: true,
+                            theme: "colored",
+                          }
+                        );
+                        setTimeout(() => signinRedirect(), 1500);
+                      } else {
+                        window.location.href = "/styling";
+                      }
+                    }}
+                    className="bg-cta text-cta-foreground font-bold py-2 px-6 rounded-md">
+                    Style Me
+                  </button>
+                </div>
+              </div>
+
+              {/* Right Column: Image */}
+              <div className="md:w-1/2 flex justify-center">
+                <Image
+                  src="/images/personalisedStyling.png"
+                  alt="Personalized Styling"
+                  width={913}
+                  height={1217}
+                  priority
+                  className="rounded-xl"
+                />
               </div>
             </section>
           </div>
