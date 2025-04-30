@@ -268,7 +268,7 @@ export default function Home() {
               {/* Right Column: Image */}
               <div className="md:w-1/2 flex justify-center">
                 <Image
-                  src="/images/personalisedStyling.png"
+                  src="/images/personalisedStyling2.png"
                   alt="Personalized Styling"
                   width={913}
                   height={1217}
