@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import AuthActionsInNavbar from "./AuthActionInNavbar.jsx";
+import { ArrowRightStartOnRectangleIcon } from '@heroicons/react/24/solid';
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -61,7 +62,7 @@ export default function Navbar() {
             className="text-primary-foreground focus:outline-none text-2xl"
             style={{ padding: "10px", lineHeight: 1 }}
           >
-            {isMenuOpen ? "✖" : "☰"}
+            {isMenuOpen ? "✖" : <ArrowRightStartOnRectangleIcon className="w-6 h-6" />}
           </button>
         </div>
       </div>
