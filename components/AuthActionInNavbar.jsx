@@ -68,8 +68,19 @@ export default function AuthActionsInNavbar({ isInMobileMenu = false }) {
     // On desktop right side
     return (
       <div className="flex items-center space-x-6">
-        <Link href="/wardrobe" passHref className="flex flex-col items-center cursor-pointer text-sm text-primary-foreground">
-          <Image src="/images/hanger.png" alt="Wardrobe" width={24} height={24} className="mb-1" />
+        <Link
+          href="/wardrobe"
+          passHref
+          className="flex flex-col items-center cursor-pointer text-sm text-primary-foreground"
+        >
+          {/* <Image src="/images/hanger.png" alt="Wardrobe" width={24} height={24} className="mb-1" /> */}
+          <Image
+            src="/images/coat-hanger-svgrepo-com.svg"
+            alt="Wardrobe"
+            width={24}
+            height={24}
+            className="mb-1"
+          />
           <span>Digital Wardrobe</span>
         </Link>
       </div>
