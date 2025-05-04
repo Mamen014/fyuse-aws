@@ -68,9 +68,9 @@ export default function AuthActionsInNavbar({ isInMobileMenu = false }) {
     // On desktop right side
     return (
       <div className="flex items-center space-x-6">
-        <Link href="/wardrobe" passHref className="flex flex-col items-center cursor-pointer text-sm text-primary-foreground">
-          <Image src="/images/hanger.png" alt="Wardrobe" width={24} height={24} className="mb-1" />
-          <span>Digital Wardrobe</span>
+        <Link href="/profile" passHref className="flex flex-col items-center cursor-pointer text-sm text-primary-foreground">
+          <Image src="/images/hanger.png" alt="Wardrobe" width={32} height={32} className="mb-1" />
+          <span>Wardrobe</span>
         </Link>
       </div>
     );
@@ -84,7 +84,7 @@ export default function AuthActionsInNavbar({ isInMobileMenu = false }) {
       }}
       className="flex flex-col items-center cursor-pointer text-sm text-primary-foreground"
     >
-      <ArrowRightEndOnRectangleIcon className="h-6 w-6 mb-1" />
+      <ArrowRightEndOnRectangleIcon className="h-8 w-8 mb-1" />
       <span>Sign In</span>
     </span>
   );

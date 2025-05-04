@@ -18,7 +18,7 @@ export default function Navbar() {
             <button
               type="button"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="text-primary-foreground focus:outline-none text-2xl"
+              className="text-primary-foreground focus:outline-none text-3xl"
               style={{ padding: "10px", lineHeight: 1 }}
             >
               {isMenuOpen ? "✖" : "☰"}

@@ -44,6 +44,7 @@
     "formidable": "^3.5.2",
     "framer-motion": "^12.6.3",
     "glob": "^11.0.1",
+    "heroicons": "^2.2.0",
     "jose": "^6.0.10",
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.487.0",
