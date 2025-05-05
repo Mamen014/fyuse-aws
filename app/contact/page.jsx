@@ -156,7 +156,7 @@ const ContactForm = () => {
       //   throw new Error(errorData.message || 'Something went wrong');
       // }
 
-      const apiUrl = 'https://rzwx53yc18.execute-api.ap-southeast-2.amazonaws.com/prodTesting/contact'; // <-- PASTE YOUR URL HERE
+      const apiUrl = 'API_GATEWAY_INVOKE_URL/contact'; // <-- PASTE YOUR URL HERE
 
       const response = await fetch(apiUrl, {
           method: 'POST',
