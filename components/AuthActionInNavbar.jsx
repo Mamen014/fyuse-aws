@@ -51,50 +51,41 @@ export default function AuthActionsInNavbar({ isInMobileMenu = false }) {
   if (auth.isLoading) return null;
 
   if (auth.isAuthenticated) {
+    const username = auth.user?.profile?.name || auth.user?.profile?.email;
+
     // Inside mobile menu
     if (isInMobileMenu) {
       return (
         <span
           onClick={handleSignOut}
-          className="block text-sm font-medium text-red-500 cursor-pointer py-2"
+          className="block text-sm font-medium text-red-500 cursor-pointer"
         >
           Sign Out
         </span>
       );
     }
 
-    // On desktop right side - horizontal layout
+    // On desktop right side
     return (
       <div className="flex items-center space-x-6">
-        <Link
-          href="/wardrobe"
-          passHref
-          className="flex flex-col items-center cursor-pointer text-sm text-primary-foreground"
-        />
-          {/* <Image src="/images/hanger.png" alt="Wardrobe" width={24} height={24} className="mb-1" /> */}
-          <Image
-            src="/images/coat-hanger-svgrepo-com.svg"
-            alt="Wardrobe"
-            width={24}
-            height={24}
-            className="mb-1"
-          />
-          <span>Digital Wardrobe</span>
+        <Link href="/profile" passHref className="flex flex-col items-center cursor-pointer text-sm text-primary-foreground">
+          <Image src="/images/hanger.png" alt="Wardrobe" width={32} height={32} className="mb-1" />
+          <span>Wardrobe</span>
+        </Link>
       </div>
     );
   }
 
-  // Sign in button - always vertical layout
   return (
     <span
       onClick={() => {
         trackSignInClick();
         auth.signinRedirect();
       }}
-      className="h-full flex flex-col items-center justify-center cursor-pointer text-primary-foreground"
+      className="flex flex-col items-center cursor-pointer text-sm text-primary-foreground"
     >
-      <ArrowRightEndOnRectangleIcon className="h-7 w-7 mb-1" />
-      <span className="text-xs whitespace-nowrap">Sign In</span>
+      <ArrowRightEndOnRectangleIcon className="h-8 w-8 mb-1" />
+      <span>Sign In</span>
     </span>
   );
 }
