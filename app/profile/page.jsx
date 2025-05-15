@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "react-oidc-context";
 import { useRouter } from "next/navigation";
 import { Toaster, toast } from "react-hot-toast";
+import { useOnboarding } from '@/hooks/useOnboarding';
 
 
 
@@ -13,6 +14,7 @@ export default function ProfilePage() {
   const [tryOnHistory, setTryOnHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(null);
+  useOnboarding();
 
   // Debugging localStorage if needed
   useEffect(() => {
@@ -98,6 +100,8 @@ export default function ProfilePage() {
         style: {
           background: "#A1E3B5", // Success state color
           color: "#0B1F63", // Primary text color
+          background: "#A1E3B5",
+          color: "#0B1F63",
         },
       });
       await fetchHistory();

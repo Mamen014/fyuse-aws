@@ -10,13 +10,25 @@ import "react-toastify/dist/ReactToastify.css";
 import Navbar from "@/components/Navbar";
 
 export default function Home() {
-  const { user, signinRedirect } = useAuth();
+  const { user, isLoading, signinRedirect } = useAuth();
+
+  // Handle post-login redirect
+  useEffect(() => {
+    if (!isLoading && user) {
+      const redirectPath = localStorage.getItem("postLoginRedirect");
+      if (redirectPath) {
+        localStorage.removeItem("postLoginRedirect");
+        window.location.href = redirectPath;
+      }
+    }
+  }, [user, isLoading]);
+
   return (
     <>
       {/* Google Analytics Script */}
       <Script
         strategy="afterInteractive"
-        src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GOOGLE_MEASUREMENT_ID}`}
+        src={`https://www.googletagmanager.com/gtag/js?id= ${process.env.NEXT_PUBLIC_GOOGLE_MEASUREMENT_ID}`}
       />
       <Script id="google-analytics" strategy="afterInteractive">
         {`
@@ -47,6 +59,12 @@ export default function Home() {
                   type="button"
                   onClick={() => {
                     if (!user) {
+                      // Save intended route before redirecting to sign in
+                      localStorage.setItem(
+                        "postLoginRedirect",
+                        "/onboarding/register"
+                      );
+
                       toast.error("Please sign in to use the Try-on feature.", {
                         position: "top-right",
                         autoClose: 1500,
@@ -58,7 +76,10 @@ export default function Home() {
                       });
                       setTimeout(() => signinRedirect(), 1500);
                     } else {
-                      window.location.href = "/tryon";
+                      const step = localStorage.getItem("onboarding_step");
+                      window.location.href = step === "appearance"
+                        ? "/tryon"
+                        : "/onboarding/register";
                     }
                   }}
                   className="bg-cta text-cta-foreground font-bold py-2 px-6 rounded-md"
@@ -82,42 +103,37 @@ export default function Home() {
 
             {/* Personalized Styling Section */}
             <section className="bg-background text-foreground px-6 py-8 md:py-12 md:flex md:items-center md:justify-center md:space-x-16">
-              {/* left Section */}
+              {/* Left Section */}
               <div className="md:w-1/2 mb-8 md:mb-0 text-center">
-                <div className="md:w-1/2 mb-8 md:mb-0 text-center">
-                  <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
-                    Personalized Styling
-                  </h2>
-                  <p className="text-base md:text-lg lg:text-xl mb-4">
-                    Need a quick style boost? We suggest looks based on your
-                    body shape, skin tone, and vibe. Fashion advice that’s fast,
-                    friendly, and focused on <em>'you'</em>.
-                  </p>
-                  <button
-                    onClick={() => {
-                      if (!user) {
-                        toast.error(
-                          "Please sign in to use the Styling feature.",
-                          {
-                            position: "top-right",
-                            autoClose: 1500,
-                            hideProgressBar: false,
-                            closeOnClick: true,
-                            pauseOnHover: true,
-                            draggable: true,
-                            theme: "colored",
-                          }
-                        );
-                        setTimeout(() => signinRedirect(), 1500);
-                      } else {
-                        window.location.href = "/styling";
-                      }
-                    }}
-                    className="bg-cta text-cta-foreground font-bold py-2 px-6 rounded-md"
-                  >
-                    Style Me
-                  </button>
-                </div>
+                <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
+                  Personalized Styling
+                </h2>
+                <p className="text-base md:text-lg lg:text-xl mb-4">
+                  Need a quick style boost? We suggest looks based on your body shape, skin tone, and vibe. Fashion advice that’s fast, friendly, and focused on <em>'you'</em>.
+                </p>
+                <button
+                  onClick={() => {
+                    if (!user) {
+                      localStorage.setItem("postLoginRedirect", "/styling");
+
+                      toast.error("Please sign in to use the Styling feature.", {
+                        position: "top-right",
+                        autoClose: 1500,
+                        hideProgressBar: false,
+                        closeOnClick: true,
+                        pauseOnHover: true,
+                        draggable: true,
+                        theme: "colored",
+                      });
+                      setTimeout(() => signinRedirect(), 1500);
+                    } else {
+                      window.location.href = "/styling";
+                    }
+                  }}
+                  className="bg-cta text-cta-foreground font-bold py-2 px-6 rounded-md"
+                >
+                  Style Me
+                </button>
               </div>
 
               {/* Right Column: Image */}
