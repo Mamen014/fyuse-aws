@@ -70,6 +70,8 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@iconify/json": "^2.2.338",
+    "@iconify/tailwind": "^1.2.0",
     "@types/react": "^19.0.10",
     "autoprefixer": "^10.4.20",
     "esbuild": "^0.25.1",

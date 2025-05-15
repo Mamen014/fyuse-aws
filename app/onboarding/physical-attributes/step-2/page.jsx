@@ -31,7 +31,7 @@ export default function PhysicalAttributesStep2() {
         </h1>
         <div className="absolute top-0 right-0">
           <span className="inline-block px-3 py-0.5 text-xs text-white bg-[#0B1F63] rounded-full">
-            Step 2/3
+            Step 3/7
           </span>
         </div>
       </div>
@@ -67,7 +67,10 @@ export default function PhysicalAttributesStep2() {
       {/* Next Button */}
       <button
         onClick={handleSubmit}
-        className="w-full py-3.5 bg-[#0B1F63] text-white font-medium rounded-lg"
+        disabled={!photoUrl}
+        className={`w-full py-3.5 font-medium rounded-lg transition-opacity duration-200 ${
+          photoUrl ? 'bg-[#0B1F63] text-white' : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+        }`}
         style={{ borderRadius: "8px" }}
       >
         Next

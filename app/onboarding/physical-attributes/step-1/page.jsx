@@ -61,7 +61,7 @@ export default function PhysicalAttributesStep1() {
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-bold text-[#0B1F63]">Physical attribute</h2>
           <span className="inline-block px-3 py-1 text-xs bg-[#0B1F63] text-white rounded-full" style={{ height: '24px' }}>
-            Step 2/3
+            Step 2/7
           </span>
         </div>
 
@@ -140,7 +140,7 @@ export default function PhysicalAttributesStep1() {
             >
               <div
                 ref={sliderRef}
-                className="absolute top-0 w-6 h-6 border-2 border-blue-900 rounded-full transform -translate-y-1/2 -translate-x-1/2 cursor-grab"
+                className="absolute top-1/2 w-6 h-6 border-2 border-blue-900 rounded-full transform -translate-y-1/2 -translate-x-1/2 cursor-grab"
                 style={{ left: `${sliderPosition}%`, background: 'transparent' }}
               />
             </div>

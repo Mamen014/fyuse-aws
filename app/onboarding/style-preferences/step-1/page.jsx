@@ -14,12 +14,10 @@ export default function StylePreferencesStep1() {
       alert('Please select a fashion type');
       return;
     }
-    // Save to localStorage
     localStorage.setItem(
       'onboarding_style_preferences_1',
       JSON.stringify({ selectedType })
     );
-    // Go to next step
     window.location.href = '/onboarding/style-preferences/step-2';
   };
 
@@ -37,49 +35,64 @@ export default function StylePreferencesStep1() {
         <div className="p-6">
           <div className="flex justify-between items-center mb-6">
             <div>
-              <h2 className="text-2xl font-bold text-gray-800">Style preference</h2>
-              <p className="text-gray-600">Fashion type</p>
+              <h2 className="text-2xl font-bold text-[#0B1F63]">Style preference</h2>
+              <p className="text-[#0B1F63]">Fashion type</p>
             </div>
             <div className="bg-[#0B1F63] text-white text-sm font-semibold px-3 py-1 rounded-full">
-              Step 2/3
+              Step 5/7
             </div>
           </div>
-          
+
           <div className="space-y-3 mb-6">
             {Object.keys(fashionTypeDescriptions).map((type) => (
               <div
                 key={type}
-                className={`p-4 rounded-full border ${
-                  selectedType === type 
-                    ? 'border-[#0B1F63] bg-blue-50' 
+                className={`p-4 rounded-3xl border transition-all duration-150 ${
+                  selectedType === type
+                    ? 'border-[#0B1F63] bg-blue-50'
                     : 'border-gray-200'
                 } cursor-pointer`}
                 onClick={() => handleSelection(type)}
               >
-                <div className="flex items-center">
-                  <div className={`h-5 w-5 flex-shrink-0 rounded-full ${
-                    selectedType === type 
-                      ? 'bg-[#0B1F63]' 
-                      : 'border border-gray-400'
-                  } flex items-center justify-center mr-3`}>
+                <div className="flex items-start">
+                  <div
+                    className={`h-5 w-5 mt-1 flex-shrink-0 rounded-full ${
+                      selectedType === type
+                        ? 'bg-[#0B1F63]'
+                        : 'border border-gray-400'
+                    } flex items-center justify-center mr-3`}
+                  >
                     {selectedType === type && (
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-3 w-3 text-white"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={3}
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M5 13l4 4L19 7"
+                        />
                       </svg>
                     )}
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-800">{type}</h3>
-                    <p className="text-sm text-gray-600">{fashionTypeDescriptions[type]}</p>
+                    <h3 className="font-semibold text-[#0B1F63]">{type}</h3>
+                    <p className="text-sm text-[#0B1F63]/80">
+                      {fashionTypeDescriptions[type]}
+                    </p>
                   </div>
                 </div>
               </div>
             ))}
           </div>
-          
+
           <button
             onClick={handleSubmit}
-            className="mt-2 w-full py-3 bg-[#0B1F63] text-white font-semibold rounded-lg shadow-md hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+            className="mt-2 w-full py-3 bg-[#0B1F63] text-white font-semibold rounded-lg shadow-md hover:bg-[#0A1B55] focus:outline-none focus:ring-2 focus:ring-[#0B1F63] focus:ring-opacity-50"
             disabled={!selectedType}
           >
             Next
