@@ -3,9 +3,12 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "react-oidc-context";
+import Image from "next/image";
+import { ArrowRightEndOnRectangleIcon } from "@heroicons/react/24/outline";
 
-export default function AuthActionsInNavbar() {
+export default function AuthActionsInNavbar({ isInMobileMenu = false }) {
   const auth = useAuth();
+
   const trackSignInClick = () => {
     if (typeof window !== "undefined" && window.gtag) {
       window.gtag("event", "click", {
@@ -39,7 +42,9 @@ export default function AuthActionsInNavbar() {
       typeof window !== "undefined"
         ? window.location.origin
         : "http://localhost:3000";
-    const logoutUrl = `https://ap-southeast-2imonu7fwb.auth.ap-southeast-2.amazoncognito.com/logout?client_id=4l7l5ebjj2io1vap6qohbl2i7l&logout_uri=${encodeURIComponent(origin + "/")}`;
+    const logoutUrl = `https://ap-southeast-2imonu7fwb.auth.ap-southeast-2.amazoncognito.com/logout?client_id=4l7l5ebjj2io1vap6qohbl2i7l&logout_uri=${encodeURIComponent(
+      origin + "/"
+    )}`;
     window.location.href = logoutUrl;
   };
 
@@ -47,40 +52,40 @@ export default function AuthActionsInNavbar() {
 
   if (auth.isAuthenticated) {
     const username = auth.user?.profile?.name || auth.user?.profile?.email;
-    return (
-      <div className="flex items-center space-x-4">
-        <span className="text-sm text-primary-foreground whitespace-nowrap">
-          Welcome, {username}
-        </span>
-        <Link href="/profile" passHref>
-          <button
-            type="button"
-            className="bg-success text-success-foreground text-sm px-4 py-2 rounded-md shadow"
-          >
-            Digital Wardrobe
-          </button>
-        </Link>
-        <button
-          type="button"
+
+    // Inside mobile menu
+    if (isInMobileMenu) {
+      return (
+        <span
           onClick={handleSignOut}
-          className="bg-destructive text-destructive-foreground text-sm px-4 py-2 rounded-md"
+          className="block text-sm font-medium text-red-500 cursor-pointer"
         >
           Sign Out
-        </button>
+        </span>
+      );
+    }
+
+    // On desktop right side
+    return (
+      <div className="flex items-center space-x-6">
+        <Link href="/profile" passHref className="flex flex-col items-center cursor-pointer text-sm text-primary-foreground">
+          <Image src="/images/hanger.png" alt="Wardrobe" width={32} height={32} className="mb-1" />
+          <span>Wardrobe</span>
+        </Link>
       </div>
     );
   }
 
   return (
-    <button
-      type="button"
+    <span
       onClick={() => {
         trackSignInClick();
         auth.signinRedirect();
       }}
-      className="bg-cta text-cta-foreground text-sm px-4 py-2 rounded-md"
+      className="flex flex-col items-center cursor-pointer text-sm text-primary-foreground"
     >
-      Sign In / Register
-    </button>
+      <ArrowRightEndOnRectangleIcon className="h-8 w-8 mb-1" />
+      <span>Sign In</span>
+    </span>
   );
 }

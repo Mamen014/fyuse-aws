@@ -7,83 +7,10 @@ import Script from "next/script";
 import { useAuth } from "react-oidc-context";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-
-function AuthActionsInNavbar() {
-  const auth = useAuth();
-
-  useEffect(() => {
-    if (auth?.isAuthenticated && auth?.user?.profile?.email) {
-      const userData = {
-        email: auth.user.profile.email,
-        name: auth.user.profile.name || "",
-        idToken: auth.user.id_token,
-        accessToken: auth.user.access_token,
-        refreshToken: auth.user.refresh_token,
-        profile: auth.user.profile,
-      };
-      localStorage.setItem("loggedInUser", JSON.stringify(userData));
-    }
-    if (!auth?.isAuthenticated) {
-      localStorage.removeItem("loggedInUser");
-    }
-  }, [auth?.isAuthenticated, auth?.user]);
-
-  const handleSignOut = () => {
-    localStorage.removeItem("loggedInUser");
-    sessionStorage.clear();
-    const origin =
-      typeof window !== "undefined"
-        ? window.location.origin
-        : "http://localhost:3000";
-    const logoutUrl = `https://ap-southeast-2imonu7fwb.auth.ap-southeast-2.amazoncognito.com/logout?client_id=4l7l5ebjj2io1vap6qohbl2i7l&logout_uri=${encodeURIComponent(origin + "/")}`;
-    window.location.href = logoutUrl;
-  };
-
-  if (auth.isLoading) return null;
-
-  if (auth.isAuthenticated) {
-    const username = auth.user?.profile?.name || auth.user?.profile?.email;
-    return (
-      <div className="flex items-center space-x-4">
-        <span className="text-sm text-primary-foreground whitespace-nowrap">
-          Welcome, {username}
-        </span>
-        <Link href="/profile" passHref>
-          <button
-            type="button"
-            className="bg-success text-success-foreground text-sm px-4 py-2 rounded-md shadow"
-          >
-            Digital Wardrobe
-          </button>
-        </Link>
-        <button
-          type="button"
-          onClick={handleSignOut}
-          className="bg-destructive text-destructive-foreground text-sm px-4 py-2 rounded-md"
-        >
-          Sign Out
-        </button>
-      </div>
-    );
-  }
-
-  return (
-    <div>
-      <button
-        type="button"
-        onClick={() => auth.signinRedirect()}
-        className="bg-cta text-cta-foreground text-sm px-4 py-2 rounded-md"
-      >
-        Sign In / Register
-      </button>
-    </div>
-  );
-}
+import Navbar from "@/components/Navbar";
 
 export default function Home() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user, signinRedirect } = useAuth();
-  const userEmail = user?.profile?.email;
   return (
     <>
       {/* Google Analytics Script */}
@@ -101,83 +28,7 @@ export default function Home() {
       </Script>
 
       <div className="flex flex-col min-h-screen bg-background text-foreground">
-        <nav className="fixed top-0 left-0 w-full bg-primary text-primary-foreground z-50 shadow-md">
-          <div className="container mx-auto px-6 py-4 flex justify-between items-center">
-            <Link href="/" passHref>
-              <Image
-                src="/favicon.PNG"
-                alt="FYUSE Logo"
-                width={1024}
-                height={273}
-                priority
-                className="cursor-pointer rounded-xl w-32 h-auto"
-              />
-            </Link>
-            <div className="hidden md:flex items-center space-x-8">
-              <Link
-                href="/"
-                className="text-sm font-medium bg-accent text-accent-foreground px-4 py-1 rounded-md shadow"
-              >
-                Home
-              </Link>
-              <Link
-                href="/features"
-                className="text-sm font-medium hover:text-muted-foreground"
-              >
-                Features
-              </Link>
-              <Link
-                href="/about"
-                className="text-sm font-medium hover:text-muted-foreground"
-              >
-                About
-              </Link>
-              <Link
-                href="/contact"
-                className="text-sm font-medium hover:text-muted-foreground"
-              >
-                Contact
-              </Link>
-              <Link
-                href="/pricing"
-                className="text-sm font-medium hover:text-muted-foreground"
-              >
-                Pricing
-              </Link>
-              <AuthActionsInNavbar />
-            </div>
-            <div className="md:hidden">
-              <button
-                type="button"
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="text-primary-foreground focus:outline-none text-2xl"
-                style={{ padding: "10px", lineHeight: 1 }}
-              >
-                {isMenuOpen ? "✖" : "☰"}
-              </button>
-            </div>
-          </div>
-          {isMenuOpen && (
-            <div className="md:hidden bg-muted text-cta p-4 space-y-2">
-              <Link href="/" className="block text-sm font-medium">
-                Home
-              </Link>
-              <Link href="/features" className="block text-sm font-medium">
-                Features
-              </Link>
-              <Link href="/about" className="block text-sm font-medium">
-                About
-              </Link>
-              <Link href="/contact" className="block text-sm font-medium">
-                Contact
-              </Link>
-              <Link href="/pricing" className="block text-sm font-medium">
-                Pricing
-              </Link>
-              <AuthActionsInNavbar />
-            </div>
-          )}
-        </nav>
+        <Navbar />
 
         <main className="flex-grow mt-20 px-6">
           <div className="flex flex-col gap-4">
@@ -193,6 +44,7 @@ export default function Home() {
                   clothes virtually from anywhere, anytime.
                 </p>
                 <button
+                  type="button"
                   onClick={() => {
                     if (!user) {
                       toast.error("Please sign in to use the Try-on feature.", {
@@ -237,7 +89,9 @@ export default function Home() {
                     Personalized Styling
                   </h2>
                   <p className="text-base md:text-lg lg:text-xl mb-4">
-                    Need a quick style boost? We suggest looks based on your body shape, skin tone, and vibe. Fashion advice that’s fast, friendly, and focused on <em>'you'</em>.
+                    Need a quick style boost? We suggest looks based on your
+                    body shape, skin tone, and vibe. Fashion advice that’s fast,
+                    friendly, and focused on <em>'you'</em>.
                   </p>
                   <button
                     onClick={() => {
@@ -259,7 +113,8 @@ export default function Home() {
                         window.location.href = "/styling";
                       }
                     }}
-                    className="bg-cta text-cta-foreground font-bold py-2 px-6 rounded-md">
+                    className="bg-cta text-cta-foreground font-bold py-2 px-6 rounded-md"
+                  >
                     Style Me
                   </button>
                 </div>
