@@ -8,10 +8,10 @@ import PricingPlans from "@/components/PricingPlanCard";
 import AnalysisModal from "@/components/AnalysisModal";
 import PrivacyPolicyModal from "@/components/PrivacyPolicyModal";
 import { toast } from "react-toastify";
-import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
+import { ToastContainer } from "react-toastify";
 
 export default function VirtualTryOn() {
   const { user, signinRedirect } = useAuth();
@@ -27,18 +27,17 @@ export default function VirtualTryOn() {
   const [error, setError] = useState(null);
   const [taskId, setTaskId] = useState(null);
   const [tryOnCount, setTryOnCount] = useState(0);
-  const [agreeToPrivacy, setAgreeToPrivacy] = useState(false);
   const [showPricingPlans, setShowPricingPlans] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [matchingAnalysis, setMatchingAnalysis] = useState(null);
   const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
+  const [agreeToPrivacy, setAgreeToPrivacy] = useState(false);
   const [userImageError, setUserImageError] = useState(null);
   const [isValidUserImage, setIsValidUserImage] = useState(false);
   const [isValidApparelImage, setIsValidApparelImage] = useState(false);
   const [apparelImageError, setApparelImageError] = useState(null);
   const [isUserPhotoGuidanceOpen, setIsUserPhotoGuidanceOpen] = useState(false);
   const [isApparelPhotoGuidanceOpen, setIsApparelPhotoGuidanceOpen] = useState(false);
-
 
   const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
 
@@ -49,12 +48,37 @@ export default function VirtualTryOn() {
   const validateImage = async (file) => {
     const isAllowedType = allowedTypes.includes(file.type);
     const isAllowedSize = file.size <= maxSizeMB * 1024 * 1024;
-
     const imageBitmap = await createImageBitmap(file);
     const hasMinResolution =
       imageBitmap.width >= minResolution && imageBitmap.height >= minResolution;
-
     return isAllowedType && isAllowedSize && hasMinResolution;
+  };
+
+  // Track Event Function
+  const handleTrack = async (action, metadata = {}) => {
+    console.log(`Tracked event: ${action}`, metadata);
+    const payload = {
+      userEmail,
+      action,
+      timestamp: new Date().toISOString(),
+      page: "VirtualTryOn",
+      ...metadata,
+    };
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/trackevent`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const result = await res.json();
+      console.log("Tracking result:", result);
+    } catch (err) {
+      console.error("Failed to track user event:", err);
+    }
   };
 
   useEffect(() => {
@@ -72,8 +96,9 @@ export default function VirtualTryOn() {
         })
         .catch((err) => console.error("Error fetching try-on count:", err));
     }
+
     const storedAgreement = localStorage.getItem(
-      `privacyAgreement:${userEmail}`,
+      `privacyAgreement:${userEmail}`
     );
     if (storedAgreement === "true") {
       setAgreeToPrivacy(true);
@@ -86,44 +111,39 @@ export default function VirtualTryOn() {
     };
   }, [pollIntervalId]);
 
+  // Upload Person Image Handler + Track
   const handleUserImageChange = async (e) => {
     if (!user) {
       toast.error("Please log in to upload photos.");
       return signinRedirect();
     }
-    const file = e.target.files?.[0]; // Safely extract the first file (use optional chaining)
 
+    const file = e.target.files?.[0];
     if (!file) {
-      // If no file is selected, reset state and exit early
       setUserImage(null);
       setUserImagePreview(null);
       setUserImageError(null);
       setIsValidUserImage(false);
-
-      // Clear the file input field
-      const inputElement = document.getElementById("userPhoto");
-      if (inputElement) {
-        inputElement.value = "";
-      }
+      document.getElementById("userPhoto").value = "";
       return;
     }
 
-    // Validate the file
     try {
       const isValid = await validateImage(file);
       if (!isValid) {
         setUserImageError(
-          "Invalid image. Only JPG or JPEG under 10MB with min 300x300px are allowed.",
+          "Invalid image. Only JPG or JPEG under 10MB with min 300x300px are allowed."
         );
         setIsValidUserImage(false);
         return;
       }
 
-      // Update state with the valid file
       setUserImage(file);
       setUserImagePreview(URL.createObjectURL(file));
       setUserImageError(null);
       setIsValidUserImage(true);
+
+      handleTrack("upload_person_image", { fileName: file.name });
     } catch (err) {
       console.error("Error validating image:", err.message);
       setUserImageError("An error occurred while validating the image.");
@@ -131,48 +151,129 @@ export default function VirtualTryOn() {
     }
   };
 
+  // Upload Garment Image Handler + Track
   const handleApparelImageChange = async (e) => {
     if (!user) {
       toast.error("Please log in to upload photos.");
       return signinRedirect();
     }
-    const file = e.target.files?.[0]; // Safely extract the first file
 
+    const file = e.target.files?.[0];
     if (!file) {
-      // If no file is selected, reset state and exit early
       setApparelImage(null);
       setApparelImagePreview(null);
       setApparelImageError(null);
       setIsValidApparelImage(false);
-
-      // Clear the file input field
-      const inputElement = document.getElementById("apparelPhoto");
-      if (inputElement) {
-        inputElement.value = "";
-      }
+      document.getElementById("apparelPhoto").value = "";
       return;
     }
 
-    // Validate the file
     try {
       const isValid = await validateImage(file);
       if (!isValid) {
         setApparelImageError(
-          "Invalid image. Only JPG or JPEG under 10MB with min 300x300px are allowed.",
+          "Invalid image. Only JPG or JPEG under 10MB with min 300x300px are allowed."
         );
         setIsValidApparelImage(false);
         return;
       }
 
-      // Update state with the valid file
       setApparelImage(file);
       setApparelImagePreview(URL.createObjectURL(file));
       setApparelImageError(null);
       setIsValidApparelImage(true);
+
+      handleTrack("upload_garment_image", { fileName: file.name });
     } catch (err) {
       console.error("Error validating image:", err.message);
       setApparelImageError("An error occurred while validating the image.");
       setIsValidApparelImage(false);
+    }
+  };
+
+  // Try-On Button Click + Track
+  const handleSubmit = async () => {
+    if (!userImage || !apparelImage) {
+      toast.error("Please upload both user and apparel images.");
+      return;
+    }
+
+    if (!user) return signinRedirect();
+
+    if (tryOnCount >= 3) return setShowPricingPlans(true);
+
+    if (
+      !userImage ||
+      !apparelImage ||
+      !isValidUserImage ||
+      !isValidApparelImage
+    ) {
+      toast.error("Please upload the accepted image.");
+      return;
+    }
+
+    handleTrack("click_try_on_button");
+
+    try {
+      setLoading(true);
+      toast.info("Processing started. This may take up to 3 minutes.", {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+
+      setError(null);
+      setResultImageUrl(null);
+      setMatchingAnalysis(null);
+
+      const userImageUrl = await uploadImageToS3(
+        userImage,
+        `${API_BASE_URL}/upload-user-image`
+      );
+      const apparelImageUrl = await uploadImageToS3(
+        apparelImage,
+        `${API_BASE_URL}/upload-apparel-image`
+      );
+
+      const response = await axios.post(`${API_BASE_URL}/tryon-image`, {
+        person_image_url: userImageUrl,
+        garment_image_url: apparelImageUrl,
+        userEmail,
+      });
+
+      if (response?.data?.taskId) {
+        const taskId = response.data.taskId;
+        setTaskId(taskId);
+        pollTryonStatus(taskId);
+
+        const analysisResponse = await axios.post(
+          `${API_BASE_URL}/MatchingAnalyzer`,
+          {
+            userImage: userImageUrl,
+            apparelImageUrl,
+            userEmail,
+            analysisType: "direct",
+            taskId,
+          }
+        );
+        setMatchingAnalysis(analysisResponse.data);
+        setIsModalOpen(true);
+      }
+    } catch (err) {
+      if (err.response?.status === 403) {
+        setShowPricingPlans(true);
+      } else {
+        setError(
+          err.response?.data?.error ||
+            "An error occurred during virtual try-on."
+        );
+      }
+    } finally {
+      setLoading(false);
+      await refreshTryOnCount();
     }
   };
 
@@ -200,7 +301,7 @@ export default function VirtualTryOn() {
         headers: {
           "Content-Type": "application/json",
         },
-      },
+      }
     );
     return response.data?.imageUrl;
   };
@@ -209,10 +310,9 @@ export default function VirtualTryOn() {
     const intervalId = setInterval(async () => {
       try {
         const response = await axios.get(
-          `${API_BASE_URL}/process-tryon-result?taskId=${taskId}`,
+          `${API_BASE_URL}/process-tryon-result?taskId=${taskId}`
         );
         const data = response.data;
-
         if (data.status === "succeed" && data.generatedImageUrl) {
           clearInterval(intervalId);
           setResultImageUrl(data.generatedImageUrl);
@@ -264,93 +364,6 @@ export default function VirtualTryOn() {
       });
   };
 
-  const handleSubmit = async () => {
-    if (!userImage || !apparelImage) {
-      toast.error("Please upload both user and apparel images.");
-      return;
-    }
-    if (!agreeToPrivacy) {
-      toast.error("You must agree to the Privacy Policy.");
-      return;
-    }
-    if (!user) return signinRedirect();
-    if (tryOnCount >= 3) return setShowPricingPlans(true);
-    if (
-      !userImage ||
-      !apparelImage ||
-      !isValidUserImage ||
-      !isValidApparelImage
-    ) {
-      toast.error("Please upload the accepted image.");
-      return;
-    }
-
-    try {
-      setLoading(true);
-      toast.info("Processing started. This may take up to 3 minutes.", {
-        position: "top-right",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
-      setError(null);
-      setResultImageUrl(null);
-      setMatchingAnalysis(null);
-
-      // Upload images
-      const userImageUrl = await uploadImageToS3(
-        userImage,
-        `${API_BASE_URL}/upload-user-image`,
-      );
-      const apparelImageUrl = await uploadImageToS3(
-        apparelImage,
-        `${API_BASE_URL}/upload-apparel-image`,
-      );
-
-      // Submit try-on task
-      const response = await axios.post(`${API_BASE_URL}/tryon-image`, {
-        person_image_url: userImageUrl,
-        garment_image_url: apparelImageUrl,
-        userEmail,
-      });
-
-      if (response?.data?.taskId) {
-        const taskId = response.data.taskId; // Capture the task ID
-        setTaskId(taskId);
-        pollTryonStatus(taskId);
-
-        // Trigger matching analysis with the same task ID
-        const analysisResponse = await axios.post(
-          `${API_BASE_URL}/MatchingAnalyzer`,
-          {
-            userImage: userImageUrl,
-            apparelImageUrl,
-            userEmail,
-            analysisType: "direct",
-            taskId, // Pass the task ID to the matching analysis
-          },
-        );
-
-        setMatchingAnalysis(analysisResponse.data);
-        setIsModalOpen(true);
-      }
-    } catch (err) {
-      if (err.response?.status === 403) {
-        setShowPricingPlans(true);
-      } else {
-        setError(
-          err.response?.data?.error ||
-            "An error occurred during virtual try-on.",
-        );
-      }
-    } finally {
-      setLoading(false);
-      await refreshTryOnCount();
-    }
-  };
-
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground">
       <Navbar />
@@ -361,6 +374,7 @@ export default function VirtualTryOn() {
           </h1>
           <p className="text-primary-300 mt-2">Experience the perfect fit.</p>
         </header>
+
         {showPricingPlans && (
           <PricingPlans
             isOpen={showPricingPlans}
@@ -368,12 +382,15 @@ export default function VirtualTryOn() {
             onSelectPlan={(planName) => alert(`You selected: ${planName}`)}
           />
         )}
+
         {!showPricingPlans && (
           <div className="bg-background w-full max-w-4xl space-y-6">
             <h2 className="text-2xl font-medium text-primary-100 text-center mb-4">
               Upload Your Photos
             </h2>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-20">
+              {/* User Photo Upload */}
               <div className="border border-cta rounded-lg p-6 text-center">
                 <h3 className="text-lg font-medium text-primary-100 mb-4">
                   Your Photo
@@ -405,7 +422,6 @@ export default function VirtualTryOn() {
                 {userImageError && (
                   <p className="text-red-400 text-sm mt-2">{userImageError}</p>
                 )}
-                {/* Trigger for the Modal */}
                 <p>
                   <button
                     onClick={() => setIsUserPhotoGuidanceOpen(true)}
@@ -415,44 +431,8 @@ export default function VirtualTryOn() {
                   </button>
                 </p>
               </div>
-              {/* Modal for Upload User Photo Guidance */}
-              <div
-                className={`fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 ${
-                  isUserPhotoGuidanceOpen ? "block" : "hidden"
-                }`}
-              >
-                <div className="bg-background w-full max-w-md p-6 rounded-lg shadow-lg">
-                  <h3 className="text-lg font-medium text-primary-100 mb-4">
-                    Upload User Photo Guidance
-                  </h3>
-                  <div className="flex justify-center space-x-4">
-                    {/* Good Example */}
-                    <div className="flex flex-col items-center">
-                      <img
-                        src="/examples/user/good.png"
-                        alt="Good Example"
-                        className="w-48 h-48 object-cover border-2 border-green-500 rounded-lg"
-                      />
-                      <span className="text-green-500 text-xs mt-2">✔ Good</span>
-                    </div>
-                    {/* Bad Example */}
-                    <div className="flex flex-col items-center">
-                      <img
-                        src="/examples/user/bad.png"
-                        alt="Bad Example"
-                        className="w-48 h-48 object-cover border-2 border-red-500 rounded-lg"
-                      />
-                      <span className="text-red-500 text-xs mt-2">✘ Bad</span>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => setIsUserPhotoGuidanceOpen(false)}
-                    className="mt-4 px-4 py-2 bg-cta text-white rounded-lg hover:bg-blue-600 transition-colors"
-                  >
-                    Close
-                  </button>
-                </div>
-              </div>
+
+              {/* Apparel Photo Upload */}
               <div className="border border-cta rounded-lg p-6 text-center">
                 <h3 className="text-lg font-medium text-primary-100 mb-4">
                   Clothing Item
@@ -484,7 +464,6 @@ export default function VirtualTryOn() {
                 {apparelImageError && (
                   <p className="text-red-400 text-sm mt-2">{apparelImageError}</p>
                 )}
-                {/* Trigger for the Modal */}
                 <p>
                   <button
                     onClick={() => setIsApparelPhotoGuidanceOpen(true)}
@@ -494,45 +473,9 @@ export default function VirtualTryOn() {
                   </button>
                 </p>
               </div>
-              {/* Modal for Upload Apparel Photo Guidance */}
-              <div
-                className={`fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 ${
-                  isApparelPhotoGuidanceOpen ? "block" : "hidden"
-                }`}
-              >
-                <div className="bg-background w-full max-w-md p-6 rounded-lg shadow-lg">
-                  <h3 className="text-lg font-medium text-primary-100 mb-4">
-                    Upload Apparel Photo Guidance
-                  </h3>
-                  <div className="flex justify-center space-x-4">
-                    {/* Good Example */}
-                    <div className="flex flex-col items-center">
-                      <img
-                        src="/examples/apparel/good.png"
-                        alt="Good Example"
-                        className="w-48 h-48 object-cover border-2 border-green-500 rounded-lg"
-                      />
-                      <span className="text-green-500 text-xs mt-2">✔ Good</span>
-                    </div>
-                    {/* Bad Example */}
-                    <div className="flex flex-col items-center">
-                      <img
-                        src="/examples/apparel/bad.png"
-                        alt="Bad Example"
-                        className="w-48 h-48 object-cover border-2 border-red-500 rounded-lg"
-                      />
-                      <span className="text-red-500 text-xs mt-2">✘ Bad</span>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => setIsApparelPhotoGuidanceOpen(false)}
-                    className="mt-4 px-4 py-2 bg-cta text-white rounded-lg hover:bg-blue-600 transition-colors"
-                  >
-                    Close
-                  </button>
-                </div>
-              </div>
             </div>
+
+            {/* Privacy Policy Checkbox + Read Link */}
             <div className="flex items-center justify-center mt-2 space-x-2">
               <input
                 type="checkbox"
@@ -544,7 +487,7 @@ export default function VirtualTryOn() {
                   if (userEmail) {
                     localStorage.setItem(
                       `privacyAgreement:${userEmail}`,
-                      checked.toString(),
+                      checked.toString()
                     );
                   }
                 }}
@@ -556,6 +499,7 @@ export default function VirtualTryOn() {
                   onClick={(e) => {
                     e.preventDefault();
                     setIsPrivacyModalOpen(true);
+                    handleTrack("click_read_privacy_policy");
                   }}
                   className="underline text-blue-400 cursor-pointer"
                 >
@@ -563,12 +507,11 @@ export default function VirtualTryOn() {
                 </button>
               </label>
             </div>
+
+            {/* Try-On Button */}
             <div className="flex justify-center items-center mt-4 space-x-2">
               <button
-                onClick={() => {
-                  if (!user) return signinRedirect();
-                  handleSubmit();
-                }}
+                onClick={handleSubmit}
                 disabled={
                   loading ||
                   !agreeToPrivacy ||
@@ -586,6 +529,8 @@ export default function VirtualTryOn() {
                 {loading ? "Processing..." : "Try-On"}
               </button>
             </div>
+
+            {/* Result & Status Messages */}
             {polling && !resultImageUrl && (
               <p className="text-yellow-500 text-center mt-4">
                 Waiting for result... polling server.
@@ -597,29 +542,30 @@ export default function VirtualTryOn() {
                 Processing...
               </p>
             )}
-          <div className="bottom-0 left-0 right-0 bg-background py-8 px-2 flex justify-between items-center">
-            {/* Back to Home (Arrow Icon) */}
-            <Link href="/" passHref>
-              <button
-                className="text-foreground text-xl hover:text-cta transition-colors"
-                aria-label="Back to Home"
-              >
-                ← Back to Home
-              </button>
-            </Link>
 
-            {/* Link to /styling */}
-            <Link href="/profile" passHref>
-              <button
-                className="text-foreground text-xl hover:text-cta transition-colors"
-                aria-label="View Profile Page"
-              >
-                Digital Wardrobe →
-              </button>
-            </Link>
-          </div>          
+            {/* Navigation Buttons */}
+            <div className="bottom-0 left-0 right-0 bg-background py-8 px-2 flex justify-between items-center">
+              <Link href="/" passHref>
+                <button
+                  className="text-foreground text-xl hover:text-cta transition-colors"
+                  aria-label="Back to Home"
+                >
+                  ← Back to Home
+                </button>
+              </Link>
+              <Link href="/profile" passHref>
+                <button
+                  className="text-foreground text-xl hover:text-cta transition-colors"
+                  aria-label="View Profile Page"
+                >
+                  Digital Wardrobe →
+                </button>
+              </Link>
+            </div>
           </div>
         )}
+
+        {/* Modals */}
         <AnalysisModal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
@@ -629,12 +575,93 @@ export default function VirtualTryOn() {
           userEmail={user?.email}
           errorMessage={error}
         />
+
         {isPrivacyModalOpen && (
           <PrivacyPolicyModal
             isOpen={isPrivacyModalOpen}
             onClose={() => setIsPrivacyModalOpen(false)}
           />
         )}
+
+        {/* User Photo Guidance Modal */}
+        <div
+          className={`fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 ${
+            isUserPhotoGuidanceOpen ? "block" : "hidden"
+          }`}
+        >
+          <div className="bg-background w-full max-w-md p-6 rounded-lg shadow-lg">
+            <h3 className="text-lg font-medium text-primary-100 mb-4">
+              Upload User Photo Guidance
+            </h3>
+            <div className="flex justify-center space-x-4">
+              {/* Good Example */}
+              <div className="flex flex-col items-center">
+                <img
+                  src="/examples/user/good.png"
+                  alt="Good Example"
+                  className="w-48 h-48 object-cover border-2 border-green-500 rounded-lg"
+                />
+                <span className="text-green-500 text-xs mt-2">✔ Good</span>
+              </div>
+              {/* Bad Example */}
+              <div className="flex flex-col items-center">
+                <img
+                  src="/examples/user/bad.png"
+                  alt="Bad Example"
+                  className="w-48 h-48 object-cover border-2 border-red-500 rounded-lg"
+                />
+                <span className="text-red-500 text-xs mt-2">✘ Bad</span>
+              </div>
+            </div>
+            <button
+              onClick={() => setIsUserPhotoGuidanceOpen(false)}
+              className="mt-4 px-4 py-2 bg-cta text-white rounded-lg hover:bg-blue-600 transition-colors"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+
+        {/* Apparel Photo Guidance Modal */}
+        <div
+          className={`fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 ${
+            isApparelPhotoGuidanceOpen ? "block" : "hidden"
+          }`}
+        >
+          <div className="bg-background w-full max-w-md p-6 rounded-lg shadow-lg">
+            <h3 className="text-lg font-medium text-primary-100 mb-4">
+              Upload Apparel Photo Guidance
+            </h3>
+            <div className="flex justify-center space-x-4">
+              {/* Good Example */}
+              <div className="flex flex-col items-center">
+                <img
+                  src="/examples/apparel/good.png"
+                  alt="Good Example"
+                  className="w-48 h-48 object-cover border-2 border-green-500 rounded-lg"
+                />
+                <span className="text-green-500 text-xs mt-2">✔ Good</span>
+              </div>
+              {/* Bad Example */}
+              <div className="flex flex-col items-center">
+                <img
+                  src="/examples/apparel/bad.png"
+                  alt="Bad Example"
+                  className="w-48 h-48 object-cover border-2 border-red-500 rounded-lg"
+                />
+                <span className="text-red-500 text-xs mt-2">✘ Bad</span>
+              </div>
+            </div>
+            <button
+              onClick={() => setIsApparelPhotoGuidanceOpen(false)}
+              className="mt-4 px-4 py-2 bg-cta text-white rounded-lg hover:bg-blue-600 transition-colors"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+
+        {/* Toast Container */}
         <ToastContainer
           position="top-right"
           autoClose={5000}
@@ -648,6 +675,7 @@ export default function VirtualTryOn() {
         />
       </main>
       <Footer />
-    </div>  
+    </div>
   );
-};
+}
+
