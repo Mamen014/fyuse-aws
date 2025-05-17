@@ -16,17 +16,14 @@ useEffect(() => {
   if (!isLoading) {
     if (!user) {
       // User not logged in → save redirect and sign in
-      localStorage.setItem("postLoginRedirect", "/onboarding/register");
       signinRedirect();
     } else {
-      // User is logged in → check onboarding step
-      const step = localStorage.getItem("onboarding_step");
-      window.location.href = step === "appearance"
-        ? "/tryon"
-        : "/onboarding/register";
+      // User is logged in → always redirect to onboarding
+      window.location.href = "/onboarding/register";
     }
   }
 }, [isLoading, user]);
+
 
 
   return (
