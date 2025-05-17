@@ -1,5 +1,7 @@
+'use client';
+
 import { useEffect } from 'react';
-import { useAuth } from 'hooks/useOnboarding';
+import { useAuth } from 'hooks/useOnboarding'; // uses real OIDC from previous step
 
 function AuthInitializer() {
   const auth = useAuth();
@@ -7,12 +9,14 @@ function AuthInitializer() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    // Redirect manually using window.location
-    if (!auth?.isAuthenticated) {
-      window.location.href = '/signin';
+    // If not authenticated and not loading, trigger signinRedirect
+    if (!auth?.isLoading && !auth?.isAuthenticated) {
+      console.log("🔒 Not authenticated, redirecting to login...");
+      auth.signinRedirect(); // use OIDC signin redirect
       return;
     }
 
+    // Store user in localStorage
     if (auth?.user?.profile?.email) {
       const userData = {
         email: auth.user.profile.email,
@@ -29,7 +33,7 @@ function AuthInitializer() {
         console.log('✅ Auth user session stored in localStorage:', userData);
       }
     }
-  }, [auth?.isAuthenticated, auth?.user]);
+  }, [auth?.isAuthenticated, auth?.isLoading, auth?.user]);
 
   return null;
 }

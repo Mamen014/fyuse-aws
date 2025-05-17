@@ -11,6 +11,9 @@ export default function PhysicalAttributesStep1() {
   const [sliderPosition, setSliderPosition] = useState(0);
   const sliderRef = useRef(null);
   const sliderContainerRef = useRef(null);
+  const { user } = useAuth();
+  const userEmail = user?.profile?.email;
+  const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
 
   // Skin tone options
   const skinTones = ['Fair', 'Light', 'Medium', 'Tan'];
@@ -53,6 +56,36 @@ export default function PhysicalAttributesStep1() {
       JSON.stringify({ gender, skinTone })
     );
     router.push('/onboarding/physical-attributes/step-2');
+  };
+
+  const data = {
+    gender,
+    skinTone,
+  }
+
+    const physic1 = async () => {
+    console.log("Registering user with data:", data);
+    const payload = {
+      userEmail,
+      section: "physicalAppearance",
+      data,
+    };
+    
+    try {
+      const res = await fetch(`${API_BASE_URL}/userPref`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const result = await res.json();
+      console.log("Inputing data:", result);
+      await handleSubmit();
+    } catch (err) {
+      console.error("Failed to input data:", err);
+    }
   };
 
   return (
@@ -148,7 +181,7 @@ export default function PhysicalAttributesStep1() {
 
           {/* Next Button */}
           <button
-            onClick={handleSubmit}
+            onClick={physic1}
             disabled={!gender || !skinTone}
             className="w-full bg-[#0B1F63] text-white py-3 px-4 rounded-lg hover:bg-[#0a1b56] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0B1F63] disabled:opacity-50 disabled:cursor-not-allowed mt-4"
           >

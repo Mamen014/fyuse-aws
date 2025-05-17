@@ -1,10 +1,14 @@
 'use client'
 
 import { useState, useEffect } from 'react';
+import { useAuth } from 'react-oidc-context';
 
 export default function PhysicalAttributesStep3() {
   const [bodyShape, setBodyShape] = useState('');
   const [gender, setGender] = useState('');
+  const { user } = useAuth();
+  const userEmail = user?.profile?.email;
+  const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
 
   useEffect(() => {
     const savedData = localStorage.getItem('onboarding_physical_attributes_1');
@@ -61,6 +65,35 @@ export default function PhysicalAttributesStep3() {
   const bodyTypeImages = gender === 'Female' ? femaleBodyTypeImages : maleBodyTypeImages;
   const bodyTypeDescriptions = gender === 'Female' ? femaleBodyTypeDescriptions : maleBodyTypeDescriptions;
 
+    const data = {
+    bodyShape,
+  }
+
+    const physic2 = async () => {
+    console.log("Registering user with data:", data);
+    const payload = {
+      userEmail,
+      section: "physicalAppearance2",
+      data,
+    };
+    
+    try {
+      const res = await fetch(`${API_BASE_URL}/userPref`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const result = await res.json();
+      console.log("Inputing data:", result);
+      await handleSubmit();
+    } catch (err) {
+      console.error("Failed to input data:", err);
+    }
+  };
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
       <div className="w-full max-w-md rounded-3xl bg-white shadow-md overflow-hidden">
@@ -115,7 +148,7 @@ export default function PhysicalAttributesStep3() {
           </div>
 
           <button
-            onClick={handleSubmit}
+            onClick={physic2}
             className="mt-6 w-full py-3 text-white font-semibold rounded-lg shadow-md hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-opacity-50"
             style={{
               backgroundColor: '#0B1F63',

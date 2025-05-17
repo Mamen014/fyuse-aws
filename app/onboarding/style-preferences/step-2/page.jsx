@@ -1,10 +1,14 @@
 'use client';
 
 import { useState } from 'react';
+import { useAuth } from 'react-oidc-context';
 
 export default function StylePreferencesStep2() {
   const [brands, setBrands] = useState([]);
   const [colors, setColors] = useState([]);
+  const { user } = useAuth();
+  const userEmail = user?.profile?.email;
+  const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
 
   const brandOptions = [
     { name: 'MANGO', image: '/images/brand-logo/mango-logo.png' },
@@ -63,6 +67,36 @@ export default function StylePreferencesStep2() {
 
     localStorage.setItem('onboarding_style_preferences_2', JSON.stringify(preferences));
     window.location.href = '/onboarding/style-preferences/step-3';
+  };
+
+  const data = {
+    brands,
+    colors,
+  };
+  
+    const pref2 = async () => {
+    console.log("Registering user with data:", data);
+    const payload = {
+      userEmail,
+      section: "StylePref2",
+      data,
+    };
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/userPref`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const result = await res.json();
+      console.log("Inputing data:", result);
+      await handleSubmit();
+    } catch (err) {
+      console.error("Failed to input data:", err);
+    }
   };
 
   return (
@@ -145,7 +179,7 @@ export default function StylePreferencesStep2() {
 
         {/* Submit Button */}
         <button
-          onClick={handleSubmit}
+          onClick={pref2}
           className="w-full py-3 bg-[#0B1F63] text-white text-lg font-semibold rounded-full shadow-md"
         >
           Next

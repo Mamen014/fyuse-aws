@@ -2,24 +2,63 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { useAuth } from 'react-oidc-context';
 
 export default function PhysicalAttributesStep2() {
   const router = useRouter();
-  const [photoUrl, setPhotoUrl] = useState('');
+  const [photoPreview, setPhotoPreview] = useState('');
+  const [fileToUpload, setFileToUpload] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const { user } = useAuth();
+  const userEmail = user?.profile?.email;
+  const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
 
-  const handleFileUpload = (e) => {
+  const handleFileSelect = (e) => {
     const file = e.target.files[0];
+    if (!file) return;
+    setFileToUpload(file);
     const reader = new FileReader();
-    reader.onload = (e) => setPhotoUrl(e.target.result);
+    reader.onloadend = () => setPhotoPreview(reader.result);
     reader.readAsDataURL(file);
   };
 
-  const handleSubmit = () => {
-    localStorage.setItem(
-      'onboarding_physical_attributes_2',
-      JSON.stringify({ photoUrl })
-    );
-    router.push('/onboarding/physical-attributes/step-3');
+  const handleSubmit = async () => {
+    if (!fileToUpload || !userEmail) return;
+
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      const base64Data = reader.result.split(',')[1];
+      const payload = {
+        fileName: fileToUpload.name,
+        fileDataBase64: base64Data,
+        contentType: fileToUpload.type,
+        userEmail: userEmail,
+      };
+
+      try {
+        setUploading(true);
+        const res = await fetch(`${API_BASE_URL}/upload-user-image`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (data.imageUrl) {
+          localStorage.setItem(
+            'onboarding_physical_attributes_2',
+            JSON.stringify({ photoUrl: data.imageUrl })
+          );
+          router.push('/onboarding/physical-attributes/step-3');
+        } else {
+          console.error('Upload failed:', data);
+        }
+      } catch (err) {
+        console.error('Upload error:', err);
+      } finally {
+        setUploading(false);
+      }
+    };
+    reader.readAsDataURL(fileToUpload);
   };
 
   return (
@@ -41,11 +80,11 @@ export default function PhysicalAttributesStep2() {
         <div className="w-full border border-[#0B1F63] rounded-2xl" style={{ minHeight: "340px" }}>
           <input
             type="file"
-            onChange={handleFileUpload}
+            onChange={handleFileSelect}
             id="photo-upload"
             className="hidden"
           />
-          {!photoUrl ? (
+          {!photoPreview ? (
             <label
               htmlFor="photo-upload"
               className="flex flex-col items-center justify-center h-[340px] cursor-pointer text-center px-4"
@@ -55,7 +94,7 @@ export default function PhysicalAttributesStep2() {
             </label>
           ) : (
             <div className="w-full h-full flex items-center justify-center py-4">
-              <img src={photoUrl} alt="Uploaded" className="max-w-full max-h-full object-contain" />
+              <img src={photoPreview} alt="Uploaded" className="max-w-full max-h-full object-contain" />
             </div>
           )}
         </div>
@@ -67,13 +106,13 @@ export default function PhysicalAttributesStep2() {
       {/* Next Button */}
       <button
         onClick={handleSubmit}
-        disabled={!photoUrl}
+        disabled={!fileToUpload || uploading}
         className={`w-full py-3.5 font-medium rounded-lg transition-opacity duration-200 ${
-          photoUrl ? 'bg-[#0B1F63] text-white' : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+          fileToUpload && !uploading ? 'bg-[#0B1F63] text-white' : 'bg-gray-300 text-gray-500 cursor-not-allowed'
         }`}
         style={{ borderRadius: "8px" }}
       >
-        Next
+        {uploading ? 'Uploading...' : 'Next'}
       </button>
     </div>
   );

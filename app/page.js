@@ -12,16 +12,22 @@ import Navbar from "@/components/Navbar";
 export default function Home() {
   const { user, isLoading, signinRedirect } = useAuth();
 
-  // Handle post-login redirect
-  useEffect(() => {
-    if (!isLoading && user) {
-      const redirectPath = localStorage.getItem("postLoginRedirect");
-      if (redirectPath) {
-        localStorage.removeItem("postLoginRedirect");
-        window.location.href = redirectPath;
-      }
+useEffect(() => {
+  if (!isLoading) {
+    if (!user) {
+      // User not logged in → save redirect and sign in
+      localStorage.setItem("postLoginRedirect", "/onboarding/register");
+      signinRedirect();
+    } else {
+      // User is logged in → check onboarding step
+      const step = localStorage.getItem("onboarding_step");
+      window.location.href = step === "appearance"
+        ? "/tryon"
+        : "/onboarding/register";
     }
-  }, [user, isLoading]);
+  }
+}, [isLoading, user]);
+
 
   return (
     <>

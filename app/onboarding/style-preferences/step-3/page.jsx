@@ -1,13 +1,16 @@
 'use client'
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from 'react-oidc-context';
 
 export default function StylePreferencesStep3() {
   const router = useRouter();
   const [clothingType, setClothingType] = useState('Top');
   const [fitIndex, setFitIndex] = useState(1); // Default to second position (Regular)
   const [sliderPosition, setSliderPosition] = useState((1 / 3) * 100); // Default position based on fitIndex
-  
+  const { user } = useAuth();
+  const userEmail = user?.profile?.email;
+  const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
   const sliderRef = useRef(null);
   const sliderContainerRef = useRef(null);
   
@@ -51,6 +54,35 @@ export default function StylePreferencesStep3() {
     // Set slider position based on index
     const newPosition = ((index + 0.5) / fitOptions.length) * 100;
     setSliderPosition(newPosition);
+  };
+
+    const data = {
+      clothingType,
+      fit: fitOptions[fitIndex],
+    }
+    const pref3 = async () => {
+    console.log("Registering user with data:", data);
+    const payload = {
+      userEmail,
+      section: "StylePref3",
+      data,
+    };
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/userPref`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const result = await res.json();
+      console.log("Inputing data:", result);
+      await handleSubmit();
+    } catch (err) {
+      console.error("Failed to input data:", err);
+    }
   };
 
   return (
@@ -155,7 +187,7 @@ export default function StylePreferencesStep3() {
         
         {/* Continue button */}
         <button
-          onClick={handleSubmit}
+          onClick={pref3}
           className="w-full py-3 bg-[#0B1F63] text-white font-medium rounded-lg"
         >
           Continue

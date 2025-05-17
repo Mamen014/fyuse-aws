@@ -1,9 +1,13 @@
 'use client'
 
 import { useState } from 'react';
+import { useAuth } from 'react-oidc-context';
 
 export default function StylePreferencesStep1() {
   const [selectedType, setSelectedType] = useState('');
+  const { user } = useAuth();
+  const userEmail = user?.profile?.email;
+  const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
 
   const handleSelection = (type) => {
     setSelectedType(type);
@@ -19,6 +23,35 @@ export default function StylePreferencesStep1() {
       JSON.stringify({ selectedType })
     );
     window.location.href = '/onboarding/style-preferences/step-2';
+  };
+
+  const data = {
+    selectedType,
+  };
+
+  const pref1 = async () => {
+    console.log("Registering user with data:", data);
+    const payload = {
+      userEmail,
+      section: "StylePref1",
+      data,
+    };
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/userPref`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const result = await res.json();
+      console.log("Inputing data:", result);
+      await handleSubmit();
+    } catch (err) {
+      console.error("Failed to input data:", err);
+    }
   };
 
   const fashionTypeDescriptions = {
@@ -91,7 +124,7 @@ export default function StylePreferencesStep1() {
           </div>
 
           <button
-            onClick={handleSubmit}
+            onClick={pref1}
             className="mt-2 w-full py-3 bg-[#0B1F63] text-white font-semibold rounded-lg shadow-md hover:bg-[#0A1B55] focus:outline-none focus:ring-2 focus:ring-[#0B1F63] focus:ring-opacity-50"
             disabled={!selectedType}
           >
