@@ -1,10 +1,83 @@
 'use client'
-
+import React, { useState, useEffect } from "react";
 import { useRouter } from 'next/navigation';
+import { useAuth } from "react-oidc-context";
+import axios from "axios";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { ToastContainer } from "react-toastify";
+import LoadingModalSpinner from '@/components/LoadingModal';
 
 export default function VirtualTryOnResultPage() {
+  const { user } = useAuth();
+  const userEmail = user?.profile?.email;  
   const router = useRouter();
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [polling, setPolling] = useState(false);
+  const [pollIntervalId, setPollIntervalId] = useState(null);
+  const [resultImageUrl, setResultImageUrl] = useState(null);
 
+  const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
+  const taskId = typeof window !== "undefined" ? localStorage.getItem("taskId") : null;
+
+  useEffect(() => {
+    return () => {
+      if (pollIntervalId) clearInterval(pollIntervalId);
+    };
+  }, [pollIntervalId]);
+
+  useEffect(() => {
+    const pollTryonStatus = () => {
+      const intervalId = setInterval(async () => {
+        try {
+          const response = await axios.get(
+            `${API_BASE_URL}/process-tryon-result?taskId=${taskId}`
+          );
+          const data = response.data;
+          if (data.status === "succeed" && data.generatedImageUrl) {
+            clearInterval(intervalId);
+            setResultImageUrl(data.generatedImageUrl);
+            window.generatedImageUrl = data.generatedImageUrl;
+            setPolling(false);
+            setLoading(false);
+            toast.success("Added to your wardrobe!", {
+              position: "top-right",
+              autoClose: 5000,
+              hideProgressBar: false,
+              closeOnClick: true,
+              pauseOnHover: true,
+              draggable: true,
+            });
+          } else if (data.status === "failed") {
+            clearInterval(intervalId);
+            setPolling(false);
+            setLoading(false);
+            setError(data.errorMessage || "Try-on failed. Please try again.");
+          }
+        } catch (err) {
+          clearInterval(intervalId);
+          setPolling(false);
+          setLoading(false);
+          console.error("Polling error:", err?.response?.data || err.message);
+          const message =
+            err?.response?.data?.error ||
+            "Network error while checking try-on status.";
+          setError(message);
+          toast.error(message);
+        }
+      }, 5000);
+      setPollIntervalId(intervalId);
+      setPolling(true);
+      setLoading(true);
+    };
+    if (taskId) {
+      pollTryonStatus();
+    }
+  }, [taskId]);
+  if (loading) {
+    return <LoadingModalSpinner message="Styling..." />;
+  }
   return (
     <div style={{
       display: 'flex',
@@ -28,7 +101,7 @@ export default function VirtualTryOnResultPage() {
         Virtual try-on result
       </h2>
       <img
-        src="/images/virtual_try_on_result.jpg"
+        src={resultImageUrl}
         alt="Virtual Try-On Result"
         style={{
           width: '100%',
@@ -39,7 +112,7 @@ export default function VirtualTryOnResultPage() {
         }}
       />
       <button
-        onClick={() => router.push('/restyle')}
+        onClick={() => router.push('/onboarding/register')}
         style={{
           backgroundColor: 'transparent',
           color: '#0B1F63',
@@ -59,6 +132,18 @@ export default function VirtualTryOnResultPage() {
         </svg>
         Re-style
       </button>
+      {/* Toast Container */}
+        <ToastContainer
+          position="top-right"
+          autoClose={5000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="dark"
+        />  
     </div>
   );
 }

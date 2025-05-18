@@ -51,10 +51,7 @@ export default function PhysicalAttributesStep1() {
   };
 
   const handleSubmit = () => {
-    localStorage.setItem(
-      'onboarding_physical_attributes_1',
-      JSON.stringify({ gender, skinTone })
-    );
+
     router.push('/onboarding/physical-attributes/step-2');
   };
 
