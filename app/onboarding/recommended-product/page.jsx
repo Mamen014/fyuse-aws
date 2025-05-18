@@ -3,14 +3,48 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from 'react-oidc-context';
+import axios from 'axios';
 
 export default function RecommendedProductPage() {
   const router = useRouter();
   const auth = useAuth();
-
+  const [taskId, setTaskId] = useState(null);
+  const [error, setError] = useState(null);
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
+
+  const trackPersonalizeEvent = async ({ userId, itemId, eventType }) => {
+    const sessionId = `session-${Date.now()}`;
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/trackRec`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          userId,
+          sessionId,
+          itemId,
+          eventType
+        })
+      });
+
+      const data = await res.json();
+      console.log("Event tracked:", data);
+    } catch (error) {
+      console.error("Failed to track personalize event:", error);
+    }
+  };
+  const logAndStoreImageS3Url = (productObj) => {
+    if (productObj?.imageS3Url) {
+      localStorage.setItem("apparel_image", productObj.imageS3Url);
+      console.log("apparel_image stored in local storage.");
+    } else {
+      console.log("Error: apparel_image not found in product object.");
+    }
+  };
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -32,6 +66,7 @@ export default function RecommendedProductPage() {
         } else {
           setProduct(null);
         }
+
       } catch (err) {
         console.error('Failed to fetch product:', err);
         setProduct(null);
@@ -44,15 +79,46 @@ export default function RecommendedProductPage() {
       fetchProduct();
     }
   }, [auth?.user?.profile?.email]);
-
   if (loading) {
     return <div className="text-center mt-10 text-[#0B1F63]">Loading recommendation...</div>;
   }
-
   if (!product) {
     return <div className="text-center mt-10 text-red-500">No product found.</div>;
   }
 
+    const handleSubmit = async () => {
+      try {
+        setError(null);
+        logAndStoreImageS3Url(product);
+        const userImage = localStorage.getItem('user_image');
+        console.log('url:', userImage);
+        const apparelImage = localStorage.getItem("apparel_image");
+        const email = auth?.user?.profile?.email;
+        
+        if (!userImage || !apparelImage) {
+          setError("Missing user or apparel image.");
+        return;
+        }
+        const userEmail = auth?.user?.profile?.email;
+        const response = await axios.post(`${API_BASE_URL}/tryon-image`, {
+          person_image_url: userImage,
+          garment_image_url: apparelImage,
+          userEmail,
+        });
+  
+        if (response?.data?.taskId) {
+          const taskId = response.data.taskId;
+          setTaskId(taskId);
+          localStorage.setItem('taskId', taskId);
+
+        }
+      } catch (err) {
+          setError(
+            err.response?.data?.error ||
+              "An error occurred during virtual try-on."
+          );
+      }
+    };
   return (
     <div style={{
       display: 'flex',
@@ -107,7 +173,15 @@ export default function RecommendedProductPage() {
         width: '100%'
       }}>
         <button
-          onClick={() => router.push('/onboarding/virtual-tryon-result')}
+          onClick={async () => {
+            await trackPersonalizeEvent({
+              userId: auth?.user?.profile?.email,
+              itemId: product.productId,
+              eventType: 'tryon'
+            });
+            await handleSubmit();
+            await router.push('/onboarding/virtual-tryon-result');
+          }}
           style={{
             backgroundColor: '#0B1F63',
             color: 'white',
@@ -118,13 +192,20 @@ export default function RecommendedProductPage() {
             width: '100%'
           }}
         >
-          Yes, I like this
+          Style Me
         </button>
         <button
-          onClick={() => window.location.reload()}
+          onClick={async () => {
+            await trackPersonalizeEvent({
+              userId: auth?.user?.profile?.email,
+              itemId: product.productId,
+              eventType: 'retry'
+            });
+            window.location.reload();
+          }}
           style={{
-            backgroundColor: '#0B1F63',
-            color: 'white',
+            backgroundColor: 'white',
+            color: '#0B1F63',
             padding: '10px',
             border: 'none',
             borderRadius: '5px',
@@ -132,7 +213,7 @@ export default function RecommendedProductPage() {
             width: '100%'
           }}
         >
-          Generate more product
+          Retry
         </button>
       </div>
     </div>

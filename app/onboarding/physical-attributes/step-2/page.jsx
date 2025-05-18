@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useAuth } from 'react-oidc-context';
 
+
 export default function PhysicalAttributesStep2() {
   const router = useRouter();
   const [photoPreview, setPhotoPreview] = useState('');
@@ -43,11 +44,10 @@ export default function PhysicalAttributesStep2() {
           body: JSON.stringify(payload),
         });
         const data = await res.json();
-        if (data.imageUrl) {
-          localStorage.setItem(
-            'onboarding_physical_attributes_2',
-            JSON.stringify({ photoUrl: data.imageUrl })
-          );
+        const raw_user_image = JSON.stringify(data.imageUrl)
+        const user_image = raw_user_image.substring(1, raw_user_image.length - 1)
+        if (user_image) {
+          localStorage.setItem('user_image', user_image);
           router.push('/onboarding/physical-attributes/step-3');
         } else {
           console.error('Upload failed:', data);
