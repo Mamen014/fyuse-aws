@@ -1,9 +1,24 @@
 'use client'
 
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { useAuth } from "react-oidc-context";
 
 export default function VirtualTryOnResultPage() {
   const router = useRouter();
+  const { user } = useAuth();
+
+  const [isLoading, setIsLoading] = useState(false);
+
+
+  const userEmail = user?.profile?.email;
+
+  const handleHomeClick = () => {
+  // After onboarding is complete
+  localStorage.setItem(`onboarding_step:${userEmail}`, "appearance");
+  setIsLoading(true);
+  router.push('/');
+};
 
   return (
     <div style={{
@@ -59,6 +74,14 @@ export default function VirtualTryOnResultPage() {
         </svg>
         Re-style
       </button>
-    </div>
+
+      <button
+        onClick={handleHomeClick}
+        disabled={isLoading}
+        className="w-full px-4 py-3 font-medium text-white bg-[#0B1F63] rounded-3xl hover:bg-[#0A1A50] transition-colors duration-200"
+      >
+        Go to Home
+      </button>
+</div>
   );
 }
