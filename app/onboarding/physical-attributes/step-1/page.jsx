@@ -64,7 +64,7 @@ export default function PhysicalAttributesStep1() {
     console.log("Registering user with data:", data);
     const payload = {
       userEmail,
-      section: "physicalAppearance",
+      section: "physicalAppearance1",
       data,
     };
     

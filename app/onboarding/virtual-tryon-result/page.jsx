@@ -112,7 +112,7 @@ export default function VirtualTryOnResultPage() {
         }}
       />
       <button
-        onClick={() => router.push('/onboarding/register')}
+        onClick={() => router.push('/onboarding/recommended-product')}
         style={{
           backgroundColor: 'transparent',
           color: '#0B1F63',
