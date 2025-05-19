@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from 'react-oidc-context';
 import axios from 'axios';
@@ -14,7 +14,7 @@ export default function RecommendedProductPage() {
   const [loading, setLoading] = useState(true);
   const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
 
-  const trackPersonalizeEvent = async ({ userId, itemId, eventType }) => {
+  const trackPersonalizeEvent = async ({ userId, itemId, eventType, liked }) => {
     const sessionId = `session-${Date.now()}`;
 
     try {
@@ -27,7 +27,8 @@ export default function RecommendedProductPage() {
           userId,
           sessionId,
           itemId,
-          eventType
+          eventType,
+          liked
         })
       });
 
@@ -46,11 +47,13 @@ export default function RecommendedProductPage() {
     }
   };
 
-  useEffect(() => {
-    const fetchProduct = async () => {
-      const email = auth?.user?.profile?.email;
-      if (!email) return;
+  const hasFetchedRef = useRef(false);
 
+  useEffect(() => {
+    const email = auth?.user?.profile?.email;
+    if (!email || hasFetchedRef.current) return;
+
+    const fetchProduct = async () => {
       try {
         const res = await fetch(`${API_BASE_URL}/stylingRecommendation`, {
           method: 'POST',
@@ -61,24 +64,33 @@ export default function RecommendedProductPage() {
         });
 
         const data = await res.json();
-        if (Array.isArray(data) && data.length > 0) {
-          setProduct(data[0]);
+        console.log("API response:", data);
+
+        if (data && typeof data === 'object' && data.productId) {
+          console.log("Setting product:", data);
+          setProduct(data);
         } else {
+          console.warn("No valid product returned from API.");
           setProduct(null);
         }
-
       } catch (err) {
-        console.error('Failed to fetch product:', err);
+        console.error("Error fetching product:", err);
         setProduct(null);
       } finally {
         setLoading(false);
+        hasFetchedRef.current = true; // ✅ prevent refetch
       }
     };
 
-    if (auth?.user?.profile?.email) {
-      fetchProduct();
-    }
+    fetchProduct();
   }, [auth?.user?.profile?.email]);
+
+  console.log('Rendered product:', product);
+
+  if (!loading && (!product?.productId || !product?.imageS3Url)) {
+    return <div className="text-center mt-10 text-red-500">Invalid product data.</div>;
+  }
+
   if (loading) {
     return <div className="text-center mt-10 text-[#0B1F63]">Loading recommendation...</div>;
   }
@@ -93,7 +105,6 @@ export default function RecommendedProductPage() {
         const userImage = localStorage.getItem('user_image');
         console.log('url:', userImage);
         const apparelImage = localStorage.getItem("apparel_image");
-        const email = auth?.user?.profile?.email;
         
         if (!userImage || !apparelImage) {
           setError("Missing user or apparel image.");
@@ -177,7 +188,8 @@ export default function RecommendedProductPage() {
             await trackPersonalizeEvent({
               userId: auth?.user?.profile?.email,
               itemId: product.productId,
-              eventType: 'tryon'
+              eventType: 'tryon',
+              liked: true
             });
             await handleSubmit();
             await router.push('/onboarding/virtual-tryon-result');
