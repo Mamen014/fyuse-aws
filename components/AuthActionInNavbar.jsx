@@ -65,27 +65,8 @@ export default function AuthActionsInNavbar({ isInMobileMenu = false }) {
       );
     }
 
-    // On desktop right side
-    return (
-      <div className="flex items-center space-x-6">
-        <Link href="/profile" passHref className="flex flex-col items-center cursor-pointer text-sm text-primary-foreground">
-          <Image src="/images/hanger.png" alt="Wardrobe" width={32} height={32} className="mb-1" />
-          <span>Wardrobe</span>
-        </Link>
-      </div>
-    );
+    
   }
 
-  return (
-    <span
-      onClick={() => {
-        trackSignInClick();
-        auth.signinRedirect();
-      }}
-      className="flex flex-col items-center cursor-pointer text-sm text-primary-foreground"
-    >
-      <ArrowRightEndOnRectangleIcon className="h-8 w-8 mb-1" />
-      <span>Sign In</span>
-    </span>
-  );
+  
 }

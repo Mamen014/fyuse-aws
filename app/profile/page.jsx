@@ -14,7 +14,6 @@ export default function ProfilePage() {
   const [tryOnHistory, setTryOnHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(null);
-  useOnboarding();
 
   // Debugging localStorage if needed
   useEffect(() => {

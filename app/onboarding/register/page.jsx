@@ -151,7 +151,7 @@ export default function RegisterPage() {
               name="birthdate"
               value={formData.birthdate}
               onChange={handleChange}
-              className="block w-full px-3 py-2 border border-gray-300 rounded-md"
+              className="block w-full px-3 py-2 border border-gray-300 text-[#a0a0a0]  rounded-md"
             />
           </div>
 
