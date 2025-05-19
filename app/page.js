@@ -103,25 +103,26 @@ export default function HomePage() {
   };
 
   // Define key display mappings
-const keyDisplays = {
-  gender: "Gender",
-  skinTone: "Skin Tone",
-  bodyShape: "Body shape",
-  selectedType: "Fashion Type",
-  brands: "Brand selections",
-  colors: "Color preferences",
-  clothingType: "Clothing Type",
-  fit: "Fit",
-};
+    const keyDisplays = {
+      gender: "Gender",
+      skinTone: "Skin Tone",
+      bodyShape: "Body shape",
+      selectedType: "Fashion Type",
+      brands: "Brand selections",
+      colors: "Color preferences",
+      clothingType: "Clothing Type",
+      fit: "Fit",
+    };
 
-const sectionLabels = {
-  onboarding_physical_attributes_1: "Physical Attributes",
-  onboarding_physical_attributes_2: "Physical Attributes",
-  onboarding_physical_attributes_3: "Physical Attributes",
-  onboarding_style_preferences_1: "Style Preferences",
-  onboarding_style_preferences_2: "Style Preferences",
-  onboarding_style_preferences_3: "Style Preferences"
-};
+    // Section display names
+    const sectionLabels = {
+      onboarding_physical_attributes_1: "Physical Attributes",
+      onboarding_physical_attributes_2: "Physical Attributes",
+      onboarding_physical_attributes_3: "Physical Attributes",
+      onboarding_style_preferences_1: "Style Preferences",
+      onboarding_style_preferences_2: "Style Preferences",
+      onboarding_style_preferences_3: "Style Preferences"
+    };
 
 const toCamelCase = (str) =>
   str.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
@@ -157,20 +158,7 @@ const toCamelCase = (str) =>
               <p className="text-gray-600 text-sm">
                 {user?.profile ? 'Welcome to your personal styling assistant' : 'Sign in to get started'}
               </p>
-            </div>
-            <div className="w-12 h-12 rounded-full border-2 overflow-hidden flex items-center justify-center bg-blue-50" style={{ borderColor: BRAND_BLUE }}>
-              {user?.profile?.picture ? (
-                <img 
-                  src={user.profile.picture} 
-                  alt="Profile" 
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <User size={24} color={BRAND_BLUE} />
-                </div>
-              )}
-            </div>
+            </div>         
           </div>
 
           {/* Quick Action Button: For You Style */}
@@ -225,29 +213,52 @@ const toCamelCase = (str) =>
                 {/* Modal Content */}
                 {/* Modal Content */}
                 <div className="max-h-80 overflow-y-auto px-5 py-4 space-y-4">
-                  {Object.entries(onboardingData).map(([sectionKey, sectionData]) => (
-                    <div key={sectionKey} className="bg-blue-50 border border-blue-100 rounded-xl p-4">
-                      <h3 className="text-sm font-semibold text-blue-900 mb-2 capitalize">
-                        {sectionLabels[sectionKey] || toCamelCase(sectionKey)}
-                      </h3>
-                      <div className="space-y-1 text-sm text-gray-700">
-                        {sectionData && Object.keys(sectionData).length > 0 ? (
-                          Object.entries(sectionData).map(([key, value]) => (
-                            <div key={key} className="flex items-start">
-                              <span className="font-medium">
-                                {keyDisplays[key] || toCamelCase(key)}:
-                              </span>
-                              <span className="ml-1 break-words">
-                                {Array.isArray(value) ? value.join(", ") : String(value)}
-                              </span>
-                            </div>
-                          ))
-                        ) : (
-                          <p className="italic text-gray-400">No data available</p>
-                        )}
+                  {(() => {
+                    // Flatten all onboardingData into a single object
+                    const flatData = Object.values(onboardingData).reduce((acc, section) => {
+                      if (section && typeof section === "object") {
+                        Object.entries(section).forEach(([key, value]) => {
+                          acc[key] = value;
+                        });
+                      }
+                      return acc;
+                    }, {});
+                    // Only display keys present in keyDisplays
+                    const displayKeys = Object.keys(keyDisplays);
+                    const filtered = displayKeys
+                      .filter((key) => flatData[key] !== undefined && flatData[key] !== null && flatData[key] !== "")
+                      .map((key) => ({
+                        label: keyDisplays[key],
+                        value: Array.isArray(flatData[key]) ? flatData[key].join(", ") : String(flatData[key]),
+                      }));
+
+                    if (filtered.length === 0) {
+                      return (
+                        <div className="text-center py-3">
+                          <p className="text-gray-500 text-sm">No style data available.</p>
+                          <Link href="/onboarding/physical-attributes/step-1">
+                            <button 
+                              className="mt-2 py-2 px-4 rounded-lg text-sm font-medium"
+                              style={{ backgroundColor: BRAND_BLUE, color: "white" }}
+                            >
+                              Complete Your Profile
+                            </button>
+                          </Link>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div className="space-y-2">
+                        {filtered.map(({ label, value }) => (
+                          <div key={label} className="flex items-start">
+                            <span className="font-medium">{label}:</span>
+                            <span className="ml-1 break-words">{value}</span>
+                          </div>
+                        ))}
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })()}
                 </div>
 
                 <div className="py-4 px-6 bg-gray-50 border-t" style={{ borderColor: `${BRAND_BLUE}1A` }}>
@@ -445,49 +456,36 @@ const toCamelCase = (str) =>
               }
 
               return (
-                <div>
-                  {Object.entries(grouped).map(([section, items]) => (
-                    <div key={section} className="mb-4">
-                      <h3 className="font-semibold mb-2 flex items-center" style={{ color: BRAND_BLUE }}>
-                        <span className="w-6 h-6 rounded-full mr-2 flex items-center justify-center text-xs text-white" 
-                              style={{ backgroundColor: BRAND_BLUE }}>
-                          {section.toLowerCase().includes('physical') ? 'P' : 'S'}
-                        </span>
-                        <span>{section}</span>
-                      </h3>
-                      <div className="grid grid-cols-2 gap-3 ml-8">
-                        {items.map(({ key, label, value }) => (
-                          <div key={key} className="bg-white rounded-lg p-3 shadow-sm">
-                            <p className="text-xs text-gray-500">{label}</p>
-                            <p className="font-medium mt-1" style={{ color: BRAND_BLUE }}>
-                              {Array.isArray(value) ? value.join(', ') : value}
-                            </p>
-                          </div>
-                        ))}
+                <div className="flex flex-row gap-4 overflow-x-auto">
+                  {["Physical Attributes", "Style Preferences"].map((section) => {
+                    const items = grouped[section];
+                    if (!items) return null;
+
+                    return (
+                      <div key={section} className="w-full md:w-1/2 mb-4">
+                        <h3 className="font-semibold mb-2 flex items-center" style={{ color: BRAND_BLUE }}>
+                          <span className="w-6 h-6 rounded-full mr-2 flex items-center justify-center text-xs text-white" 
+                                style={{ backgroundColor: BRAND_BLUE }}>
+                            {section === "Physical Attributes" ? "P" : "S"}
+                          </span>
+                          <span>{section}</span>
+                        </h3>
+                        <div className="grid grid-cols-2 gap-3 ml-8">
+                          {items.map(({ key, label, value }) => (
+                            <div key={key} className="bg-white rounded-lg p-3 shadow-sm">
+                              <p className="text-xs text-gray-500">{label}</p>
+                              <p className="font-medium mt-1" style={{ color: BRAND_BLUE }}>
+                                {Array.isArray(value) ? value.join(', ') : value}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               );
             })()}
-          </div>
-
-          {/* Bottom Action Buttons */}
-          <div className="flex gap-3 mb-20">
-            <button 
-              onClick={() => window.location.href = "/pricing"}
-              className="flex-1 text-white py-3 rounded-xl font-medium" 
-              style={{ backgroundColor: BRAND_BLUE }}
-            >
-              Upgrade Plan
-            </button>
-            <button 
-              onClick={() => window.location.href = "/contact"}
-              className="flex-1 py-3 rounded-xl font-medium" 
-              style={{ backgroundColor: `${BRAND_BLUE}1A`, color: BRAND_BLUE }}
-            >
-              Help/Support
-            </button>
           </div>
         </div>
 
@@ -502,10 +500,6 @@ const toCamelCase = (str) =>
           <Link href="/profile" className="flex flex-col items-center text-gray-400 hover:text-blue-900">
             <Shirt className="w-5 h-5 mb-0.5" />
             <span className="text-xs mt-1">Wardrobe</span>
-          </Link>
-          <Link href="/profile" className="flex flex-col items-center text-gray-400">
-            <User size={20} />
-            <span className="text-xs mt-1">Profile</span>
           </Link>
         </div>
 

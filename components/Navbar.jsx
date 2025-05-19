@@ -76,9 +76,6 @@ export default function Navbar() {
           <Link href="/contact" className="block py-2 text-sm font-medium">
             Contact
           </Link>
-          <Link href="/pricing" className="block py-2 text-sm font-medium">
-            Pricing
-          </Link>
 
           {/* Show Sign Out in mobile menu if signed in */}
           <AuthActionsInNavbar isInMobileMenu />

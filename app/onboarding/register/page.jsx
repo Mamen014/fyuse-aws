@@ -149,21 +149,25 @@ export default function RegisterPage() {
             <input
               type="date"
               name="birthdate"
+              placeholder="DD-MM-YY"
               value={formData.birthdate}
               onChange={handleChange}
-              className="block w-full px-3 py-2 border border-gray-300 text-[#a0a0a0]  rounded-md"
+              className="block w-full px-3 py-2 border border-gray-300 uppercase text-[#a0a0a0]  rounded-md"
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-[#0B1F63] mb-1">Phone number</label>
             <div className="flex">
-              <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm w-20">{countryCode}</span>
+              <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm w-20">
+                {countryCode}
+              </span>
               <input
                 type="tel"
                 name="phoneNumber"
                 value={formData.phoneNumber}
                 onChange={handleChange}
+                placeholder="e.g. 812-3456-7890)"
                 className="block w-full px-3 py-2 border border-gray-300 rounded-r-md"
               />
             </div>
