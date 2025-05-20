@@ -36,6 +36,9 @@ export default function Navbar() {
             <Link href="/about" className="text-sm font-medium hover:text-muted-foreground">
               About
             </Link>
+            <Link href="/pricing" className="text-sm font-medium hover:text-muted-foreground">
+              Pricing
+            </Link>
           </div>
         </div>
 
@@ -64,17 +67,20 @@ export default function Navbar() {
       {/* Mobile Menu Dropdown */}
       {isMenuOpen && (
         <div className="bg-muted text-cta p-4 space-y-2">
-          <Link href="/" className="block py-2 text-sm font-medium">
+          <Link href="/" className="block py-1 text-sm font-medium">
             Home
           </Link>
-          <Link href="/features" className="block py-2 text-sm font-medium">
+          <Link href="/features" className="block py-1 text-sm font-medium">
             Features
           </Link>
-          <Link href="/about" className="block py-2 text-sm font-medium">
+          <Link href="/about" className="block py-1 text-sm font-medium">
             About
           </Link>
-          <Link href="/contact" className="block py-2 text-sm font-medium">
+          <Link href="/contact" className="block py-1 text-sm font-medium">
             Contact
+          </Link>
+          <Link href="/pricing" className="block py-1 text-sm font-medium">
+            Pricing
           </Link>
 
           {/* Show Sign Out in mobile menu if signed in */}
