@@ -70,9 +70,22 @@ export default function HomePage() {
             const data = await res.json();
             console.log("Fetched History Data:", data);
 
-            // Directly use data.tryonItems and data.likedRecommendations
-            setTryonItems(Array.isArray(data.tryonItems) ? data.tryonItems.slice(0, 1) : []);
-            setLikedRecommendations(Array.isArray(data.likedRecommendations) ? data.likedRecommendations.slice(0, 5) : []);
+            if (Array.isArray(data.tryonItems)) {
+              // Sort tryonItems by timestamp descending
+              const sortedTryonItems = data.tryonItems
+                .filter(item => item.timestamp)  // optionally filter items missing timestamp
+                .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+              setTryonItems(sortedTryonItems.slice(0, 1));
+            } else {
+              setTryonItems([]);
+            }
+
+            if (Array.isArray(data.likedRecommendations)) {
+              setLikedRecommendations(data.likedRecommendations.slice(0, 5));
+            } else {
+              setLikedRecommendations([]);
+            }
 
           } catch (err) {
             console.error("Error fetching history:", err);
@@ -80,6 +93,7 @@ export default function HomePage() {
             setLikedRecommendations([]);
           }
         };
+
         fetchHistory();
       }
     }
@@ -496,7 +510,7 @@ const toCamelCase = (str) =>
         </div>
 
         {/* Keep the original footer but hide it on mobile */}
-        <footer className="hidden md:block bg-primary text-primary-foreground py-8 text-center">
+{/*         <footer className="hidden md:block bg-primary text-primary-foreground py-8 text-center">
           <p>&copy; 2025 FYUSE. All rights reserved.</p>
           <div className="mt-4 flex justify-center space-x-6 text-sm">
             <Link href="/pricing">Pricing</Link>
@@ -504,7 +518,7 @@ const toCamelCase = (str) =>
             <Link href="/contact">Contact Us</Link>
             <Link href="/features">Features</Link>
           </div>
-        </footer>
+        </footer> */}
       </div>
     </>
   );
