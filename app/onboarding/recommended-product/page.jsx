@@ -51,7 +51,9 @@ export default function RecommendedProductPage() {
 
   useEffect(() => {
     const email = auth?.user?.profile?.email;
-    if (!email || hasFetchedRef.current) return;
+    if (!email) return;
+    if (hasFetchedRef.current) return;
+    hasFetchedRef.current = true;
 
     const fetchProduct = async () => {
       try {
@@ -67,7 +69,6 @@ export default function RecommendedProductPage() {
         console.log("API response:", data);
 
         if (data && typeof data === 'object' && data.productId) {
-          console.log("Setting product:", data);
           setProduct(data);
         } else {
           console.warn("No valid product returned from API.");
@@ -78,12 +79,12 @@ export default function RecommendedProductPage() {
         setProduct(null);
       } finally {
         setLoading(false);
-        hasFetchedRef.current = true; // ✅ prevent refetch
       }
     };
 
     fetchProduct();
   }, [auth?.user?.profile?.email]);
+
 
   console.log('Rendered product:', product);
 
@@ -148,9 +149,9 @@ export default function RecommendedProductPage() {
         marginBottom: '20px',
         textAlign: 'center'
       }}>
-        Recommended Product
+        Personalized Style
       </h2>
-
+      <p style={{ fontSize: '14px', fontWeight: '500', color: '#0B1F63' }}>Product Preview</p>
       <img
         src={product.imageS3Url}
         alt={product.productName}
@@ -162,6 +163,23 @@ export default function RecommendedProductPage() {
           borderRadius: '8px',
         }}
       />
+      {product.modelRef && (
+        <div style={{ marginTop: '10px' }}>
+          <p style={{ fontSize: '14px', fontWeight: '500', color: '#0B1F63', textAlign: 'center' }}>On-Model Preview</p>
+          <img
+            src={product.modelRef}
+            alt={`${product.productName} on model`}
+            style={{
+              width: '100%',
+              height: 'auto',
+              maxWidth: '200px',
+              objectFit: 'cover',
+              borderRadius: '8px',
+              marginTop: '5px',
+            }}
+          />
+        </div>
+      )}
 
       <div style={{ textAlign: 'center', marginTop: '10px' }}>
         <p style={{ fontWeight: 'bold', color: '#0B1F63' }}>{product.productName}</p>

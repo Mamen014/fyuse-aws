@@ -1,87 +1,79 @@
 'use client'
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from 'react-oidc-context';
 
 export default function StylePreferencesStep3() {
   const router = useRouter();
-  const [clothingType, setClothingType] = useState('Top');
-  const [fitIndex, setFitIndex] = useState(1); // Default to second position (Regular)
-  const [sliderPosition, setSliderPosition] = useState((1 / 3) * 100); // Default position based on fitIndex
   const { user } = useAuth();
   const userEmail = user?.profile?.email;
   const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
+
   const sliderRef = useRef(null);
   const sliderContainerRef = useRef(null);
-  
-  const fitOptions = ['Tight', 'Regular', 'Loose', 'Oversized'];
-  
-  const handleSubmit = () => {
-    localStorage.setItem(
-      'onboarding_style_preferences_3',
-      JSON.stringify({ clothingType, fit: fitOptions[fitIndex] })
-    );
-    router.push('/onboarding/recommended-product');
-  };
-  
-  // Handle sliding functionality
+
+  const [clothingType, setClothingType] = useState('Top');
+  const getFitOptions = (type) =>
+    type === 'Bottom'
+      ? ['Tight', 'Slim', 'Regular', 'Loose', 'Oversized']
+      : ['Tight', 'Regular', 'Loose', 'Oversized'];
+
+  const [fitOptions, setFitOptions] = useState(getFitOptions('Top'));
+  const [fitIndex, setFitIndex] = useState(1); // Default: 'Regular'
+  const [sliderPosition, setSliderPosition] = useState(((1) / (fitOptions.length - 1)) * 100);
+
+  useEffect(() => {
+    const newOptions = getFitOptions(clothingType);
+    setFitOptions(newOptions);
+
+    // Set index to 'Regular' or fallback
+    const defaultIndex = newOptions.indexOf('Regular') !== -1 ? newOptions.indexOf('Regular') : 0;
+    setFitIndex(defaultIndex);
+    setSliderPosition((defaultIndex / (newOptions.length - 1)) * 100);
+  }, [clothingType]);
+
   const handleSlide = (e) => {
     if (!sliderContainerRef.current) return;
-
     const containerRect = sliderContainerRef.current.getBoundingClientRect();
     const containerWidth = containerRect.width;
-
-    // Calculate position relative to container (0 to 1)
     let relativePos = (e.clientX - containerRect.left) / containerWidth;
-
-    // Limit to 0-1 range
     relativePos = Math.max(0, Math.min(1, relativePos));
-
-    // Set the slider position
-    setSliderPosition(relativePos * 100);
-
-    // Determine which fit option this corresponds to
-    const newFitIndex = Math.min(
-      Math.floor(relativePos * fitOptions.length),
+    const newIndex = Math.min(
+      Math.round(relativePos * (fitOptions.length - 1)),
       fitOptions.length - 1
     );
-    setFitIndex(newFitIndex);
+    setFitIndex(newIndex);
+    setSliderPosition((newIndex / (fitOptions.length - 1)) * 100);
   };
-  
-  // Handle direct icon click
+
   const handleFitClick = (index) => {
     setFitIndex(index);
-    // Set slider position based on index
-    const newPosition = ((index + 0.5) / fitOptions.length) * 100;
+    const newPosition = (index / (fitOptions.length - 1)) * 100;
     setSliderPosition(newPosition);
   };
 
-    const data = {
-      clothingType,
-      fit: fitOptions[fitIndex],
-    }
-    const pref3 = async () => {
-    console.log("Registering user with data:", data);
+  const data = {
+    clothingType,
+    fit: fitOptions[fitIndex],
+  };
+
+  const pref3 = async () => {
     const payload = {
       userEmail,
-      section: "StylePref3",
+      section: 'StylePref3',
       data,
     };
-
     try {
       const res = await fetch(`${API_BASE_URL}/userPref`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-
       const result = await res.json();
-      console.log("Inputing data:", result);
-      await handleSubmit();
+      console.log('Inputing data:', result);
+      router.push('/onboarding/recommended-product');
     } catch (err) {
-      console.error("Failed to input data:", err);
+      console.error('Failed to input data:', err);
     }
   };
 
@@ -92,14 +84,15 @@ export default function StylePreferencesStep3() {
           <h2 className="text-xl font-bold text-[#0B1F63]">Style Preference</h2>
           <span className="text-xs bg-[#0B1F63] text-white px-2 py-1 rounded-full">Step 7/7</span>
         </div>
-        
+
         <div className="mb-8">
-          {/* Top/Bottom Selection */}
           <div className="flex gap-2 mb-6">
             <button
               onClick={() => setClothingType('Top')}
               className={`py-1 px-4 rounded-full text-sm border ${
-                clothingType === 'Top' ? 'bg-[#0B1F63] text-white' : 'bg-white text-[#0B1F63] border-gray-300'
+                clothingType === 'Top'
+                  ? 'bg-[#0B1F63] text-white'
+                  : 'bg-white text-[#0B1F63] border-gray-300'
               }`}
             >
               Top
@@ -107,46 +100,46 @@ export default function StylePreferencesStep3() {
             <button
               onClick={() => setClothingType('Bottom')}
               className={`py-1 px-4 rounded-full text-sm border ${
-                clothingType === 'Bottom' ? 'bg-[#0B1F63] text-white' : 'bg-white text-[#0B1F63] border-gray-300'
+                clothingType === 'Bottom'
+                  ? 'bg-[#0B1F63] text-white'
+                  : 'bg-white text-[#0B1F63] border-gray-300'
               }`}
             >
               Bottom
             </button>
           </div>
-          
+
           <h3 className="font-medium text-[#0B1F63] mb-4">Cloth fitting</h3>
-          
-          
-          
-          {/* T-shirt icons representing different fits */}
+
           <div className="flex justify-between items-end mb-6">
             {fitOptions.map((fit, index) => {
               const isSelected = fitIndex === index;
-              const basePath = clothingType === 'Top' ? '/images/cloth-fitting/cloth' : '/images/cloth-fitting/short';
-              const imgSrc = isSelected ? `${basePath}-active.png` : `${basePath}-unactive.png`;
+              const basePath =
+                clothingType === 'Top'
+                  ? '/images/cloth-fitting/cloth'
+                  : '/images/cloth-fitting/short';
+              const imgSrc = isSelected
+                ? `${basePath}-active.png`
+                : `${basePath}-unactive.png`;
               const size = 24 + index * 3;
 
               return (
-                <div 
-                  key={fit} 
-                  className="flex flex-col items-center cursor-pointer" 
+                <div
+                  key={fit}
+                  className="flex flex-col items-center cursor-pointer"
                   onClick={() => handleFitClick(index)}
                 >
-                  <img 
+                  <img
                     src={imgSrc}
                     alt={`${fit} fit`}
-                    style={{
-                      width: `${size}px`,
-                      height: `${size + 8}px`, // keeping slight height increase for aesthetics
-                    }}
+                    style={{ width: `${size}px`, height: `${size + 8}px` }}
                   />
                   <span className="text-xs mt-1">{fit}</span>
                 </div>
               );
             })}
           </div>
-          
-          {/* Slider for fit selection */}
+
           <div className="relative w-full mb-4">
             <div
               ref={sliderContainerRef}
@@ -154,9 +147,13 @@ export default function StylePreferencesStep3() {
               onClick={handleSlide}
               onMouseDown={() => {
                 document.addEventListener('mousemove', handleSlide);
-                document.addEventListener('mouseup', () => {
-                  document.removeEventListener('mousemove', handleSlide);
-                }, { once: true });
+                document.addEventListener(
+                  'mouseup',
+                  () => {
+                    document.removeEventListener('mousemove', handleSlide);
+                  },
+                  { once: true }
+                );
               }}
               onTouchStart={(e) => {
                 const touch = e.touches[0];
@@ -165,9 +162,13 @@ export default function StylePreferencesStep3() {
                   const touch = e.touches[0];
                   handleSlide({ clientX: touch.clientX });
                 });
-                document.addEventListener('touchend', () => {
-                  document.removeEventListener('touchmove', handleSlide);
-                }, { once: true });
+                document.addEventListener(
+                  'touchend',
+                  () => {
+                    document.removeEventListener('touchmove', handleSlide);
+                  },
+                  { once: true }
+                );
               }}
             >
               <div
@@ -177,15 +178,13 @@ export default function StylePreferencesStep3() {
               />
             </div>
           </div>
-          
-          {/* Size labels */}
+
           <div className="flex justify-between text-xs text-gray-500">
             <span>Tighter</span>
             <span>Looser</span>
           </div>
         </div>
-        
-        {/* Continue button */}
+
         <button
           onClick={pref3}
           className="w-full py-3 bg-[#0B1F63] text-white font-medium rounded-lg"

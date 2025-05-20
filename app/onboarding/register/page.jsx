@@ -167,7 +167,7 @@ export default function RegisterPage() {
                 name="phoneNumber"
                 value={formData.phoneNumber}
                 onChange={handleChange}
-                placeholder="e.g. 812-3456-7890)"
+                placeholder="81234567890"
                 className="block w-full px-3 py-2 border border-gray-300 rounded-r-md"
               />
             </div>

@@ -15,13 +15,15 @@ const BRAND_BLUE = '#0B1F63';
 
 export default function HomePage() {
   const { user, isLoading, signinRedirect } = useAuth();
-  const [likedProduct, setLikedProduct] = useState(null);
-  const [wardrobeItems, setWardrobeItems] = useState([]);
+  const [likedRecommendations, setLikedRecommendations] = useState([]);
+  const [tryonItems, setTryonItems] = useState([]);
   const [apparelImage, setApparelImage] = useState(null);
   const [showForYouModal, setShowForYouModal] = useState(false);
   const [onboardingData, setOnboardingData] = useState({});
   const userEmail = user?.profile?.email;
   const [lastUpdated, setLastUpdated] = useState("");
+
+  const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
 
   useEffect(() => {
     setLastUpdated(new Date().toLocaleDateString());
@@ -51,12 +53,12 @@ export default function HomePage() {
         const stored = localStorage.getItem("likedProduct");
         if (stored) setLikedProduct(JSON.parse(stored));
 
-        // Fetch wardrobe items (limit to 5 for preview)
-        const fetchWardrobe = async () => {
+        // Fetch history items
+        const fetchHistory = async () => {
           try {
-            const lambdaUrl = process.env.NEXT_PUBLIC_HISTORY_HANDLER;
+            const endpoint = `${API_BASE_URL}/historyHandler`;
             const res = await fetch(
-              `${lambdaUrl}?email=${encodeURIComponent(userEmail)}`,
+              `${endpoint}?email=${encodeURIComponent(userEmail)}`,
               {
                 method: "GET",
                 headers: {
@@ -66,14 +68,19 @@ export default function HomePage() {
             );
             if (!res.ok) throw new Error(`Failed to fetch history: ${res.status}`);
             const data = await res.json();
-            const allItems = Array.isArray(data.items) ? data.items : [];
-            const wardrobe = allItems.filter((item) => item.isInWardrobe === true);
-            setWardrobeItems(wardrobe.slice(0, 5));
+            console.log("Fetched History Data:", data);
+
+            // Directly use data.tryonItems and data.likedRecommendations
+            setTryonItems(Array.isArray(data.tryonItems) ? data.tryonItems.slice(0, 1) : []);
+            setLikedRecommendations(Array.isArray(data.likedRecommendations) ? data.likedRecommendations.slice(0, 5) : []);
+
           } catch (err) {
-            setWardrobeItems([]);
+            console.error("Error fetching history:", err);
+            setTryonItems([]);
+            setLikedRecommendations([]);
           }
         };
-        fetchWardrobe();
+        fetchHistory();
       }
     }
   }, [isLoading, user]);
@@ -191,7 +198,6 @@ const toCamelCase = (str) =>
           </div>
 
           {/* For You Style Modal */}
-          {/* For You Style Modal */}
           {showForYouModal && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
               <div className="bg-white rounded-2xl w-full max-w-sm mx-4 shadow-xl overflow-hidden border border-gray-100">
@@ -210,7 +216,6 @@ const toCamelCase = (str) =>
                   </button>
                 </div>
 
-                {/* Modal Content */}
                 {/* Modal Content */}
                 <div className="max-h-80 overflow-y-auto px-5 py-4 space-y-4">
                   {(() => {
@@ -303,13 +308,13 @@ const toCamelCase = (str) =>
               </Link>
             </div>
             <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1">
-              {wardrobeItems.length > 0 ? (
-                wardrobeItems.map((item) => (
-                  <div key={item.taskId || item.id} className="min-w-[100px] h-[140px] rounded-lg overflow-hidden flex-shrink-0 bg-gray-100 flex items-center justify-center">
-                    {item.generatedImageUrl ? (
+              {likedRecommendations.length > 0 ? (
+                likedRecommendations.map((recommendation) => (
+                  <div key={recommendation.productId} className="min-w-[100px] h-[140px] rounded-lg overflow-hidden flex-shrink-0 bg-gray-100 flex items-center justify-center">
+                    {recommendation.imageUrl ? (
                       <img
-                        src={item.generatedImageUrl}
-                        alt="Wardrobe item"
+                        src={recommendation.imageUrl}
+                        alt="Liked Recommendation"
                         className="w-full h-full object-cover"
                       />
                     ) : (
@@ -333,43 +338,26 @@ const toCamelCase = (str) =>
               <h2 className="text-lg font-semibold" style={{ color: BRAND_BLUE }}>Recent Activity</h2>
             </div>
             <div className="rounded-xl p-4" style={{ backgroundColor: `${BRAND_BLUE}0D` }}>
-              {likedProduct || apparelImage ? (
+              {tryonItems.length > 0 ? (
                 <div className="flex items-center">
                   <div className="w-20 h-20 rounded-lg overflow-hidden mr-4">
-                    {apparelImage ? (
+                    {tryonItems[0].generatedImageUrl ? (
                       <img
-                        src={apparelImage}
-                        alt="Apparel"
+                        src={tryonItems[0].generatedImageUrl}
+                        alt="Recent Fitting"
                         width={80}
                         height={80}
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <Image
-                        src={likedProduct.imageS3Url}
-                        alt={likedProduct.productName}
-                        width={80}
-                        height={80}
-                        className="w-full h-full object-cover"
-                      />
+                      <span className="text-xs text-gray-400">No Image</span>
                     )}
                   </div>
                   <div>
                     <h3 className="font-semibold" style={{ color: BRAND_BLUE }}>
-                      {likedProduct?.productName || "Recently Uploaded Apparel"}
+                      Latest Fitting
                     </h3>
-                    <p className="text-sm text-gray-600 mb-2">{likedProduct?.brand || ""}</p>
-                    {likedProduct?.productLink ? (
-                      <a
-                        href={likedProduct.productLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm font-semibold"
-                        style={{ color: BRAND_BLUE }}
-                      >
-                        View Product
-                      </a>
-                    ) : null}
+                    {/* You might want to add a link to view all try-ons */}
                   </div>
                 </div>
               ) : (
@@ -379,8 +367,8 @@ const toCamelCase = (str) =>
                       💡
                     </div>
                     <div>
-                      <p className="text-sm font-semibold">No liked products yet</p>
-                      <p className="text-xs text-gray-500">Like a product to see it here</p>
+                      <p className="text-sm font-semibold">No recent activity</p>
+                      <p className="text-xs text-gray-500">Your recent interactions will appear here</p>
                     </div>
                   </div>
                 </div>

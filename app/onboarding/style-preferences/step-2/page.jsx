@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useAuth } from 'react-oidc-context';
+import toast, { Toaster } from 'react-hot-toast';
 
 export default function StylePreferencesStep2() {
   const [brands, setBrands] = useState([]);
@@ -11,17 +12,10 @@ export default function StylePreferencesStep2() {
   const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
 
   const brandOptions = [
-    { name: 'MANGO', image: '/images/brand-logo/mango-logo.png' },
+    { name: 'Bershka', image: '/images/brand-logo/bershka-logo.png' },
     { name: 'Massimo Dutti', image: '/images/brand-logo/massimodutti-logo.png' },
-    { name: 'PULL&BEAR', image: '/images/brand-logo/pull&bear-logo.png' },
     { name: 'ZARA', image: '/images/brand-logo/zara-logo.png' },
-    { name: 'Ralph Lauren', image: '/images/brand-logo/ralphlauren-logo.png' },
-    { name: 'Dior', image: '/images/brand-logo/dior-logo.png' },
-    { name: 'Nike', image: '/images/brand-logo/nike-logo.png' },
-    { name: 'Tommy Hilfiger', image: '/images/brand-logo/tommyhilfiger-logo.png' },
-    { name: 'M&S', image: '/images/brand-logo/m&s-logo.png' },
-    { name: 'Louis Vuitton', image: '/images/brand-logo/lv-logo.png' },
-    { name: 'adidas', image: '/images/brand-logo/adidas-logo.png' },
+    { name: 'Adidas', image: '/images/brand-logo/adidas-logo.png' },
     { name: 'H&M', image: '/images/brand-logo/hnm-logo.png' },
   ];
 
@@ -56,51 +50,47 @@ export default function StylePreferencesStep2() {
 
   const handleSubmit = () => {
     if (brands.length === 0 || colors.length === 0) {
-      alert('Please select at least one brand and one color.');
-      return;
+      toast.error('Please select at least one brand and one color.');
+      return false;
     }
 
-    const preferences = {
-      brands,
-      colors,
-    };
-
+    const preferences = { brands, colors };
     localStorage.setItem('onboarding_style_preferences_2', JSON.stringify(preferences));
     window.location.href = '/onboarding/style-preferences/step-3';
+    return true;
   };
 
-  const data = {
-    brands,
-    colors,
-  };
-  
-    const pref2 = async () => {
-    console.log("Registering user with data:", data);
+  const data = { brands, colors };
+
+  const pref2 = async () => {
+    if (!handleSubmit()) return;
+
     const payload = {
       userEmail,
-      section: "StylePref2",
+      section: 'StylePref2',
       data,
     };
 
     try {
       const res = await fetch(`${API_BASE_URL}/userPref`, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify(payload),
       });
 
       const result = await res.json();
-      console.log("Inputing data:", result);
-      await handleSubmit();
+      console.log('Inputting data:', result);
     } catch (err) {
-      console.error("Failed to input data:", err);
+      console.error('Failed to input data:', err);
+      toast.error('Failed to save preferences. Please try again.');
     }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 bg-gray-100">
+      <Toaster position="top-center" />
       <div className="w-full max-w-4xl bg-white rounded-[32px] shadow-lg p-6 space-y-6">
         <div className="flex justify-between items-start">
           <h2 className="text-3xl font-bold text-[#0B1F63] leading-snug">
@@ -111,7 +101,6 @@ export default function StylePreferencesStep2() {
           </div>
         </div>
 
-        {/* Brand and Color Selectors Side-by-Side */}
         <div className="flex flex-col md:flex-row gap-6 overflow-x-auto">
           {/* Brand Selector */}
           <div className="min-w-[140px] flex-1">
@@ -130,11 +119,7 @@ export default function StylePreferencesStep2() {
                   <img
                     src={brand.image}
                     alt={brand.name}
-                    className={`object-contain ${
-                      ['MANGO', 'Massimo Dutti', 'PULL&BEAR', 'ZARA', 'Ralph Lauren', 'Louis Vuitton'].includes(brand.name)
-                        ? 'h-100 w-100'
-                        : 'h-100 w-100'
-                    }`}
+                    className="h-100 w-100 object-contain"
                   />
                 </button>
               ))}
