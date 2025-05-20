@@ -489,6 +489,10 @@ const toCamelCase = (str) =>
             <Shirt className="w-5 h-5 mb-0.5" />
             <span className="text-xs mt-1">Wardrobe</span>
           </Link>
+          <Link href="/insights" className="flex flex-col items-center text-gray-400 hover:text-blue-900">
+            <User className="w-5 h-5 mb-0.5" />
+            <span className="text-xs mt-1">Profile</span>
+          </Link>
         </div>
 
         {/* Keep the original footer but hide it on mobile */}
