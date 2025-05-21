@@ -310,15 +310,15 @@ const toCamelCase = (str) =>
                 See All <ChevronRight size={16} />
               </Link>
             </div>
-            <div className="flex gap-2 overflow-x-auto pb-2 px-1">
+            <div className="flex gap-2 overflow-x-auto pb-2 px-1 scrollbar-hide">
               {likedRecommendations.length > 0 ? (
                 likedRecommendations.map((recommendation) => (
-                  <div key={recommendation.productId} className="min-w-[100px] h-[140px] rounded-lg overflow-hidden flex-shrink-0 bg-gray-100 flex items-center justify-center">
+                  <div key={recommendation.productId} className="min-w-[80px] md:min-w-[100px] h-[110px] md:h-[140px] rounded-lg overflow-hidden flex-shrink-0 bg-gray-100 flex items-center justify-center">
                     {recommendation.imageUrl ? (
                       <img
                         src={recommendation.imageUrl}
                         alt="Liked Recommendation"
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover rounded-lg transition-transform hover:scale-105 duration-200"
                         loading="lazy"
                       />
                     ) : (
@@ -328,7 +328,7 @@ const toCamelCase = (str) =>
                 ))
               ) : (
                 [1, 2, 3, 4, 5].map((item) => (
-                  <div key={item} className="min-w-[100px] h-[140px] rounded-lg overflow-hidden flex-shrink-0 bg-gray-100 flex items-center justify-center">
+                  <div key={item} className="min-w-[80px] md:min-w-[100px] h-[110px] md:h-[140px] rounded-lg overflow-hidden flex-shrink-0 bg-gray-100 flex items-center justify-center">
                     <span className="text-xs text-gray-400">No Item</span>
                   </div>
                 ))
@@ -351,7 +351,7 @@ const toCamelCase = (str) =>
                         alt="Recent Fitting"
                         width={80}
                         height={80}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover rounded-lg transition-transform hover:scale-105 duration-200"
                         loading="lazy"
                       />
                     ) : (
