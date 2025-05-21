@@ -319,12 +319,17 @@ const toCamelCase = (str) =>
                     className="min-w-[80px] md:min-w-[100px] h-[110px] md:h-[140px] rounded-lg overflow-hidden flex-shrink-0 bg-gray-100 flex items-center justify-center"
                   >
                     {recommendation.imageUrl ? (
-                      <img
-                        src={recommendation.imageUrl}
-                        alt="Liked Recommendation"
-                        className="w-full h-full object-cover rounded-lg transition-transform md:hover:scale-105 duration-200"
-                        loading="lazy"
-                      />
+                      <div className="relative w-[80px] md:w-[100px] h-[110px] md:h-[140px] overflow-hidden rounded-lg">
+                        <Image
+                          src={recommendation.imageUrl}
+                          alt="Liked Recommendation"
+                          width={100}
+                          height={140}
+                          className="object-cover w-full h-full"
+                          priority
+                        />
+                      </div>
+
                     ) : (
                       <span className="text-xs text-gray-400">No Image</span>
                     )}
@@ -353,7 +358,7 @@ const toCamelCase = (str) =>
                 <div className="flex items-center">
                   <div className="w-28 h-28 rounded-lg overflow-hidden mr-4 flex-shrink-0">
                     {tryonItems[0].generatedImageUrl ? (
-                      <img
+                      <Image
                         src={tryonItems[0].generatedImageUrl}
                         alt="Recent Fitting"
                         width={120}
