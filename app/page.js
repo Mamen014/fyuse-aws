@@ -313,22 +313,29 @@ const toCamelCase = (str) =>
             <div className="flex gap-2 overflow-x-auto pb-2 px-1 scrollbar-hide">
               {likedRecommendations.length > 0 ? (
                 likedRecommendations.map((recommendation) => (
-                  <div key={recommendation.productId} className="min-w-[80px] md:min-w-[100px] h-[110px] md:h-[140px] rounded-lg overflow-hidden flex-shrink-0 bg-gray-100 flex items-center justify-center">
+                  <Link
+                    key={recommendation.productId}
+                    href="/profile"
+                    className="min-w-[80px] md:min-w-[100px] h-[110px] md:h-[140px] rounded-lg overflow-hidden flex-shrink-0 bg-gray-100 flex items-center justify-center"
+                  >
                     {recommendation.imageUrl ? (
                       <img
                         src={recommendation.imageUrl}
                         alt="Liked Recommendation"
-                        className="w-full h-full object-cover rounded-lg transition-transform hover:scale-105 duration-200"
+                        className="w-full h-full object-cover rounded-lg transition-transform md:hover:scale-105 duration-200"
                         loading="lazy"
                       />
                     ) : (
                       <span className="text-xs text-gray-400">No Image</span>
                     )}
-                  </div>
+                  </Link>
                 ))
               ) : (
                 [1, 2, 3, 4, 5].map((item) => (
-                  <div key={item} className="min-w-[80px] md:min-w-[100px] h-[110px] md:h-[140px] rounded-lg overflow-hidden flex-shrink-0 bg-gray-100 flex items-center justify-center">
+                  <div
+                    key={item}
+                    className="min-w-[80px] md:min-w-[100px] h-[110px] md:h-[140px] rounded-lg overflow-hidden flex-shrink-0 bg-gray-100 flex items-center justify-center"
+                  >
                     <span className="text-xs text-gray-400">No Item</span>
                   </div>
                 ))
@@ -344,14 +351,14 @@ const toCamelCase = (str) =>
             <div className="rounded-xl p-4" style={{ backgroundColor: `${BRAND_BLUE}0D` }}>
               {tryonItems.length > 0 ? (
                 <div className="flex items-center">
-                  <div className="w-20 h-20 rounded-lg overflow-hidden mr-4">
+                  <div className="w-28 h-28 rounded-lg overflow-hidden mr-4 flex-shrink-0">
                     {tryonItems[0].generatedImageUrl ? (
                       <img
                         src={tryonItems[0].generatedImageUrl}
                         alt="Recent Fitting"
-                        width={80}
-                        height={80}
-                        className="w-full h-full object-cover rounded-lg transition-transform hover:scale-105 duration-200"
+                        width={120}
+                        height={120}
+                        className="w-full h-full object-contain rounded-xl transition-transform md:hover:scale-105 duration-200"
                         loading="lazy"
                       />
                     ) : (
@@ -359,8 +366,12 @@ const toCamelCase = (str) =>
                     )}
                   </div>
                   <div>
-                    <h3 className="font-semibold" style={{ color: BRAND_BLUE }}>
-                      Latest Fitting
+                    <h3 className="font-semibold text-sm" style={{ color: BRAND_BLUE }}>
+                      {new Date(tryonItems[0].timestamp).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                      })}
                     </h3>
                     {/* You might want to add a link to view all try-ons */}
                   </div>
@@ -485,8 +496,8 @@ const toCamelCase = (str) =>
         <ToastContainer />
         
         {/* Bottom Navigation Bar */}
-        <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white shadow-[0_-2px_10px_rgba(0,0,0,0.1)] flex justify-around items-center px-2 pt-2 pb-1">
-          <Link href="/" className="flex flex-col items-center" style={{ color: BRAND_BLUE }}>
+        <div className="fixed bottom-0 left-0 right-0 w-full bg-white shadow-[0_-2px_10px_rgba(0,0,0,0.1)] flex justify-around items-center px-4 pt-2 pb-3 z-50">
+          <Link href="/" className="flex flex-col items-center text-blue-600">
             <Home size={20} />
             <span className="text-xs mt-1">Home</span>
           </Link>
@@ -499,6 +510,7 @@ const toCamelCase = (str) =>
             <span className="text-xs mt-1">Profile</span>
           </Link>
         </div>
+
 
         {/* Keep the original footer but hide it on mobile */}
 {/*         <footer className="hidden md:block bg-primary text-primary-foreground py-8 text-center">
