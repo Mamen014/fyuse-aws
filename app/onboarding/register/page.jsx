@@ -8,12 +8,14 @@ import dynamic from 'next/dynamic';
 
 const Select = dynamic(() => import('react-select'), { ssr: false });
 
+// Import the PrivacyPolicyModal component
+import PrivacyPolicyModal from "@/components/PrivacyPolicyModal";
+
 export default function RegisterPage() {
   const router = useRouter();
   const { user } = useAuth();
   const userEmail = user?.profile?.email;
   const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
-
 
   const [formData, setFormData] = useState({
     birthdate: '',
@@ -23,12 +25,17 @@ export default function RegisterPage() {
     occupation: '',
   });
 
+  // Add privacy policy state
+  const [agreeToPrivacy, setAgreeToPrivacy] = useState(false);
+  const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
+
   const isFormValid =
-  formData.birthdate &&
-  formData.phoneNumber &&
-  formData.country &&
-  formData.city &&
-  formData.occupation;
+    formData.birthdate &&
+    formData.phoneNumber &&
+    formData.country &&
+    formData.city &&
+    formData.occupation &&
+    agreeToPrivacy; // Add privacy agreement to form validation
 
   const [countryCode, setCountryCode] = useState('+62'); // Default
   const [countryOptions, setCountryOptions] = useState([]);
@@ -45,7 +52,15 @@ export default function RegisterPage() {
     })).sort((a, b) => a.label.localeCompare(b.label));
 
     setCountryOptions(formattedCountries);
-  }, []);
+
+    // Load privacy agreement from localStorage
+    if (userEmail) {
+      const storedAgreement = localStorage.getItem(`privacyAgreement:${userEmail}`);
+      if (storedAgreement === "true") {
+        setAgreeToPrivacy(true);
+      }
+    }
+  }, [userEmail]);
 
   const handleCountryChange = (selectedOption) => {
     setSelectedCountry(selectedOption);
@@ -81,6 +96,33 @@ export default function RegisterPage() {
     const updatedFormData = { ...formData, phoneNumber: fullPhoneNumber };
     localStorage.setItem('onboarding_register', JSON.stringify(updatedFormData));
     router.push('/onboarding/physical-attributes/step-1');
+  };
+
+  // Track event function for privacy policy
+  const handleTrack = async (action, metadata = {}) => {
+    console.log(`Tracked event: ${action}`, metadata);
+    const payload = {
+      userEmail,
+      action,
+      timestamp: new Date().toISOString(),
+      page: "Register",
+      ...metadata,
+    };
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/trackevent`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const result = await res.json();
+      console.log("Tracking result:", result);
+    } catch (err) {
+      console.error("Failed to track user event:", err);
+    }
   };
 
   const data = {
@@ -207,6 +249,39 @@ export default function RegisterPage() {
             />
           </div>
 
+          {/* Privacy Policy Agreement - copied from tryOn page */}
+          <div className="flex items-center justify-center mt-2 space-x-2">
+            <input
+              type="checkbox"
+              id="privacyConsent"
+              checked={agreeToPrivacy}
+              onChange={(e) => {
+                const checked = e.target.checked;
+                setAgreeToPrivacy(checked);
+                if (userEmail) {
+                  localStorage.setItem(
+                    `privacyAgreement:${userEmail}`,
+                    checked.toString()
+                  );
+                }
+              }}
+              className="w-4 h-4 accent-blue-500"
+            />
+            <label htmlFor="privacyConsent" className="text-sm text-gray-500">
+              I agree to the{" "}
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  setIsPrivacyModalOpen(true);
+                  handleTrack("click_read_privacy_policy");
+                }}
+                className="underline text-blue-400 cursor-pointer"
+              >
+                Privacy Policy Agreement
+              </button>
+            </label>
+          </div>
+
           <button
             onClick={register}
             type="submit"
@@ -221,6 +296,14 @@ export default function RegisterPage() {
           </button>
         </form>
       </div>
+      
+      {/* Privacy Policy Modal - copied from tryOn page */}
+      {isPrivacyModalOpen && (
+        <PrivacyPolicyModal
+          isOpen={isPrivacyModalOpen}
+          onClose={() => setIsPrivacyModalOpen(false)}
+        />
+      )}
     </div>
   );
 }
