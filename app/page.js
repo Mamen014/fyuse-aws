@@ -41,17 +41,6 @@ export default function HomePage() {
           window.location.href = redirect;
           return;
         }
-        // Use user email as key
-        const step = localStorage.getItem(`onboarding_step:${userEmail}`);
-        if (step !== "appearance") {
-          window.location.href = "/onboarding/register";
-        }
-        // Load apparel_image from localStorage
-        const apparelImg = localStorage.getItem("apparel_image");
-        if (apparelImg) setApparelImage(apparelImg);
-        // Load liked product from localStorage
-        const stored = localStorage.getItem("likedProduct");
-        if (stored) setLikedProduct(JSON.parse(stored));
 
         // Fetch history items
         const fetchHistory = async () => {
@@ -164,7 +153,7 @@ const toCamelCase = (str) =>
         `}
       </Script>
 
-      <div className="bg-white max-w-md mx-auto h-screen flex flex-col relative">
+      <div className="bg-white w-full min-h-screen flex flex-col relative">
         {/* Keeping the original Navbar for now */}
         <Navbar />
 
@@ -321,7 +310,7 @@ const toCamelCase = (str) =>
                 See All <ChevronRight size={16} />
               </Link>
             </div>
-            <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1">
+            <div className="flex gap-2 overflow-x-auto pb-2 px-1">
               {likedRecommendations.length > 0 ? (
                 likedRecommendations.map((recommendation) => (
                   <div key={recommendation.productId} className="min-w-[100px] h-[140px] rounded-lg overflow-hidden flex-shrink-0 bg-gray-100 flex items-center justify-center">
@@ -330,6 +319,7 @@ const toCamelCase = (str) =>
                         src={recommendation.imageUrl}
                         alt="Liked Recommendation"
                         className="w-full h-full object-cover"
+                        loading="lazy"
                       />
                     ) : (
                       <span className="text-xs text-gray-400">No Image</span>
@@ -362,6 +352,7 @@ const toCamelCase = (str) =>
                         width={80}
                         height={80}
                         className="w-full h-full object-cover"
+                        loading="lazy"
                       />
                     ) : (
                       <span className="text-xs text-gray-400">No Image</span>
