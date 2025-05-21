@@ -5,12 +5,17 @@ import { useAuth } from "react-oidc-context";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { useRouter } from "next/navigation";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
 
 export default function PricingPlans() {
+  const router = useRouter();
   const { user } = useAuth();
   const userEmail = user?.profile?.email;
+
+  const [showThankYou, setShowThankYou] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState(null);
 
   const handleTrack = async (action, planName) => {
     console.log(`User selected plan: ${planName}`);
@@ -77,6 +82,22 @@ export default function PricingPlans() {
     },
   ];
 
+  const handlePlanSelect = async (planName) => {
+    await handleTrack("purchase_plan", planName);
+
+    if (planName === "Basic") {
+      router.push("/");
+    } else {
+      setSelectedPlan(planName);
+      setShowThankYou(true);
+    }
+  };
+
+  const closeThankYouModal = () => {
+    setShowThankYou(false);
+    router.push("/");
+  };
+
   return (
     <>
       <Navbar />
@@ -114,7 +135,7 @@ export default function PricingPlans() {
 
               <div className="mt-6 space-y-3">
                 <Button
-                  onClick={() => handleTrack("purchase_plan", plan.name)}
+                  onClick={() => handlePlanSelect(plan.name)}
                   className="w-full bg-cta text-cta-foreground rounded-full text-sm md:text-base hover:bg-primary transition-colors"
                   aria-label={`Select ${plan.name}`}
                 >
@@ -125,7 +146,37 @@ export default function PricingPlans() {
           ))}
         </div>
       </div>
+
       <Footer />
+
+      {/* Thank You Modal */}
+      {showThankYou && (
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-70 flex justify-center items-center p-4">
+          <div className="bg-background rounded-3xl p-8 max-w-md w-full shadow-2xl text-center">
+            <h3 className="text-2xl font-bold mb-4 text-green-600">
+              🎉 Thank You for Choosing FYUSE Premium!
+            </h3>
+            <p className="text-base text-foreground mb-4">
+              You’ve selected the Elegant/Glamour Plan with special promo pricing.
+              <br />
+              We’re currently in early-access testing mode — actual payment isn’t required yet.
+              <br />
+              Your interest helps us improve FYUSE for you.
+            </p>
+            <p className="text-green-700 font-semibold">
+              {selectedPlan === "Elegant" && "✔ You’re now pre-enrolled in the Elegant Plan (Rp.29,999/mo)"}
+              {selectedPlan === "Glamour" && "✔ You’re now pre-enrolled in the Glamour Plan (Rp.59,999/mo)"}
+            </p>
+
+            <Button
+              onClick={closeThankYouModal}
+              className="mt-6 bg-cta text-cta-foreground rounded-full hover:bg-primary"
+            >
+              Got it!
+            </Button>
+          </div>
+        </div>
+      )}
     </>
   );
 }

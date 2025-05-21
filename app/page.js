@@ -8,6 +8,7 @@ import { useAuth } from "react-oidc-context";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Navbar from "@/components/Navbar";
+import axios from "axios";
 import { Home, Search, Heart, User, ChevronRight, Zap, X, Shirt } from "lucide-react";
 
 // Define brand colors
@@ -22,7 +23,8 @@ export default function HomePage() {
   const [onboardingData, setOnboardingData] = useState({});
   const userEmail = user?.profile?.email;
   const [lastUpdated, setLastUpdated] = useState("");
-
+  const [tryOnCount, setTryOnCount] = useState(0);
+  
   const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
 
   useEffect(() => {
@@ -35,24 +37,40 @@ export default function HomePage() {
         localStorage.setItem("postLoginRedirect", "/");
         signinRedirect();
       } else {
+        const userEmail = user.profile.email;
+
+        const refreshTryOnCount = async () => {
+          try {
+            const res = await axios.get(`${API_BASE_URL}/getrack?userEmail=${userEmail}`);
+            const updatedCount = res.data.tryOnCount || 0;
+            setTryOnCount(updatedCount);
+            sessionStorage.setItem('tryOnCount', updatedCount);
+            setLastUpdated(new Date().toLocaleDateString());
+          } catch (err) {
+            console.error('Error updating try-on count:', err);
+          }
+        };
+
+        refreshTryOnCount();
+
         const redirect = localStorage.getItem("postLoginRedirect");
         if (redirect && window.location.pathname !== redirect) {
           localStorage.removeItem("postLoginRedirect");
           window.location.href = redirect;
           return;
         }
-        // Use user email as key
+
         const step = localStorage.getItem(`onboarding_step:${userEmail}`);
         if (step !== "appearance") {
           window.location.href = "/onboarding/register";
         }
-        // Load apparel_image from localStorage
+
         const apparelImg = localStorage.getItem("apparel_image");
         if (apparelImg) setApparelImage(apparelImg);
-        // Load liked product from localStorage
+
         const stored = localStorage.getItem("likedProduct");
         if (stored) setLikedProduct(JSON.parse(stored));
-        // Fetch history items
+
         const fetchHistory = async () => {
           try {
             const endpoint = `${API_BASE_URL}/historyHandler`;
@@ -70,11 +88,9 @@ export default function HomePage() {
             console.log("Fetched History Data:", data);
 
             if (Array.isArray(data.tryonItems)) {
-              // Sort tryonItems by timestamp descending
               const sortedTryonItems = data.tryonItems
-                .filter(item => item.timestamp)  // optionally filter items missing timestamp
+                .filter(item => item.timestamp)
                 .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-
               setTryonItems(sortedTryonItems.slice(0, 1));
             } else {
               setTryonItems([]);
@@ -122,6 +138,31 @@ export default function HomePage() {
     return data;
   };
 
+  const handleTrack = async (action, metadata = {}) => {
+    console.log(`Tracked event: ${action}`, metadata);
+    const payload = {
+      userEmail,
+      action,
+      timestamp: new Date().toISOString(),
+      page: "VirtualTryOn",
+      ...metadata,
+    };
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/trackevent`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const result = await res.json();
+      console.log("Tracking result:", result);
+    } catch (err) {
+      console.error("Failed to track user event:", err);
+    }
+  };  
   // Define key display mappings
     const keyDisplays = {
       gender: "Gender",
@@ -185,6 +226,7 @@ const toCamelCase = (str) =>
           <div className="flex gap-3 mb-6">
             <button
               onClick={() => {
+                handleTrack("Click For You Style Button");
                 if (!user) {
                   localStorage.setItem("postLoginRedirect", "/onboarding/register");
                   toast.error("Please sign in to use this feature.", {
@@ -285,6 +327,7 @@ const toCamelCase = (str) =>
                       className="flex-1 py-3 rounded-xl font-medium text-white flex items-center justify-center"
                       style={{ backgroundColor: BRAND_BLUE }}
                       onClick={() => {
+                        handleTrack("Click Continue Button in For You Style Modal");
                         setShowForYouModal(false);
                         window.location.href = "/onboarding/recommended-product";
                       }}
@@ -296,6 +339,7 @@ const toCamelCase = (str) =>
                       className="flex-1 py-3 rounded-xl font-medium flex items-center justify-center"
                       style={{ backgroundColor: `${BRAND_BLUE}1A`, color: BRAND_BLUE }}
                       onClick={() => {
+                        handleTrack("Click Edit Profile Button in For You Style Modal");
                         setShowForYouModal(false);
                         window.location.href = "/onboarding/physical-attributes/step-1";
                       }}
@@ -381,12 +425,11 @@ const toCamelCase = (str) =>
                     )}
                   </div>
                   <div>
-                    <h3 className="font-semibold text-sm" style={{ color: BRAND_BLUE }}>
-                      {new Date(tryonItems[0].timestamp).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric',
-                      })}
+                    <h3 className="font-regular text-sm" style={{ color: BRAND_BLUE }}>
+                      Last updated: {lastUpdated}
+                    </h3>
+                    <h3 className="font-regular text-sm" style={{ color: BRAND_BLUE }}>
+                      Style Me: {tryOnCount} times
                     </h3>
                     {/* You might want to add a link to view all try-ons */}
                   </div>

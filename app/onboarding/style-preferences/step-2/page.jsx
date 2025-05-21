@@ -119,7 +119,7 @@ export default function StylePreferencesStep2() {
                   <img
                     src={brand.image}
                     alt={brand.name}
-                    className="h-100 w-100 object-contain"
+                    className="scale-150 object-contain h-10 w-10 md:h-12 md:w-12"
                   />
                 </button>
               ))}
@@ -147,7 +147,7 @@ export default function StylePreferencesStep2() {
                   {colors.includes(color.name) && (
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
-                      className="h-4 w-4"
+                      className="absolute h-6 w-6 md:h-8 md:w-8"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke={color.name === 'White' ? '#000' : '#fff'}

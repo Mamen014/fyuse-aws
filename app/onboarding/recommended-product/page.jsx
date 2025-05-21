@@ -32,6 +32,7 @@ export default function RecommendedProductPage() {
     try {
       const res = await axios.get(`${API_BASE_URL}/getrack?userEmail=${userEmail}`);
       const updatedCount = res.data.tryOnCount || 0;
+      console.log('count:', updatedCount);
       setTryOnCount(updatedCount);
       sessionStorage.setItem('tryOnCount', updatedCount);
     } catch (err) {
