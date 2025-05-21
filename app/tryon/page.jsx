@@ -29,7 +29,6 @@ export default function VirtualTryOn() {
   const [tryOnCount, setTryOnCount] = useState(0);
   const [showPricingPlans, setShowPricingPlans] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [matchingAnalysis, setMatchingAnalysis] = useState(null);
   const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
   const [agreeToPrivacy, setAgreeToPrivacy] = useState(false);
   const [userImageError, setUserImageError] = useState(null);
@@ -200,7 +199,7 @@ export default function VirtualTryOn() {
 
     if (!user) return signinRedirect();
 
-    if (tryOnCount >= 3) return setShowPricingPlans(true);
+    if (tryOnCount >= 100) return setShowPricingPlans(true);
 
     if (
       !userImage ||
@@ -227,7 +226,6 @@ export default function VirtualTryOn() {
 
       setError(null);
       setResultImageUrl(null);
-      setMatchingAnalysis(null);
 
       const userImageUrl = await uploadImageToS3(
         userImage,
@@ -248,18 +246,6 @@ export default function VirtualTryOn() {
         const taskId = response.data.taskId;
         setTaskId(taskId);
         pollTryonStatus(taskId);
-
-        const analysisResponse = await axios.post(
-          `${API_BASE_URL}/MatchingAnalyzer`,
-          {
-            userImage: userImageUrl,
-            apparelImageUrl,
-            userEmail,
-            analysisType: "direct",
-            taskId,
-          }
-        );
-        setMatchingAnalysis(analysisResponse.data);
         setIsModalOpen(true);
       }
     } catch (err) {
@@ -569,7 +555,6 @@ export default function VirtualTryOn() {
         <AnalysisModal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
-          analysisData={matchingAnalysis}
           loading={loading}
           tryOnImage={resultImageUrl}
           userEmail={user?.email}

@@ -1,20 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useAuth } from "react-oidc-context";
 import { Button } from "@/components/ui/button";
-import LearnMoreModal from "@/components/LearnMoreModal";
-import LearnMoreLite from "@/components/LearnMoreLite";
-import LearnMorePro from "@/components/LearnMorePro";
-import LearnMoreElite from "@/components/LearnMoreElite";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
 
 export default function PricingPlans() {
-  const [openLearnMoreIndex, setOpenLearnMoreIndex] = useState(null);
   const { user } = useAuth();
   const userEmail = user?.profile?.email;
 
@@ -25,7 +19,7 @@ export default function PricingPlans() {
       action,
       planName,
       timestamp: new Date().toISOString(),
-      page: "PricingPage", 
+      page: "PricingPage",
     };
 
     try {
@@ -45,62 +39,46 @@ export default function PricingPlans() {
   };
 
   const plans = [
-    // New Basic Plan
     {
-      name: "Basic Plan",
-      price: "Free Forever",
+      name: "Basic",
+      price: "Free",
       features: [
-        "3 Try-Ons/Month",
-        "6 Styling Tips",
-        "15 Styles in the Digital Wardrobe",
+        "10 Style Me",
+        "20 Personalized Styling",
+        "20 Change Preferences",
+        "15 Saved Items in Wardrobe",
       ],
       promo: "",
       buttonText: "Continue with Basic",
     },
     {
-      name: "Lite Plan",
-      price: "Rp. 29,999/mo",
+      name: "Elegant",
+      price: "Rp. 29.999/Month",
       features: [
-        "10 Try-Ons/month",
-        "15 Styling Tips",
-        "25 Styles in the Digital Wardrobe",
+        "25 Style Me",
+        "30 Personalized Styling Recommendations",
+        "30 Change Preferences",
+        "Unlimited Saved Items in Wardrobe",
       ],
-      promo: "🔓 Promo Price! 40% OFF",
-      buttonText: "Upgrade to Lite – Rp.29,999",
-      LearnMoreComponent: LearnMoreLite,
+      promo: "",
+      buttonText: "Upgrade to Elegant – Rp.29.999/Mo",
     },
     {
-      name: "Pro Plan",
-      price: "Rp. 59,999/mo",
+      name: "Glamour",
+      price: "Rp. 59.999/Month",
       features: [
-        "25 Try-Ons/month",
-        "20 Personalized Styling Recommendations",
-        "Compare Looks Side-by-Side",
-        "30 Styles in the Digital Wardrobe",
+        "40 Style Me",
+        "Unlimited Personalized Styling",
+        "Unlimited Change Preferences",
+        "Unlimited Saved Items in Wardrobe",
       ],
-      promo: "🔓 Promo Price! Save Rp.15,000",
-      buttonText: "Upgrade to Pro – Rp.59,999",
-      LearnMoreComponent: LearnMorePro,
-    },
-    {
-      name: "👑 Elite Plan",
-      price: "Coming Soon",
-      features: [
-        "Unlimited Try-Ons",
-        "Unlimited Personalized Styling recommendations",
-        "Wardrobe Tracker + Body Tracker",
-        "Unlimited Styles in the Digital Wardrobe",
-        "Exclusive Outfits",
-      ],
-      promo: "💬 Be the first to experience Elite benefits",
-      buttonText: "Notify Me on Launch",
-      LearnMoreComponent: LearnMoreElite,
+      promo: "",
+      buttonText: "Upgrade to Glamour – Rp.59.999/Mo",
     },
   ];
 
   return (
     <>
-      {/* Full-page Pricing Plans */}
       <Navbar />
       <div className="bg-background text-foreground mt-20 min-h-screen p-8">
         <h2 className="text-3xl md:text-4xl font-bold text-center mb-8 text-primary">
@@ -113,24 +91,20 @@ export default function PricingPlans() {
               className="border border-cta bg-background rounded-xl p-6 shadow-lg flex flex-col justify-between"
             >
               <div>
-                {/* Plan Name */}
                 <h3 className="text-xl md:text-2xl font-semibold text-center text-primary">
                   {plan.name}
                 </h3>
 
-                {/* Price */}
                 <p className="text-lg md:text-xl text-cta mt-2 text-center">
                   {plan.price}
                 </p>
 
-                {/* Features */}
                 <ul className="mt-4 text-sm md:text-base text-foreground list-disc ml-6 space-y-2">
                   {plan.features.map((feature, i) => (
                     <li key={i}>{feature}</li>
                   ))}
                 </ul>
 
-                {/* Promo */}
                 {plan.promo && (
                   <p className="mt-3 text-cta text-xs md:text-sm text-center">
                     {plan.promo}
@@ -138,7 +112,6 @@ export default function PricingPlans() {
                 )}
               </div>
 
-              {/* Buttons */}
               <div className="mt-6 space-y-3">
                 <Button
                   onClick={() => handleTrack("purchase_plan", plan.name)}
@@ -147,56 +120,12 @@ export default function PricingPlans() {
                 >
                   {plan.buttonText}
                 </Button>
-                {/* Conditionally render the "Learn More" button */}
-                {plan.LearnMoreComponent && (
-                  <Button
-                    onClick={() => {
-                      setOpenLearnMoreIndex(index);
-                      handleTrack("learn_more", plan.name);
-                    }}
-                    className="w-full bg-background text-foreground border border-cta hover:bg-cta hover:text-cta-foreground rounded-full text-sm md:text-base transition-colors"
-                    aria-label={`Learn more about ${plan.name}`}
-                  >
-                    Learn More
-                  </Button>
-                )}
               </div>
             </div>
           ))}
         </div>
-        {/* <div className="bottom-0 left-0 right-0 bg-background py-8 px-2 flex justify-between items-center"> */}
-        {/* Back to Home (Arrow Icon) */}
-        {/* <Link href="/" passHref>
-            <button
-              className="text-foreground text-xl hover:text-cta transition-colors"
-              aria-label="Back to Home"
-            >
-              ← Back to Home
-            </button>
-          </Link> */}
-
-        {/* Link to /features */}
-        {/* <Link href="/features" passHref>
-            <button
-              className="text-foreground text-xl hover:text-cta transition-colors"
-              aria-label="View Features Page"
-            >
-              View Features →
-            </button>
-          </Link> */}
-        {/* </div> */}
       </div>
       <Footer />
-
-      {/* Learn More Modal */}
-      {openLearnMoreIndex !== null &&
-        plans[openLearnMoreIndex]?.LearnMoreComponent && (
-          <LearnMoreModal
-            isOpen={true}
-            onClose={() => setOpenLearnMoreIndex(null)}
-            Component={plans[openLearnMoreIndex].LearnMoreComponent}
-          />
-        )}
     </>
   );
 }

@@ -1,0 +1,170 @@
+'use client'
+import React, { useState, useEffect } from "react";
+import { useRouter } from 'next/navigation';
+import { useAuth } from "react-oidc-context";
+import axios from "axios";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { ToastContainer } from "react-toastify";
+import LoadingModalSpinner from '@/components/LoadingModal';
+
+export default function VirtualTryOnResultPage() {
+  const { user } = useAuth();
+  const userEmail = user?.profile?.email;
+  const router = useRouter();
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [polling, setPolling] = useState(false);
+  const [pollIntervalId, setPollIntervalId] = useState(null);
+  const [resultImageUrl, setResultImageUrl] = useState(null);
+
+  const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
+  const taskId = typeof window !== "undefined" ? localStorage.getItem("taskId") : null;
+
+  const handleHomeClick = () => {
+    localStorage.setItem(`onboarding_step:${userEmail}`, "appearance");
+    setIsLoading(true);
+    router.push('/');
+  };
+
+  useEffect(() => {
+    return () => {
+      if (pollIntervalId) clearInterval(pollIntervalId);
+    };
+  }, [pollIntervalId]);
+
+  useEffect(() => {
+    const pollTryonStatus = () => {
+      const intervalId = setInterval(async () => {
+        try {
+          const response = await axios.get(
+            `${API_BASE_URL}/process-tryon-result?taskId=${taskId}`
+          );
+          const data = response.data;
+          if (data.status === "succeed" && data.generatedImageUrl) {
+            clearInterval(intervalId);
+            setResultImageUrl(data.generatedImageUrl);
+            window.generatedImageUrl = data.generatedImageUrl;
+            setPolling(false);
+            setLoading(false);
+            toast.success("Added to your wardrobe!", {
+              position: "top-right",
+              autoClose: 5000,
+              hideProgressBar: false,
+              closeOnClick: true,
+              pauseOnHover: true,
+              draggable: true,
+            });
+          } else if (data.status === "failed") {
+            clearInterval(intervalId);
+            setPolling(false);
+            setLoading(false);
+            setError(data.errorMessage || "Try-on failed. Please try again.");
+          }
+        } catch (err) {
+          clearInterval(intervalId);
+          setPolling(false);
+          setLoading(false);
+          console.error("Polling error:", err?.response?.data || err.message);
+          const message =
+            err?.response?.data?.error ||
+            "Network error while checking try-on status.";
+          setError(message);
+          toast.error(message);
+        }
+      }, 5000);
+      setPollIntervalId(intervalId);
+      setPolling(true);
+      setLoading(true);
+    };
+    if (taskId) {
+      pollTryonStatus();
+    }
+  }, [taskId]);
+
+  if (loading) {
+    return <LoadingModalSpinner message="Styling..." />;
+  }
+
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen w-full bg-gradient-to-b from-blue-50 to-white px-4 py-8">
+      {/* Decorative Elements */}
+      <div className="absolute top-0 left-0 w-full h-32 bg-[#0B1F63]/5 rounded-b-full blur-xl opacity-50 z-0"></div>
+      
+      <div className="relative z-10 w-full max-w-lg">
+        {/* Header */}
+        <h1 className="text-[#0B1F63] text-3xl md:text-4xl font-bold mb-3 text-center">
+          Your Perfect Look
+        </h1>
+        <p className="text-gray-600 text-center mb-10">The style has been added to your wardrobe</p>
+        
+        {/* Result Image Container */}
+        <div className="flex justify-center mb-12">
+          <div className="relative overflow-hidden rounded-2xl shadow-2xl">
+            <div className="absolute inset-0 bg-gradient-to-t from-[#0B1F63]/20 to-transparent z-10"></div>
+            <img
+              src={resultImageUrl}
+              alt="Virtual Try-On Result"
+              className="w-full h-auto object-cover"
+            />
+            <div className="absolute bottom-4 right-4 bg-white/90 text-[#0B1F63] px-3 py-1 rounded-full text-sm font-medium z-20">
+              Perfect Match
+            </div>
+          </div>
+        </div>
+        
+        {/* Buttons Container */}
+        <div className="space-y-4 px-4 md:px-12">
+          <button
+            onClick={() => router.push('/onboarding/recommended-product')}
+            className="w-full py-4 px-4 bg-white border border-[#0B1F63]/30 text-[#0B1F63] font-medium rounded-full hover:bg-[#0B1F63]/5 transition-all duration-300 flex items-center justify-center shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16" className="mr-2">
+              <path d="M14 2a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1h12zM2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2z"/>
+              <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+            </svg>
+            Try Another Style
+          </button>
+
+          <button
+            onClick={handleHomeClick}
+            disabled={isLoading}
+            className="w-full py-4 px-4 font-medium text-white bg-[#0B1F63] rounded-full hover:bg-[#0A1A50] transition-all duration-300 flex items-center justify-center shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+          >
+            {isLoading ? (
+              <span className="flex items-center">
+                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Loading...
+              </span>
+            ) : (
+              "Continue to My Wardrobe"
+            )}
+          </button>
+        </div>
+        
+        {/* Additional Info */}
+        <p className="text-center text-gray-500 text-sm mt-8">
+          You can access this style anytime in your personal wardrobe
+        </p>
+      </div>
+
+      {/* Toast Container */}
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="dark"
+      />
+    </div>
+  );
+}

@@ -2,19 +2,29 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "react-oidc-context";
 import { useRouter } from "next/navigation";
-import { Toaster, toast } from "react-hot-toast";
+import Image from "next/image";
+import Link from "next/link";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { Home, Shirt, User, ChevronRight } from "lucide-react";
 
-
-
+// Define brand colors to match home page
+const BRAND_BLUE = '#0B1F63';
 
 export default function ProfilePage() {
   const auth = useAuth();
   const router = useRouter();
-  const [tryOnHistory, setTryOnHistory] = useState([]);
+  const [likedRecommendations, setLikedRecommendations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState("");
 
-  // Debugging localStorage if needed
+  const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
+
+  useEffect(() => {
+    setLastUpdated(new Date().toLocaleDateString());
+  }, []);
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       const storedUser = localStorage.getItem("loggedInUser");
@@ -28,10 +38,10 @@ export default function ProfilePage() {
     if (!auth?.user?.profile?.email) return;
 
     try {
-      const lambdaUrl = process.env.NEXT_PUBLIC_HISTORY_HANDLER;
+      const endpoint = `${API_BASE_URL}/historyHandler`;
 
       const res = await fetch(
-        `${lambdaUrl}?email=${encodeURIComponent(auth.user.profile.email)}`,
+        `${endpoint}?email=${encodeURIComponent(auth.user.profile.email)}`,
         {
           method: "GET",
           headers: {
@@ -43,16 +53,12 @@ export default function ProfilePage() {
       if (!res.ok) throw new Error(`Failed to fetch history: ${res.status}`);
 
       const data = await res.json();
-      const allItems = Array.isArray(data.items) ? data.items : [];
-      const wardrobeItems = allItems.filter(
-        (item) => item.isInWardrobe === true
-      );
+      setLikedRecommendations(Array.isArray(data.likedRecommendations) ? data.likedRecommendations : []);
 
-      setTryOnHistory(wardrobeItems);
     } catch (err) {
-      console.error("❌ Error fetching wardrobe history:", err);
-      toast.error("Failed to load your wardrobe items.");
-      setTryOnHistory([]);
+      console.error("❌ Error fetching liked recommendations:", err);
+      toast.error("Failed to load your liked recommendations.");
+      setLikedRecommendations([]);
     } finally {
       setLoading(false);
     }
@@ -72,129 +78,179 @@ export default function ProfilePage() {
     }
   }, [auth?.isAuthenticated]);
 
-  const handleRemoveFromWardrobe = async (taskId) => {
-    if (!taskId) return;
-    setActionLoading(taskId);
-
-    try {
-      const removeEndpoint = process.env.NEXT_PUBLIC_REMOVE_ENDPOINT;
-
-      const response = await fetch(removeEndpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ taskId }),
-      });
-
-      if (!response.ok) {
-        const errorBody = await response.text();
-        throw new Error(`API error: ${response.status} - ${errorBody}`);
-      }
-
-      const result = await response.json();
-      console.log("✅ Removed from wardrobe:", result);
-      toast.success("Item removed from wardrobe!", {
-        style: {
-          background: "#A1E3B5", // Success state color
-          color: "#0B1F63", // Primary text color
-        },
-      });
-      await fetchHistory();
-    } catch (err) {
-      console.error("❌ Failed to remove wardrobe item:", err);
-      if (err.message.includes("Failed to fetch")) {
-        toast.error("Network error or CORS issue. Check console for details.");
-      } else {
-        toast.error(err.message || "Unexpected error removing item.");
-      }
-    } finally {
-      setActionLoading(null);
-    }
-  };
-
   if (!auth?.isAuthenticated) {
     return (
-      <div className="p-6 max-w-3xl mx-auto text-foreground">
-        <Toaster position="top-center" />
-        <p className="text-center text-gray-400">
-          🔐 Please sign in to view your profile and wardrobe.
-        </p>
+      <div className="bg-white max-w-md mx-auto h-screen flex flex-col relative">
+        {/* Fixed Navbar */}
+        <div className="h-16 bg-white border-b border-gray-200 flex items-center justify-center fixed top-0 left-0 right-0 z-10 max-w-md mx-auto">
+          <h1 className="text-lg font-semibold" style={{ color: BRAND_BLUE }}>Your Wardrobe</h1>
+        </div>
+        
+        <div className="p-6 max-w-3xl mx-auto text-foreground mt-20 flex-1">
+          <ToastContainer />
+          <p className="text-center text-gray-400">
+            🔐 Please sign in to view your profile and liked recommendations.
+          </p>
+        </div>
+        
+        {/* Bottom Navigation Bar */}
+        <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white shadow-[0_-2px_10px_rgba(0,0,0,0.1)] flex justify-around items-center px-2 pt-2 pb-1 z-10">
+          <Link href="/" className="flex flex-col items-center text-gray-400 hover:text-blue-900">
+            <Home size={20} />
+            <span className="text-xs mt-1">Home</span>
+          </Link>
+          <Link href="/profile" className="flex flex-col items-center" style={{ color: BRAND_BLUE }}>
+            <Shirt className="w-5 h-5 mb-0.5" />
+            <span className="text-xs mt-1">Wardrobe</span>
+          </Link>
+          <Link href="/insights" className="flex flex-col items-center text-gray-400 hover:text-blue-900">
+            <User className="w-5 h-5 mb-0.5" />
+            <span className="text-xs mt-1">Profile</span>
+          </Link>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-background p-6 max-w-3xl mx-auto text-foreground">
-      <Toaster position="top-center" />
-
-      {/* Heading */}
-      <h2 className="text-2xl font-bold mb-4 text-primary">Digital Wardrobe</h2>
-
-      {/* Back to Home Button */}
-      <div className="mb-6">
-        <button
-          type="button"
-          onClick={() => router.push("/tryon")}
-          className="px-4 py-2 bg-cta hover:bg-primary text-cta-foreground rounded-md transition-all"
-        >
-          ← Digital Fitting Room
-        </button>
+    <div className="bg-white max-w-md mx-auto h-screen flex flex-col relative">
+      <ToastContainer />
+      
+      {/* Fixed Navbar */}
+      <div className="h-16 bg-white border-b border-gray-200 flex items-center justify-center fixed top-0 left-0 right-0 z-10 max-w-md mx-auto">
+        <h1 className="text-lg font-semibold" style={{ color: BRAND_BLUE }}>Your Wardrobe</h1>
       </div>
 
-      {/* User Profile Section */}
-      <div className="bg-background p-4 rounded-xl mb-6 border border-cta shadow-lg">
-        <p>
-          <strong>Name:</strong> {auth.user?.profile?.name || "N/A"}
-        </p>
-        <p>
-          <strong>Email:</strong> {auth.user?.profile?.email}
-        </p>
-      </div>
-
-      {/* Wardrobe Items */}
-      {loading ? (
-        <p className="text-gray-400">Loading wardrobe...</p>
-      ) : tryOnHistory.length === 0 ? (
-        <p className="text-gray-400">
-          Your wardrobe is empty. Try on outfits and build your collection!
-        </p>
-      ) : (
-        <ul className="space-y-4">
-          {tryOnHistory.map((item) => (
-            <li
-              key={item.taskId}
-              className="border border-cta p-4 rounded-xl bg-background"
-            >
-              <p>
-                <strong>Matching:</strong> {item.matchingPercentage || "0"}%
-              </p>
-
-              {item.generatedImageUrl && (
-                <img
-                  src={item.generatedImageUrl}
-                  alt="Try-on preview"
-                  className="mt-3 rounded shadow max-w-xs"
-                />
-              )}
-
-              {/* Remove from Wardrobe Button */}
-              <div className="mt-3">
-                <button
-                  type="button"
-                  onClick={() => handleRemoveFromWardrobe(item.taskId)}
-                  disabled={actionLoading === item.taskId}
-                  className="px-4 py-2 rounded text-sm bg-cta hover:bg-primary text-cta-foreground transition-all disabled:bg-gray-500 disabled:cursor-not-allowed"
-                >
-                  {actionLoading === item.taskId
-                    ? "Processing..."
-                    : "Remove from Wardrobe"}
-                </button>
+      {/* Main container with scrollable content */}
+      <div className="flex-1 overflow-y-auto p-4 mt-20 mb-16">
+        {/* Header section with greeting and profile */}
+        <div className="mb-6 rounded-xl overflow-hidden shadow-sm" style={{ backgroundColor: `${BRAND_BLUE}0D` }}>
+          <div className="p-4">
+            <div className="flex items-center">
+              <div className="w-10 h-10 rounded-full flex items-center justify-center text-white mr-3" 
+                  style={{ backgroundColor: BRAND_BLUE }}>
+                👕
               </div>
-            </li>
-          ))}
-        </ul>
-      )}
+              <div>
+                <h1 className="text-xl font-semibold" style={{ color: BRAND_BLUE }}>
+                  {auth?.user ? `Hi, ${auth.user.profile?.given_name || 'there'}!` : 'Your Wardrobe'}
+                </h1>
+                <p className="text-sm text-gray-600">
+                  {auth?.user?.profile ? `Items you've liked` : 'Your saved items'}
+                </p>
+              </div>
+            </div>
+            <div className="flex justify-end mt-2">
+              <span className="text-xs text-gray-400 px-2 py-1 bg-white rounded-md">
+                Last updated: {lastUpdated}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Liked Recommendations Section */}
+        <div className="mb-6 rounded-xl overflow-hidden shadow-sm" style={{ backgroundColor: `${BRAND_BLUE}0D` }}>
+          <div className="px-4 py-3 border-b" style={{ borderColor: `${BRAND_BLUE}1A` }}>
+            <div className="flex items-center">
+              <div className="w-6 h-6 rounded-full mr-2 flex items-center justify-center text-xs text-white" 
+                  style={{ backgroundColor: BRAND_BLUE }}>
+                L
+              </div>
+              <h3 className="font-semibold" style={{ color: BRAND_BLUE }}>
+                Liked Items
+              </h3>
+            </div>
+          </div>
+          
+          <div className="p-4">
+            {loading ? (
+              <div className="text-center py-6">
+                <p className="text-gray-400">Loading your liked items...</p>
+              </div>
+            ) : likedRecommendations.length === 0 ? (
+              <div className="text-center py-6">
+                <div className="w-12 h-12 mx-auto mb-3 rounded-full text-white flex items-center justify-center text-xl" style={{ backgroundColor: BRAND_BLUE }}>
+                  👚
+                </div>
+                <p className="font-medium" style={{ color: BRAND_BLUE }}>No liked recommendations yet.</p>
+                <p className="text-xs text-gray-500 mt-2">Items you like will appear here</p>
+                <Link href="/onboarding/recommended-product">
+                  <button 
+                    className="mt-4 py-2 px-4 rounded-lg text-sm font-medium text-white"
+                    style={{ backgroundColor: BRAND_BLUE }}
+                  >
+                    Discover Items
+                  </button>
+                </Link>
+              </div>
+            ) : (
+              <div className="flex flex-col space-y-3">
+                {likedRecommendations.map((recommendation) => (
+                  <div
+                    key={recommendation.productId}
+                    className="bg-white rounded-lg p-3 shadow-sm overflow-hidden flex"
+                  >
+                    <div className="relative w-24 h-24 overflow-hidden rounded-lg flex-shrink-0">
+                      {recommendation.imageUrl ? (
+                        <Image
+                          src={recommendation.imageUrl}
+                          alt="Liked Recommendation"
+                          fill
+                          style={{ objectFit: 'cover' }}
+                          sizes="(max-width: 768px) 100px, 100px"
+                          priority
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                          <span className="text-gray-400">No Image</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="ml-3 flex-1">
+                      <p className="font-medium" style={{ color: BRAND_BLUE }}>
+                        {recommendation.brand || "Unknown Brand"}
+                      </p>
+                      <p className="text-xs text-gray-600">
+                        {recommendation.clothingType || "Clothing"} ({recommendation.fashionType || "Style"})
+                      </p>
+                      <p className="text-xs text-gray-600">
+                        <span className="font-medium">Color:</span> {recommendation.color || "N/A"}
+                      </p>
+                      {recommendation.productLink && (
+                        <a
+                          href={recommendation.productLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="mt-2 text-xs flex items-center"
+                          style={{ color: BRAND_BLUE }}
+                        >
+                          View Product <ChevronRight size={14} />
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom Navigation Bar */}
+      <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white shadow-[0_-2px_10px_rgba(0,0,0,0.1)] flex justify-around items-center px-2 pt-2 pb-1 z-10">
+        <Link href="/" className="flex flex-col items-center text-gray-400 hover:text-blue-900">
+          <Home size={20} />
+          <span className="text-xs mt-1">Home</span>
+        </Link>
+        <Link href="/profile" className="flex flex-col items-center" style={{ color: BRAND_BLUE }}>
+          <Shirt className="w-5 h-5 mb-0.5" />
+          <span className="text-xs mt-1">Wardrobe</span>
+        </Link>
+        <Link href="/insights" className="flex flex-col items-center text-gray-400 hover:text-blue-900">
+          <User className="w-5 h-5 mb-0.5" />
+          <span className="text-xs mt-1">Profile</span>
+        </Link>
+      </div>
     </div>
   );
 }

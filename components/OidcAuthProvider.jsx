@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect } from "react";
-import { AuthProvider, useAuth } from "react-oidc-context";
+import React from 'react';
+import AuthInitializer from './AuthInitializer'; // Ensure the correct path to AuthInitializer
+import { AuthProvider } from 'react-oidc-context'; // Ensure you import the correct AuthProvider
+
 const getOidcConfig = () => {
   const origin =
     typeof window !== "undefined"
@@ -20,34 +22,7 @@ const getOidcConfig = () => {
   };
 };
 
-function AuthInitializer() {
-  const auth = useAuth();
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    if (auth?.isAuthenticated && auth?.user?.profile?.email) {
-      const userData = {
-        email: auth.user.profile.email,
-        name: auth.user.profile.name || "",
-        idToken: auth.user.id_token,
-        accessToken: auth.user.access_token,
-        refreshToken: auth.user.refresh_token,
-        profile: auth.user.profile,
-      };
-
-      const existing = localStorage.getItem("loggedInUser");
-      if (!existing || JSON.stringify(userData) !== existing) {
-        localStorage.setItem("loggedInUser", JSON.stringify(userData));
-        console.log("✅ Auth user session stored in localStorage:", userData);
-      }
-    }
-  }, [auth?.isAuthenticated, auth?.user]);
-
-  return null;
-}
-
-export default function OidcAuthProvider({ children }) {
+function OidcAuthProvider({ children }) {
   const oidcConfig = getOidcConfig();
 
   return (
@@ -57,3 +32,5 @@ export default function OidcAuthProvider({ children }) {
     </AuthProvider>
   );
 }
+
+export default OidcAuthProvider;

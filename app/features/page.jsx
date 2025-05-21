@@ -17,11 +17,6 @@ const features = [
       "Let our expert stylist pick outfits tailored to 'you'. Discover what flatters you most and get direct links to shop. Coming soon: shop directly from FYUSE for a seamless style-to-cart experience.",
   },
   {
-    title: "Styling Tips",
-    description:
-      "Need a quick style boost? We suggest looks based on your body shape, skin tone, and vibe. Fashion advice that’s fast, friendly, and focused on 'you'.",
-  },
-  {
     title: "Digital Wardrobe",
     description:
       "Upload and organize your clothes, plan outfits virtually, and track what you wear to simplify your style and declutter with ease.",
