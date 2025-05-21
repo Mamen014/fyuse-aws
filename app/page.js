@@ -41,7 +41,17 @@ export default function HomePage() {
           window.location.href = redirect;
           return;
         }
-
+        // Use user email as key
+        const step = localStorage.getItem(`onboarding_step:${userEmail}`);
+        if (step !== "appearance") {
+          window.location.href = "/onboarding/register";
+        }
+        // Load apparel_image from localStorage
+        const apparelImg = localStorage.getItem("apparel_image");
+        if (apparelImg) setApparelImage(apparelImg);
+        // Load liked product from localStorage
+        const stored = localStorage.getItem("likedProduct");
+        if (stored) setLikedProduct(JSON.parse(stored));
         // Fetch history items
         const fetchHistory = async () => {
           try {
