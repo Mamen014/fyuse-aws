@@ -1,15 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 
-export default function PricingPlans({ isOpen, onSelectPlan, onClose }) {
+export default function PricingPlans({ isOpen, onClose, sourcePage = "Unknown" }) {
   const router = useRouter();
-  const [selectedPremiumPlan, setSelectedPremiumPlan] = useState(null); // NEW
-  const [showThankYou, setShowThankYou] = useState(false); // NEW
-
-  if (!isOpen) return null;
+  const [selectedPremiumPlan, setSelectedPremiumPlan] = useState(null);
+  const [showThankYou, setShowThankYou] = useState(false);
 
   const plans = [
     {
@@ -21,7 +19,6 @@ export default function PricingPlans({ isOpen, onSelectPlan, onClose }) {
         "20 Change Preferences",
         "15 Saved Items in Wardrobe",
       ],
-      promo: "",
       buttonText: "Continue with Basic",
     },
     {
@@ -33,7 +30,6 @@ export default function PricingPlans({ isOpen, onSelectPlan, onClose }) {
         "30 Change Preferences",
         "Unlimited Saved Items in Wardrobe",
       ],
-      promo: "",
       buttonText: "Upgrade to Elegant – Rp.29,999",
     },
     {
@@ -45,27 +41,39 @@ export default function PricingPlans({ isOpen, onSelectPlan, onClose }) {
         "Unlimited Change Preferences",
         "Unlimited Saved Items in Wardrobe",
       ],
-      promo: "",
       buttonText: "Upgrade to Glamour – Rp.59,999",
     },
   ];
 
-  const handlePlanSelect = (planName) => {
+  const handlePlanSelect = async (planName) => {
     try {
-      console.log("Tracking plan selection for plan:", planName);
       const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
-      if (loggedInUser) {
-        const userId = loggedInUser.profile?.sub || loggedInUser.email;
-        window.gtag("set", { user_id: userId });
+      const email = loggedInUser?.profile?.email || loggedInUser?.email;
+      if (email) {
+        await fetch(`${process.env.NEXT_PUBLIC_FYUSEAPI}/trackevent`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userEmail: email,
+            action: "Selected Pricing Plan",
+            planName: planName,
+            timestamp: new Date().toISOString(),
+            page: sourcePage,
+          }),
+        });
       }
-      window.gtag("event", "select_plan", { plan: planName });
+
+      if (window?.gtag) {
+        const userId = loggedInUser?.profile?.sub || email;
+        window.gtag("set", { user_id: userId });
+        window.gtag("event", "select_plan", { plan: planName });
+      }
     } catch (error) {
-      console.error("Error tracking plan selection:", error.message);
+      console.error("Tracking error:", error.message);
     }
 
-    onSelectPlan(planName);
-
     if (planName === "Basic") {
+      onClose();
       router.push("/");
     } else {
       setSelectedPremiumPlan(planName);
@@ -75,62 +83,55 @@ export default function PricingPlans({ isOpen, onSelectPlan, onClose }) {
 
   const handleThankYouClose = () => {
     setShowThankYou(false);
-    onClose(); // Close pricing modal
+    onClose();
     router.push("/");
   };
 
   return (
     <>
       {/* Pricing Modal */}
-      <div className="fixed inset-0 z-50 bg-black bg-opacity-70 flex justify-center items-center overflow-y-auto">
-        <div className="bg-background text-primary rounded-3xl p-8 max-w-7xl w-full mx-4 shadow-2xl relative overflow-y-auto max-h-[90vh]">
-          <button
-            onClick={onClose}
-            className="absolute top-5 right-6 text-primary text-3xl font-bold hover:text-cta z-10"
-            aria-label="Close Pricing Modal"
-          >
-            &times;
-          </button>
+      {!showThankYou && (
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-70 flex justify-center items-center overflow-y-auto">
+          <div className="bg-background text-primary rounded-3xl p-8 max-w-7xl w-full mx-4 shadow-2xl relative overflow-y-auto max-h-[90vh]">
 
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-8">
-            Choose Your Plan
-          </h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-center mb-8">
+              Choose Your Plan
+            </h2>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {plans.map((plan, index) => (
-              <div
-                key={index}
-                className="border border-cta bg-background rounded-xl p-6 shadow-lg flex flex-col justify-between"
-              >
-                <div>
-                  <h3 className="text-xl md:text-2xl font-semibold text-center text-primary">
-                    {plan.name}
-                  </h3>
-                  <p className="text-lg md:text-xl text-cta mt-2 text-center">
-                    {plan.price}
-                  </p>
-                  <ul className="mt-4 text-sm md:text-base text-foreground list-disc ml-6 space-y-2">
-                    {plan.features.map((feature, i) => (
-                      <li key={i}>{feature}</li>
-                    ))}
-                  </ul>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {plans.map((plan, index) => (
+                <div
+                  key={index}
+                  className="border border-cta bg-background rounded-xl p-6 shadow-lg flex flex-col justify-between"
+                >
+                  <div>
+                    <h3 className="text-xl md:text-2xl font-semibold text-center text-primary">
+                      {plan.name}
+                    </h3>
+                    <p className="text-lg md:text-xl text-cta mt-2 text-center">
+                      {plan.price}
+                    </p>
+                    <ul className="mt-4 text-sm md:text-base text-foreground list-disc ml-6 space-y-2">
+                      {plan.features.map((feature, i) => (
+                        <li key={i}>{feature}</li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className="mt-6">
+                    <Button
+                      onClick={() => handlePlanSelect(plan.name)}
+                      className="w-full bg-cta text-cta-foreground rounded-full text-sm md:text-base hover:bg-primary transition-colors"
+                    >
+                      {plan.buttonText}
+                    </Button>
+                  </div>
                 </div>
-
-                <div className="mt-6">
-                  <Button
-                    onClick={() => handlePlanSelect(plan.name)}
-                    className="w-full bg-cta text-cta-foreground rounded-full text-sm md:text-base hover:bg-primary transition-colors"
-                  >
-                    {plan.buttonText}
-                  </Button>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
-      </div>
-
-      {/* Thank You Modal */}
+      )}
       {showThankYou && (
         <div className="fixed inset-0 z-60 bg-black bg-opacity-70 flex justify-center items-center">
           <div className="bg-background text-primary p-8 rounded-3xl shadow-2xl max-w-lg w-full mx-4 text-center">
@@ -154,7 +155,7 @@ export default function PricingPlans({ isOpen, onSelectPlan, onClose }) {
             </Button>
           </div>
         </div>
-      )}
+      )}      
     </>
   );
 }

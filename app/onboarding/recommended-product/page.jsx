@@ -86,6 +86,10 @@ export default function RecommendedProductPage() {
 
       if (count >= 20) {
         setShowPricingPlans(true);
+        toast("You've reached monthly limit, please upgrade your plan", {
+          icon: "⚠️",
+          duration: 4000,
+        });
       } else {
         await fetchProduct(email);
       }
@@ -118,6 +122,10 @@ export default function RecommendedProductPage() {
     if (tryOnCount >= 10) {
       setShowPricingPlans(true);
       setSubmitStatus('limit');
+      toast("You've reached monthly limit, please upgrade your plan", {
+        icon: "⚠️",
+        duration: 4000,
+      });
       return 'limit';
     }
 
@@ -197,7 +205,7 @@ export default function RecommendedProductPage() {
           <PricingPlans
             isOpen={showPricingPlans}
             onClose={() => setShowPricingPlans(false)}
-            onSelectPlan={(planName) => alert(`You selected: ${planName}`)}
+            sourcePage="StylingPage"
           />
         )}
 

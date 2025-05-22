@@ -9,6 +9,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Navbar from "@/components/Navbar";
 import axios from "axios";
+import PricingPlans from "@/components/PricingPlanCard";
 import { Home, Search, Heart, User, ChevronRight, Zap, X, Shirt } from "lucide-react";
 
 // Define brand colors
@@ -24,6 +25,7 @@ export default function HomePage() {
   const userEmail = user?.profile?.email;
   const [lastUpdated, setLastUpdated] = useState("");
   const [tryOnCount, setTryOnCount] = useState(0);
+  const [showPricingModal, setShowPricingModal] = useState(false);
   
   const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
 
@@ -68,8 +70,13 @@ export default function HomePage() {
         const apparelImg = localStorage.getItem("apparel_image");
         if (apparelImg) setApparelImage(apparelImg);
 
-        const stored = localStorage.getItem("likedProduct");
-        if (stored) setLikedProduct(JSON.parse(stored));
+        if (!isLoading && user) {
+          const hasShown = sessionStorage.getItem("hasShownPricingModal");
+          if (!hasShown) {
+            setShowPricingModal(true);
+            sessionStorage.setItem("hasShownPricingModal", "true");
+          }
+        }        
 
         const fetchHistory = async () => {
           try {
@@ -144,7 +151,7 @@ export default function HomePage() {
       userEmail,
       action,
       timestamp: new Date().toISOString(),
-      page: "VirtualTryOn",
+      page: "HomePage",
       ...metadata,
     };
 
@@ -581,6 +588,13 @@ const toCamelCase = (str) =>
           </div>
         </footer> */}
       </div>
+      {showPricingModal && (
+        <PricingPlans
+          isOpen={showPricingModal}
+          onClose={() => setShowPricingModal(false)}
+          sourcePage="HomePage"
+        />
+      )}
     </>
   );
 }
