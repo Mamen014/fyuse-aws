@@ -56,11 +56,8 @@ export default function StylePreferencesStep2() {
 
     const preferences = { brands, colors };
     localStorage.setItem('onboarding_style_preferences_2', JSON.stringify(preferences));
-    window.location.href = '/onboarding/style-preferences/step-3';
     return true;
   };
-
-  const data = { brands, colors };
 
   const pref2 = async () => {
     if (!handleSubmit()) return;
@@ -68,7 +65,7 @@ export default function StylePreferencesStep2() {
     const payload = {
       userEmail,
       section: 'StylePref2',
-      data,
+      data: { brands, colors },
     };
 
     try {
@@ -82,6 +79,7 @@ export default function StylePreferencesStep2() {
 
       const result = await res.json();
       console.log('Inputting data:', result);
+      window.location.href = '/onboarding/style-preferences/step-3';
     } catch (err) {
       console.error('Failed to input data:', err);
       toast.error('Failed to save preferences. Please try again.');
