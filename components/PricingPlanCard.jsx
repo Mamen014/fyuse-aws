@@ -25,7 +25,7 @@ export default function PricingPlans({ isOpen, onClose, sourcePage = "Unknown" }
       name: "Elegant",
       price: "Rp. 29,999/mo",
       features: [
-        "25 Virtual Try-Ons",
+        "25 Style Me",
         "30 Personalized Styling",
         "30 Change Preferences",
         "Unlimited Saved Items in Wardrobe",
@@ -36,7 +36,7 @@ export default function PricingPlans({ isOpen, onClose, sourcePage = "Unknown" }
       name: "Glamour",
       price: "Rp. 59,999/mo",
       features: [
-        "40 Virtual Try-Ons",
+        "40 Style Me",
         "Unlimited Personalized Styling",
         "Unlimited Change Preferences",
         "Unlimited Saved Items in Wardrobe",
