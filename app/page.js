@@ -1,533 +1,547 @@
-"use client";
-
-import { useState, useEffect } from "react";
-import Link from "next/link";
-import Image from "next/image";
-import Script from "next/script";
-import { useAuth } from "react-oidc-context";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-import Navbar from "@/components/Navbar";
-import { Home, Search, Heart, User, ChevronRight, Zap, X, Shirt } from "lucide-react";
+"use client"
+import { useState, useEffect } from "react"
+import Link from "next/link"
+import Image from "next/image"
+import Script from "next/script"
+import { useAuth } from "react-oidc-context"
+import { ToastContainer, toast } from "react-toastify"
+import "react-toastify/dist/ReactToastify.css"
+import Navbar from "@/components/Navbar"
+import { Home, User, ChevronRight, X, Shirt, Sparkles, Star, TrendingUp } from "lucide-react"
 
 // Define brand colors
-const BRAND_BLUE = '#0B1F63';
+const BRAND_BLUE = "#0B1F63"
 
 export default function HomePage() {
-  const { user, isLoading, signinRedirect } = useAuth();
-  const [likedRecommendations, setLikedRecommendations] = useState([]);
-  const [tryonItems, setTryonItems] = useState([]);
-  const [apparelImage, setApparelImage] = useState(null);
-  const [showForYouModal, setShowForYouModal] = useState(false);
-  const [onboardingData, setOnboardingData] = useState({});
-  const userEmail = user?.profile?.email;
-  const [lastUpdated, setLastUpdated] = useState("");
+const { user, isLoading, signinRedirect } = useAuth()
+const [likedRecommendations, setLikedRecommendations] = useState([])
+const [tryonItems, setTryonItems] = useState([])
+const [apparelImage, setApparelImage] = useState(null)
+const [showForYouModal, setShowForYouModal] = useState(false)
+const [onboardingData, setOnboardingData] = useState({})
+const userEmail = user?.profile?.email
+const [lastUpdated, setLastUpdated] = useState("")
+const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI
 
-  const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
+useEffect(() => {
+setLastUpdated(new Date().toLocaleDateString())
+ }, [])
 
-  useEffect(() => {
-    setLastUpdated(new Date().toLocaleDateString());
-  }, []);
+useEffect(() => {
+if (!isLoading) {
+if (!user) {
+ localStorage.setItem("postLoginRedirect", "/")
+signinRedirect()
+ } else {
+const redirect = localStorage.getItem("postLoginRedirect")
+if (redirect && window.location.pathname !== redirect) {
+ localStorage.removeItem("postLoginRedirect")
+ window.location.href = redirect
+return
+ }
+// Fetch history items
+const fetchHistory = async () => {
+try {
+const endpoint = `${API_BASE_URL}/historyHandler`
+const res = await fetch(`${endpoint}?email=${encodeURIComponent(userEmail)}`, {
+ method: "GET",
+ headers: {
+"Content-Type": "application/json",
+ },
+ })
+if (!res.ok) throw new Error(`Failed to fetch history: ${res.status}`)
+const data = await res.json()
+ console.log("Fetched History Data:", data)
+if (Array.isArray(data.tryonItems)) {
+const sortedTryonItems = data.tryonItems
+ .filter((item) => item.timestamp)
+ .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+setTryonItems(sortedTryonItems.slice(0, 1))
+ } else {
+setTryonItems([])
+ }
+if (Array.isArray(data.likedRecommendations)) {
+setLikedRecommendations(data.likedRecommendations.slice(0, 5))
+ } else {
+setLikedRecommendations([])
+ }
+ } catch (err) {
+ console.error("Error fetching history:", err)
+setTryonItems([])
+setLikedRecommendations([])
+ }
+ }
+fetchHistory()
+ }
+ }
+ }, [isLoading, user])
 
-  useEffect(() => {
-    if (!isLoading) {
-      if (!user) {
-        localStorage.setItem("postLoginRedirect", "/");
-        signinRedirect();
-      } else {
-        const redirect = localStorage.getItem("postLoginRedirect");
-        if (redirect && window.location.pathname !== redirect) {
-          localStorage.removeItem("postLoginRedirect");
-          window.location.href = redirect;
-          return;
-        }
+const getAllOnboardingData = () => {
+if (!userEmail) return {}
+const keys = [
+"onboarding_physical_attributes_1",
+"onboarding_physical_attributes_2",
+"onboarding_physical_attributes_3",
+"onboarding_style_preferences_1",
+"onboarding_style_preferences_2",
+"onboarding_style_preferences_3",
+ ]
+const data = {}
+ keys.forEach((key) => {
+try {
+const val = localStorage.getItem(key)
+if (val) {
+ data[key.split(":")[0]] = JSON.parse(val)
+ }
+ } catch {
+ data[key.split(":")[0]] = {}
+ }
+ })
+return data
+ }
 
-        // Fetch history items
-        const fetchHistory = async () => {
-          try {
-            const endpoint = `${API_BASE_URL}/historyHandler`;
-            const res = await fetch(
-              `${endpoint}?email=${encodeURIComponent(userEmail)}`,
-              {
-                method: "GET",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-              }
-            );
-            if (!res.ok) throw new Error(`Failed to fetch history: ${res.status}`);
-            const data = await res.json();
-            console.log("Fetched History Data:", data);
+const keyDisplays = {
+ gender: "Gender",
+ skinTone: "Skin Tone",
+ bodyShape: "Body shape",
+ selectedType: "Fashion Type",
+ brands: "Brand selections",
+ colors: "Color preferences",
+ clothingType: "Clothing Type",
+ fit: "Fit",
+ }
 
-            if (Array.isArray(data.tryonItems)) {
-              // Sort tryonItems by timestamp descending
-              const sortedTryonItems = data.tryonItems
-                .filter(item => item.timestamp)  // optionally filter items missing timestamp
-                .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+const sectionLabels = {
+ onboarding_physical_attributes_1: "Physical Attributes",
+ onboarding_physical_attributes_2: "Physical Attributes",
+ onboarding_physical_attributes_3: "Physical Attributes",
+ onboarding_style_preferences_1: "Style Preferences",
+ onboarding_style_preferences_2: "Style Preferences",
+ onboarding_style_preferences_3: "Style Preferences",
+ }
 
-              setTryonItems(sortedTryonItems.slice(0, 1));
-            } else {
-              setTryonItems([]);
-            }
+const toCamelCase = (str) => str.replace(/_([a-z])/g, (g) => g[1].toUpperCase())
 
-            if (Array.isArray(data.likedRecommendations)) {
-              setLikedRecommendations(data.likedRecommendations.slice(0, 5));
-            } else {
-              setLikedRecommendations([]);
-            }
+return (
+<>
+ <Script
+strategy="afterInteractive"
+src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GOOGLE_MEASUREMENT_ID}`}
+/>
+ <Script id="google-analytics" strategy="afterInteractive">
+{`
+ window.dataLayer = window.dataLayer || [];
+ function gtag(){dataLayer.push(arguments);}
+ gtag('js', new Date());
+ gtag('config', '${process.env.NEXT_PUBLIC_GOOGLE_MEASUREMENT_ID}');
+ `}
+ </Script>
+ 
+ <div className="bg-gradient-to-b from-gray-50 to-white w-full min-h-screen flex flex-col">
+ <Navbar />
 
-          } catch (err) {
-            console.error("Error fetching history:", err);
-            setTryonItems([]);
-            setLikedRecommendations([]);
-          }
-        };
+{/* Main Content */}
+ <div className="flex-1 overflow-y-auto pb-20 pt-16">
+ 
+{/* Hero Section with Greeting and Profile Summary */}
+ <div className="px-6 pt-8 pb-6">
+ <div className="flex items-center justify-between mb-6">
+ <div>
+ <h1 className="text-3xl font-bold mb-1" style={{ color: BRAND_BLUE }}>
+ Good Morning!
+ </h1>
+ <p className="text-gray-600">Ready to style your day?</p>
+ </div>
+ <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center">
+ <User className="w-6 h-6" style={{ color: BRAND_BLUE }} />
+ </div>
+ </div>
 
-        fetchHistory();
-      }
-    }
-  }, [isLoading, user]);
+{/* Profile Summary Cards */}
+ <div className="mb-6">
+{(() => {
+const data = getAllOnboardingData()
+const flatData = Object.values(data).reduce((acc, section) => {
+if (section && typeof section === "object") {
+ Object.entries(section).forEach(([key, value]) => {
+ acc[key] = value
+ })
+ }
+return acc
+ }, {})
 
-  const getAllOnboardingData = () => {
-    if (!userEmail) return {};
-    const keys = [
-      "onboarding_physical_attributes_1",
-      "onboarding_physical_attributes_2",
-      "onboarding_physical_attributes_3",
-      "onboarding_style_preferences_1",
-      "onboarding_style_preferences_2",
-      "onboarding_style_preferences_3",
-    ];
-    const data = {};
-    keys.forEach((key) => {
-      try {
-        const val = localStorage.getItem(key);
-        if (val) {
-          data[key.split(":")[0]] = JSON.parse(val);
-        }
-      } catch {
-        data[key.split(":")[0]] = {};
-      }
-    });
-    return data;
-  };
+// Get key profile data
+const gender = flatData.gender || "Not Set"
+const bodyShape = flatData.bodyShape || "Not Set"
+const selectedType = flatData.selectedType || "Not Set"
+const skinTone = flatData.skinTone || "Not Set"
+const brands = flatData.brands || []
+const colors = flatData.colors || []
 
-  // Define key display mappings
-    const keyDisplays = {
-      gender: "Gender",
-      skinTone: "Skin Tone",
-      bodyShape: "Body shape",
-      selectedType: "Fashion Type",
-      brands: "Brand selections",
-      colors: "Color preferences",
-      clothingType: "Clothing Type",
-      fit: "Fit",
-    };
+// Create display items - only show set values
+const profileItems = [
+ { label: "Style", value: selectedType, icon: Sparkles },
+ { label: "Body", value: bodyShape, icon: User },
+ { label: "Tone", value: skinTone, icon: Star },
+].filter(item => item.value !== "Not Set")
 
-    // Section display names
-    const sectionLabels = {
-      onboarding_physical_attributes_1: "Physical Attributes",
-      onboarding_physical_attributes_2: "Physical Attributes",
-      onboarding_physical_attributes_3: "Physical Attributes",
-      onboarding_style_preferences_1: "Style Preferences",
-      onboarding_style_preferences_2: "Style Preferences",
-      onboarding_style_preferences_3: "Style Preferences"
-    };
+// Add brands/colors if available
+if (Array.isArray(brands) && brands.length > 0) {
+ profileItems.push({ 
+ label: "Brands", 
+ value: brands.join(", "),
+ icon: TrendingUp 
+ })
+}
+if (Array.isArray(colors) && colors.length > 0) {
+ profileItems.push({ 
+ label: "Colors", 
+ value: colors.join(", "),
+ icon: Star 
+ })
+}
 
-const toCamelCase = (str) =>
-  str.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
+// If no profile data, show setup prompt
+if (profileItems.length === 0) {
+return (
+<div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-4 border border-blue-100">
+ <div className="flex items-center justify-between">
+ <div className="flex-1">
+ <p className="font-semibold text-gray-900 mb-1">Complete Your Style Profile</p>
+ <p className="text-sm text-gray-600">Tell us about your preferences</p>
+ </div>
+ <Link href="/onboarding/physical-attributes/step-1">
+ <button className="bg-white text-blue-600 px-4 py-2 rounded-xl font-medium text-sm shadow-sm border border-blue-200">
+ Setup
+ </button>
+ </Link>
+ </div>
+ </div>
+)
+}
 
-  return (
-    <>
-      {/* Google Analytics Script */}
-      <Script
-        strategy="afterInteractive"
-        src={`https://www.googletagmanager.com/gtag/js?id= ${process.env.NEXT_PUBLIC_GOOGLE_MEASUREMENT_ID}`}
-      />
-      <Script id="google-analytics" strategy="afterInteractive">
-        {`
-          window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);}
-          gtag('js', new Date());
-          gtag('config', '${process.env.NEXT_PUBLIC_GOOGLE_MEASUREMENT_ID}');
-        `}
-      </Script>
+// Show profile summary in compact grid
+const itemsToShow = profileItems.slice(0, 6)
+return (
+<div>
+ <div className="grid grid-cols-3 gap-2 mb-3">
+{itemsToShow.slice(0, 3).map((item, index) => {
+const IconComponent = item.icon
+return (
+<div key={index} className="bg-white rounded-xl p-3 shadow-sm border border-gray-100">
+ <div className="flex items-center mb-1">
+ <IconComponent className="w-3 h-3 mr-1" style={{ color: BRAND_BLUE }} />
+ <span className="text-xs font-medium text-gray-500 tracking-wide">{item.label}</span>
+ </div>
+ <p className="text-sm font-bold text-gray-900 truncate">{item.value}</p>
+ </div>
+)
+ })}
+ </div>
+ {itemsToShow.length > 3 && (
+ <div className="grid grid-cols-3 gap-2">
+{itemsToShow.slice(3, 6).map((item, index) => {
+const IconComponent = item.icon
+return (
+<div key={index + 3} className="bg-white rounded-xl p-3 shadow-sm border border-gray-100">
+ <div className="flex items-center mb-1">
+ <IconComponent className="w-3 h-3 mr-1" style={{ color: BRAND_BLUE }} />
+ <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">{item.label}</span>
+ </div>
+ <p className="text-sm font-bold text-gray-900 truncate">{item.value}</p>
+ </div>
+)
+ })}
+ </div>
+ )}
+ </div>
+)
+ })()}
+ </div>
 
-      <div className="bg-white w-full min-h-screen flex flex-col relative">
-        {/* Keeping the original Navbar for now */}
-        <Navbar />
+{/* AI Style Button - More prominent */}
+ <button
+onClick={() => {
+if (!user) {
+ localStorage.setItem("postLoginRedirect", "/onboarding/register")
+ toast.error("Please sign in to use this feature.")
+setTimeout(() => signinRedirect(), 1500)
+ } else {
+const data = getAllOnboardingData()
+setOnboardingData(data)
+setShowForYouModal(true)
+ }
+ }}
+className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-5 rounded-3xl font-bold text-lg flex items-center justify-center shadow-lg shadow-blue-200/50 mb-2"
+style={{ backgroundImage: `linear-gradient(135deg, ${BRAND_BLUE} 0%, #1e40af 100%)` }}
+>
+ <Sparkles className="w-6 h-6 mr-3" />
+ Get AI Style Recommendations
+ </button>
+ <p className="text-center text-xs text-gray-500 mb-8">Powered by personalized AI matching</p>
+ </div>
 
-        {/* Main container with scrollable content */}
-        <div className="flex-1 overflow-y-auto p-4 mt-20">
-          {/* Header section with greeting and profile */}
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <h1 className="text-2xl font-semibold" style={{ color: BRAND_BLUE }}>
-                👋 {user ? `Hi, ${user.profile?.given_name || 'there'}!` : 'Hi, there!'}
-              </h1>
-              <p className="text-gray-600 text-sm">
-                {user?.profile ? 'Welcome to your personal styling assistant' : 'Sign in to get started'}
-              </p>
-            </div>         
-          </div>
+{/* Recent Try-Ons Section */}
+ <div className="px-6 mb-8">
+ <div className="flex items-center justify-between mb-4">
+ <h2 className="text-xl font-bold text-gray-900">Recent Try-Ons</h2>
+ <Link href="/profile" className="text-sm font-medium" style={{ color: BRAND_BLUE }}>
+ View All
+ </Link>
+ </div>
+ 
+ <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-2">
+{tryonItems.length > 0
+? [0, 1, 2].map((index) => (
+<div
+key={index}
+className="min-w-36 h-48 rounded-3xl overflow-hidden flex-shrink-0 bg-white shadow-md border border-gray-100 relative"
+>
+{tryonItems[0]?.generatedImageUrl ? (
+<Image
+src={tryonItems[0].generatedImageUrl || "/placeholder.svg"}
+alt="Recent Try-On"
+width={144}
+height={192}
+className="object-cover w-full h-full"
+/>
+ ) : (
+<div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+ <Shirt className="w-10 h-10 text-gray-400" />
+ </div>
+ )}
+ <div className="absolute bottom-3 left-3 right-3">
+ <div className="bg-white/90 backdrop-blur-sm rounded-xl px-3 py-1.5">
+ <p className="text-xs font-medium text-gray-800">Try-On #{index + 1}</p>
+ </div>
+ </div>
+ </div>
+ ))
+: [1, 2, 3].map((item) => (
+<div
+key={item}
+className="min-w-36 h-48 rounded-3xl overflow-hidden flex-shrink-0 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center relative"
+>
+ <Shirt className="w-10 h-10 text-gray-400" />
+ <div className="absolute bottom-3 left-3 right-3">
+ <div className="bg-white/80 backdrop-blur-sm rounded-xl px-3 py-1.5">
+ <p className="text-xs font-medium text-gray-600">Try something new</p>
+ </div>
+ </div>
+ </div>
+ ))}
+ </div>
+ </div>
 
-          {/* Quick Action Button: For You Style */}
-          <div className="flex gap-3 mb-6">
-            <button
-              onClick={() => {
-                if (!user) {
-                  localStorage.setItem("postLoginRedirect", "/onboarding/register");
-                  toast.error("Please sign in to use this feature.", {
-                    position: "top-right",
-                    autoClose: 1500,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                    theme: "colored",
-                  });
-                  setTimeout(() => signinRedirect(), 1500);
-                } else {
-                  const data = getAllOnboardingData();
-                  setOnboardingData(data);
-                  setShowForYouModal(true);
-                }
-              }}
-              className="flex-1 text-white py-4 rounded-xl font-medium"
-              style={{ backgroundColor: BRAND_BLUE }}
-            >
-              For You Style
-            </button>
-          </div>
+{/* Wardrobe Collection */}
+ <div className="px-6 pb-8">
+ <div className="flex justify-between items-center mb-6">
+ <h2 className="text-xl font-bold text-gray-900">My Wardrobe</h2>
+ <Link href="/profile" className="flex items-center text-sm font-medium" style={{ color: BRAND_BLUE }}>
+ Organize <ChevronRight size={16} className="ml-1" />
+ </Link>
+ </div>
 
-          {/* For You Style Modal */}
-          {showForYouModal && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-              <div className="bg-white rounded-2xl w-full max-w-sm mx-4 shadow-xl overflow-hidden border border-gray-100">
-                
-                {/* Modal Header */}
-                <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200">
-                  <div>
-                    <h2 className="text-lg font-semibold text-blue-900">For you style</h2>
-                    <p className="text-sm text-gray-500">Review and confirm your style preferences</p>
-                  </div>
-                  <button
-                    onClick={() => setShowForYouModal(false)}
-                    className="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center shrink-0"
-                  >
-                    <X className="w-5 h-5 text-blue-900" />
-                  </button>
-                </div>
+{/* Wardrobe Grid */}
+ <div className="space-y-6">
+{/* Tops Section */}
+ <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+ <div className="flex items-center justify-between mb-4">
+ <h3 className="text-lg font-bold text-gray-900">Tops</h3>
+ <span className="text-sm text-gray-500">{likedRecommendations.length > 0 ? Math.min(2, likedRecommendations.length) : 0} items</span>
+ </div>
+ <div className="flex gap-3">
+{likedRecommendations.length > 0
+? likedRecommendations.slice(0, 2).map((recommendation, index) => (
+<Link
+key={recommendation.productId}
+href="/profile"
+className="flex-1 aspect-[3/4] rounded-2xl overflow-hidden bg-white shadow-sm border border-gray-100 relative group"
+>
+{recommendation.imageUrl ? (
+<Image
+src={recommendation.imageUrl || "/placeholder.svg"}
+alt="Top Item"
+fill
+className="object-cover group-hover:scale-105 transition-transform duration-300"
+/>
+ ) : (
+<div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+ <Shirt className="w-8 h-8 text-gray-400" />
+ </div>
+ )}
+ </Link>
+ ))
+: [1, 2].map((item) => (
+<div
+key={item}
+className="flex-1 aspect-[3/4] rounded-2xl overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center"
+>
+ <Shirt className="w-8 h-8 text-gray-400" />
+ </div>
+ ))}
+ </div>
+ </div>
 
-                {/* Modal Content */}
-                <div className="max-h-80 overflow-y-auto px-5 py-4 space-y-4">
-                  {(() => {
-                    // Flatten all onboardingData into a single object
-                    const flatData = Object.values(onboardingData).reduce((acc, section) => {
-                      if (section && typeof section === "object") {
-                        Object.entries(section).forEach(([key, value]) => {
-                          acc[key] = value;
-                        });
-                      }
-                      return acc;
-                    }, {});
-                    // Only display keys present in keyDisplays
-                    const displayKeys = Object.keys(keyDisplays);
-                    const filtered = displayKeys
-                      .filter((key) => flatData[key] !== undefined && flatData[key] !== null && flatData[key] !== "")
-                      .map((key) => ({
-                        label: keyDisplays[key],
-                        value: Array.isArray(flatData[key]) ? flatData[key].join(", ") : String(flatData[key]),
-                      }));
+{/* Bottoms Section */}
+ <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+ <div className="flex items-center justify-between mb-4">
+ <h3 className="text-lg font-bold text-gray-900">Bottoms</h3>
+ <span className="text-sm text-gray-500">{likedRecommendations.length > 2 ? Math.min(2, likedRecommendations.length - 2) : 0} items</span>
+ </div>
+ <div className="flex gap-3">
+{likedRecommendations.length > 2
+? likedRecommendations.slice(2, 4).map((recommendation, index) => (
+<Link
+key={recommendation.productId}
+href="/profile"
+className="flex-1 aspect-[3/4] rounded-2xl overflow-hidden bg-white shadow-sm border border-gray-100 relative group"
+>
+{recommendation.imageUrl ? (
+<Image
+src={recommendation.imageUrl || "/placeholder.svg"}
+alt="Bottom Item"
+fill
+className="object-cover group-hover:scale-105 transition-transform duration-300"
+/>
+ ) : (
+<div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+ <Shirt className="w-8 h-8 text-gray-400" />
+ </div>
+ )}
+ </Link>
+ ))
+: [1, 2].map((item) => (
+<div
+key={item}
+className="flex-1 aspect-[3/4] rounded-2xl overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center"
+>
+ <Shirt className="w-8 h-8 text-gray-400" />
+ </div>
+ ))}
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>
 
-                    if (filtered.length === 0) {
-                      return (
-                        <div className="text-center py-3">
-                          <p className="text-gray-500 text-sm">No style data available.</p>
-                          <Link href="/onboarding/physical-attributes/step-1">
-                            <button 
-                              className="mt-2 py-2 px-4 rounded-lg text-sm font-medium"
-                              style={{ backgroundColor: BRAND_BLUE, color: "white" }}
-                            >
-                              Complete Your Profile
-                            </button>
-                          </Link>
-                        </div>
-                      );
-                    }
+{/* Style Modal - Enhanced */}
+{showForYouModal && (
+<div className="fixed inset-0 z-50 flex items-end justify-center bg-black bg-opacity-50 backdrop-blur-sm">
+ <div className="bg-white rounded-t-3xl w-full max-w-md mx-auto shadow-2xl overflow-hidden animate-slide-up">
+ <div className="flex items-center justify-between px-6 py-6 border-b border-gray-100">
+ <div>
+ <h2 className="text-xl font-bold" style={{ color: BRAND_BLUE }}>
+ Your Style DNA
+ </h2>
+ <p className="text-gray-500 text-sm">Personalized just for you</p>
+ </div>
+ <button
+onClick={() => setShowForYouModal(false)}
+className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
+>
+ <X className="w-5 h-5 text-gray-600" />
+ </button>
+ </div>
+ 
+ <div className="max-h-80 overflow-y-auto px-6 py-4">
+{(() => {
+const flatData = Object.values(onboardingData).reduce((acc, section) => {
+if (section && typeof section === "object") {
+ Object.entries(section).forEach(([key, value]) => {
+ acc[key] = value
+ })
+ }
+return acc
+ }, {})
+const displayKeys = Object.keys(keyDisplays)
+const filtered = displayKeys
+ .filter((key) => flatData[key] !== undefined && flatData[key] !== null && flatData[key] !== "")
+ .map((key) => ({
+ label: keyDisplays[key],
+ value: Array.isArray(flatData[key]) ? flatData[key].join(", ") : String(flatData[key]),
+ }))
 
-                    return (
-                      <div className="space-y-2">
-                        {filtered.map(({ label, value }) => (
-                          <div key={label} className="flex items-start">
-                            <span className="font-medium">{label}:</span>
-                            <span className="ml-1 break-words">{value}</span>
-                          </div>
-                        ))}
-                      </div>
-                    );
-                  })()}
-                </div>
+if (filtered.length === 0) {
+return (
+<div className="text-center py-8">
+ <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center mx-auto mb-4">
+ <User className="w-10 h-10" style={{ color: BRAND_BLUE }} />
+ </div>
+ <p className="text-gray-600 font-medium mb-2">Complete Your Style Profile</p>
+ <p className="text-gray-500 text-sm mb-6">Help us understand your unique style</p>
+ <Link href="/onboarding/physical-attributes/step-1">
+ <button
+className="text-white py-4 px-8 rounded-2xl font-medium shadow-lg"
+style={{ backgroundColor: BRAND_BLUE }}
+>
+ Start Setup
+ </button>
+ </Link>
+ </div>
+ )
+ }
 
-                <div className="py-4 px-6 bg-gray-50 border-t" style={{ borderColor: `${BRAND_BLUE}1A` }}>
-                  <div className="flex gap-3">
-                    <button
-                      className="flex-1 py-3 rounded-xl font-medium text-white flex items-center justify-center"
-                      style={{ backgroundColor: BRAND_BLUE }}
-                      onClick={() => {
-                        setShowForYouModal(false);
-                        window.location.href = "/onboarding/recommended-product";
-                      }}
-                    >
-                      <span>Continue</span>
-                      <ChevronRight size={18} className="ml-1" />
-                    </button>
-                    <button
-                      className="flex-1 py-3 rounded-xl font-medium flex items-center justify-center"
-                      style={{ backgroundColor: `${BRAND_BLUE}1A`, color: BRAND_BLUE }}
-                      onClick={() => {
-                        setShowForYouModal(false);
-                        window.location.href = "/onboarding/physical-attributes/step-1";
-                      }}
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
-                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                      </svg>
-                      <span>Edit Profile</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
+return (
+<div className="space-y-4">
+{filtered.map(({ label, value }) => (
+<div key={label} className="bg-gradient-to-r from-gray-50 to-white rounded-2xl p-4 border border-gray-100">
+ <p className="text-sm font-semibold mb-1" style={{ color: BRAND_BLUE }}>
+{label}
+ </p>
+ <p className="text-gray-900">{value}</p>
+ </div>
+ ))}
+ </div>
+ )
+ })()}
+ </div>
+ 
+ <div className="px-6 py-6 bg-gradient-to-r from-gray-50 to-white border-t border-gray-100">
+ <div className="flex gap-3">
+ <button
+className="flex-1 text-white py-4 rounded-2xl font-semibold shadow-lg"
+style={{ backgroundColor: BRAND_BLUE }}
+onClick={() => {
+setShowForYouModal(false)
+ window.location.href = "/onboarding/recommended-product"
+ }}
+>
+ Get Recommendations
+ </button>
+ <button
+className="flex-1 py-4 rounded-2xl font-semibold border-2 border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors"
+onClick={() => {
+setShowForYouModal(false)
+ window.location.href = "/onboarding/physical-attributes/step-1"
+ }}
+>
+ Edit Profile
+ </button>
+ </div>
+ </div>
+ </div>
+ </div>
+ )}
 
-          {/* Wardrobe section */}
-          <div className="mb-6">
-            <div className="flex justify-between items-center mb-3">
-              <h2 className="text-lg font-semibold" style={{ color: BRAND_BLUE }}>Your Wardrobe</h2>
-              <Link href="/profile" className="flex items-center text-sm font-medium" style={{ color: BRAND_BLUE }}>
-                See All <ChevronRight size={16} />
-              </Link>
-            </div>
-            <div className="flex gap-2 overflow-x-auto pb-2 px-1 scrollbar-hide">
-              {likedRecommendations.length > 0 ? (
-                likedRecommendations.map((recommendation) => (
-                  <Link
-                    key={recommendation.productId}
-                    href="/profile"
-                    className="min-w-[80px] md:min-w-[100px] h-[110px] md:h-[140px] rounded-lg overflow-hidden flex-shrink-0 bg-gray-100 flex items-center justify-center"
-                  >
-                    {recommendation.imageUrl ? (
-                      <div className="relative w-[80px] md:w-[100px] h-[110px] md:h-[140px] overflow-hidden rounded-lg">
-                        <Image
-                          src={recommendation.imageUrl}
-                          alt="Liked Recommendation"
-                          width={100}
-                          height={140}
-                          className="object-cover w-full h-full"
-                          priority
-                        />
-                      </div>
+ <ToastContainer />
 
-                    ) : (
-                      <span className="text-xs text-gray-400">No Image</span>
-                    )}
-                  </Link>
-                ))
-              ) : (
-                [1, 2, 3, 4, 5].map((item) => (
-                  <div
-                    key={item}
-                    className="min-w-[80px] md:min-w-[100px] h-[110px] md:h-[140px] rounded-lg overflow-hidden flex-shrink-0 bg-gray-100 flex items-center justify-center"
-                  >
-                    <span className="text-xs text-gray-400">No Item</span>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-
-          {/* Recent Activity / Liked Product Widget */}
-          <div className="mb-6">
-            <div className="flex justify-between items-center mb-3">
-              <h2 className="text-lg font-semibold" style={{ color: BRAND_BLUE }}>Recent Activity</h2>
-            </div>
-            <div className="rounded-xl p-4" style={{ backgroundColor: `${BRAND_BLUE}0D` }}>
-              {tryonItems.length > 0 ? (
-                <div className="flex items-center">
-                  <div className="w-28 h-28 rounded-lg overflow-hidden mr-4 flex-shrink-0">
-                    {tryonItems[0].generatedImageUrl ? (
-                      <Image
-                        src={tryonItems[0].generatedImageUrl}
-                        alt="Recent Fitting"
-                        width={120}
-                        height={120}
-                        className="w-full h-full object-contain rounded-xl transition-transform md:hover:scale-105 duration-200"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <span className="text-xs text-gray-400">No Image</span>
-                    )}
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-sm" style={{ color: BRAND_BLUE }}>
-                      {new Date(tryonItems[0].timestamp).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric',
-                      })}
-                    </h3>
-                    {/* You might want to add a link to view all try-ons */}
-                  </div>
-                </div>
-              ) : (
-                <div className="pb-3 mb-3" style={{ borderBottom: `1px solid ${BRAND_BLUE}1A` }}>
-                  <div className="flex items-center">
-                    <div className="w-8 h-8 rounded-full text-white flex items-center justify-center mr-3 text-xs" style={{ backgroundColor: BRAND_BLUE }}>
-                      💡
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold">No recent activity</p>
-                      <p className="text-xs text-gray-500">Your recent interactions will appear here</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-        
-          {/* User Style Profile Widget (displaying data directly on homepage) */}
-          <div className="p-4">
-            {/* Dynamic data from getAllOnboardingData() */}
-            {(() => {
-              const data = getAllOnboardingData();
-
-              // Helper to convert snake_case to camelCase
-              const toCamelCase = (str) =>
-                str.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
-
-              // Map for display labels
-              const keyDisplays = {
-                gender: "Gender",
-                skinTone: "Skin Tone",
-                bodyShape: "Body shape",
-                selectedType: "Fashion Type",
-                brands: "Brand selections",
-                colors: "Color preferences",
-                clothingType: "Clothing Type",
-              };
-
-              // Section display names
-              const sectionLabels = {
-                onboarding_physical_attributes_1: "Physical Attributes",
-                onboarding_physical_attributes_2: "Physical Attributes",
-                onboarding_physical_attributes_3: "Physical Attributes",
-                onboarding_style_preferences_1: "Style Preferences",
-                onboarding_style_preferences_2: "Style Preferences",
-                onboarding_style_preferences_3: "Style Preferences"
-              };
-
-              // Flatten and group data by section
-              const grouped = {};
-              Object.entries(data).forEach(([section, values]) => {
-                if (values && Object.keys(values).length > 0) {
-                  const label = sectionLabels[section] || section.replace(/_/g, " ");
-                  if (!grouped[label]) grouped[label] = [];
-                  Object.entries(values).forEach(([key, value]) => {
-                    const camelKey = toCamelCase(key);
-                    if (keyDisplays[camelKey]) {
-                      grouped[label].push({
-                        key: camelKey,
-                        label: keyDisplays[camelKey],
-                        value: value || "Not specified"
-                      });
-                    }
-                  });
-                }
-              });
-
-              if (Object.keys(grouped).length === 0) {
-                return (
-                  <div className="text-center py-3">
-                    <p className="text-gray-500 text-sm">No style data available.</p>
-                    <Link href="/onboarding/physical-attributes/step-1">
-                      <button 
-                        className="mt-2 py-2 px-4 rounded-lg text-sm font-medium"
-                        style={{ backgroundColor: BRAND_BLUE, color: "white" }}
-                      >
-                        Complete Your Profile
-                      </button>
-                    </Link>
-                  </div>
-                );
-              }
-
-              return (
-                <div className="flex flex-row gap-4 overflow-x-auto">
-                  {["Physical Attributes", "Style Preferences"].map((section) => {
-                    const items = grouped[section];
-                    if (!items) return null;
-
-                    return (
-                      <div key={section} className="w-full md:w-1/2 mb-4">
-                        <h3 className="font-semibold mb-2 flex items-center" style={{ color: BRAND_BLUE }}>
-                          <span className="w-6 h-6 rounded-full mr-2 flex items-center justify-center text-xs text-white" 
-                                style={{ backgroundColor: BRAND_BLUE }}>
-                            {section === "Physical Attributes" ? "P" : "S"}
-                          </span>
-                          <span>{section}</span>
-                        </h3>
-                        <div className="grid grid-cols-2 gap-3 ml-8">
-                          {items.map(({ key, label, value }) => (
-                            <div key={key} className="bg-white rounded-lg p-3 shadow-sm">
-                              <p className="text-xs text-gray-500">{label}</p>
-                              <p className="font-medium mt-1" style={{ color: BRAND_BLUE }}>
-                                {Array.isArray(value) ? value.join(', ') : value}
-                              </p>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              );
-            })()}
-          </div>
-        </div>
-
-        <ToastContainer />
-        
-        {/* Bottom Navigation Bar */}
-        <div className="fixed bottom-0 left-0 right-0 w-full bg-white shadow-[0_-2px_10px_rgba(0,0,0,0.1)] flex justify-around items-center px-4 pt-2 pb-3 z-50">
-          <Link href="/" className="flex flex-col items-center text-blue-600">
-            <Home size={20} />
-            <span className="text-xs mt-1">Home</span>
-          </Link>
-          <Link href="/profile" className="flex flex-col items-center text-gray-400 hover:text-blue-900">
-            <Shirt className="w-5 h-5 mb-0.5" />
-            <span className="text-xs mt-1">Wardrobe</span>
-          </Link>
-          <Link href="/insights" className="flex flex-col items-center text-gray-400 hover:text-blue-900">
-            <User className="w-5 h-5 mb-0.5" />
-            <span className="text-xs mt-1">Profile</span>
-          </Link>
-        </div>
-
-
-        {/* Keep the original footer but hide it on mobile */}
-{/*         <footer className="hidden md:block bg-primary text-primary-foreground py-8 text-center">
-          <p>&copy; 2025 FYUSE. All rights reserved.</p>
-          <div className="mt-4 flex justify-center space-x-6 text-sm">
-            <Link href="/pricing">Pricing</Link>
-            <Link href="/about">About</Link>
-            <Link href="/contact">Contact Us</Link>
-            <Link href="/features">Features</Link>
-          </div>
-        </footer> */}
-      </div>
-    </>
-  );
+{/* Bottom Navigation Bar - Unchanged */}
+ <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white shadow-[0_-2px_10px_rgba(0,0,0,0.1)] flex justify-around items-center px-2 pt-2 pb-1 z-10">
+ <Link href="/" className="flex flex-col items-center text-gray-400 " style={{ color: BRAND_BLUE }}>
+ <Home size={20} />
+ <span className="text-xs mt-1">Home</span>
+ </Link>
+ <Link href="/profile" className="flex flex-col items-center text-gray-400 hover:text-blue-900">
+ <Shirt className="w-5 h-5 mb-0.5" />
+ <span className="text-xs mt-1">Wardrobe</span>
+ </Link>
+ <Link href="/insights" className="flex flex-col items-center text-gray-400 hover:text-blue-900">
+ <User className="w-5 h-5 mb-0.5" />
+ <span className="text-xs mt-1">Profile</span>
+ </Link>
+ </div>
+ </div>
+</>
+ )
 }
