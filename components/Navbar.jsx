@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { lazy, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import AuthActionsInNavbar from "./AuthActionInNavbar.jsx";
@@ -46,10 +46,10 @@ export default function Navbar() {
         <div className="flex w-1/3 justify-center h-full items-center">
           <Link href="/" passHref>
             <Image
-              src="/favicon.PNG"
+              src="/logo.PNG"
               alt="FYUSE Logo"
-              width={1024}
-              height={273}
+              width={128}
+              height={34}
               priority
               className="cursor-pointer rounded-xl w-32 h-auto"
             />

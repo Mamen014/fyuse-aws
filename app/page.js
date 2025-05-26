@@ -10,23 +10,25 @@ import "react-toastify/dist/ReactToastify.css";
 import Navbar from "@/components/Navbar";
 import axios from "axios";
 import PricingPlans from "@/components/PricingPlanCard";
+import ReferralModal from "@/components/ReferralModal";
 import { Home, Search, Heart, User, ChevronRight, Zap, X, Shirt } from "lucide-react";
 
-// Define brand colors
 const BRAND_BLUE = '#0B1F63';
 
 export default function HomePage() {
   const { user, isLoading, signinRedirect } = useAuth();
   const [likedRecommendations, setLikedRecommendations] = useState([]);
+  const [referralHandled, setReferralHandled] = useState(false);
   const [tryonItems, setTryonItems] = useState([]);
   const [apparelImage, setApparelImage] = useState(null);
+  const [showReferralModal, setShowReferralModal] = useState(false);
   const [showForYouModal, setShowForYouModal] = useState(false);
   const [onboardingData, setOnboardingData] = useState({});
-  const userEmail = user?.profile?.email;
   const [lastUpdated, setLastUpdated] = useState("");
   const [tryOnCount, setTryOnCount] = useState(0);
   const [showPricingModal, setShowPricingModal] = useState(false);
   
+  const userEmail = user?.profile?.email;
   const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
 
   useEffect(() => {
@@ -70,11 +72,11 @@ export default function HomePage() {
         const apparelImg = localStorage.getItem("apparel_image");
         if (apparelImg) setApparelImage(apparelImg);
 
-        if (!isLoading && user) {
-          const hasShown = sessionStorage.getItem("hasShownPricingModal");
-          if (!hasShown) {
-            setShowPricingModal(true);
-            sessionStorage.setItem("hasShownPricingModal", "true");
+        if (!isLoading && user) {     
+          const hasSeenReferral = localStorage.getItem("hasSeenReferralModal");
+          if (!hasSeenReferral) {
+            setShowReferralModal(true);
+            localStorage.setItem("hasSeenReferralModal", "true");
           }
         }        
 
@@ -120,6 +122,15 @@ export default function HomePage() {
       }
     }
   }, [isLoading, user]);
+  useEffect(() => {
+    if (referralHandled) {
+      const hasShown = sessionStorage.getItem("hasShownPricingModal");
+      if (!hasShown) {
+        setShowPricingModal(true);
+        sessionStorage.setItem("hasShownPricingModal", "true");
+      }
+    }
+  }, [referralHandled]);
 
   const getAllOnboardingData = () => {
     if (!userEmail) return {};
@@ -154,7 +165,6 @@ export default function HomePage() {
       page: "HomePage",
       ...metadata,
     };
-
     try {
       const res = await fetch(`${API_BASE_URL}/trackevent`, {
         method: "POST",
@@ -169,7 +179,12 @@ export default function HomePage() {
     } catch (err) {
       console.error("Failed to track user event:", err);
     }
-  };  
+  };
+  const handleReferralSelect = (source) => {
+    handleTrack("Referral Source Selected", { source });
+    setShowReferralModal(false);
+    setReferralHandled(true);
+  };
   // Define key display mappings
     const keyDisplays = {
       gender: "Gender",
@@ -214,7 +229,6 @@ const toCamelCase = (str) =>
       <div className="bg-white w-full min-h-screen flex flex-col relative">
         {/* Keeping the original Navbar for now */}
         <Navbar />
-
         {/* Main container with scrollable content */}
         <div className="flex-1 overflow-y-auto p-4 mt-20">
           {/* Header section with greeting and profile */}
@@ -575,24 +589,22 @@ const toCamelCase = (str) =>
             <span className="text-xs mt-1">Profile</span>
           </Link>
         </div>
-
-
-        {/* Keep the original footer but hide it on mobile */}
-{/*         <footer className="hidden md:block bg-primary text-primary-foreground py-8 text-center">
-          <p>&copy; 2025 FYUSE. All rights reserved.</p>
-          <div className="mt-4 flex justify-center space-x-6 text-sm">
-            <Link href="/pricing">Pricing</Link>
-            <Link href="/about">About</Link>
-            <Link href="/contact">Contact Us</Link>
-            <Link href="/features">Features</Link>
-          </div>
-        </footer> */}
       </div>
       {showPricingModal && (
         <PricingPlans
           isOpen={showPricingModal}
           onClose={() => setShowPricingModal(false)}
           sourcePage="HomePage"
+        />
+      )}
+      {showReferralModal && (
+        <ReferralModal
+          isOpen={showReferralModal}
+          handleTrack={handleTrack}
+          onClose={() => {
+            setShowReferralModal(false);
+            setReferralHandled(true);
+          }}
         />
       )}
     </>

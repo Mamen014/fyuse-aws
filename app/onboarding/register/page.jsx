@@ -194,7 +194,7 @@ export default function RegisterPage() {
               placeholder="DD-MM-YY"
               value={formData.birthdate}
               onChange={handleChange}
-              className="block w-full px-3 py-2 border border-gray-300 uppercase text-[#a0a0a0]  rounded-md"
+              className="block w-full px-3 py-2 border border-gray-300 uppercase text-[#0b1f63]  rounded-md"
             />
           </div>
 
