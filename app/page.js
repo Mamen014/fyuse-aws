@@ -91,10 +91,10 @@ export default function HomePage() {
           return;
         }
 
-        const step = localStorage.getItem(`onboarding_step:${userEmail}`);
-        if (step !== "appearance") {
-          window.location.href = "/onboarding/register";
-        }
+        // const step = localStorage.getItem(`onboarding_step:${userEmail}`);
+        // if (step !== "appearance") {
+        //   window.location.href = "/onboarding/register";
+        // }
 
         const apparelImg = localStorage.getItem("apparel_image");
         if (apparelImg) setApparelImage(apparelImg);
