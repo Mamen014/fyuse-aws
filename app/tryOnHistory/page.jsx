@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from 'react-oidc-context';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ChevronLeft, Star, Shirt } from 'lucide-react';
+import { ChevronLeft, Star, Shirt, Home, User} from 'lucide-react';
 import Navbar from '@/components/Navbar';
 
 export default function TryOnHistoryPage() {
@@ -12,6 +12,8 @@ export default function TryOnHistoryPage() {
   const userEmail = user?.profile?.email;
   const [tryonHistory, setTryonHistory] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const BRAND_BLUE = '#0B1F63';
 
   const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
 
@@ -128,6 +130,22 @@ export default function TryOnHistoryPage() {
             ))}
           </div>
         )}
+
+        {/* Bottom Navigation Bar - Unchanged */}
+        <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white shadow-[0_-2px_10px_rgba(0,0,0,0.1)] flex justify-around items-center px-2 pt-2 pb-1 z-10">
+        <Link href="/" className="flex flex-col items-center text-gray-400 " style={{ color: BRAND_BLUE }}>
+        <Home size={20} />
+        <span className="text-xs mt-1">Home</span>
+        </Link>
+        <Link href="/profile" className="flex flex-col items-center text-gray-400 hover:text-blue-900">
+        <Shirt className="w-5 h-5 mb-0.5" />
+        <span className="text-xs mt-1">Wardrobe</span>
+        </Link>
+        <Link href="/insights" className="flex flex-col items-center text-gray-400 hover:text-blue-900">
+        <User className="w-5 h-5 mb-0.5" />
+        <span className="text-xs mt-1">Profile</span>
+        </Link>
+        </div>
       </main>
     </div>
   );

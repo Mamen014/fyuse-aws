@@ -248,7 +248,7 @@ src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GOOG
  <div className="flex items-center justify-between mb-6">
  <div>
  <h1 className="text-3xl font-bold mb-1" style={{ color: BRAND_BLUE }}>
- Good Morning!
+ Hi there!
  </h1>
  <p className="text-gray-600">Ready to style your day?</p>
  </div>
@@ -349,7 +349,7 @@ return (
 <div key={index + 3} className="bg-white rounded-xl p-3 shadow-sm border border-gray-100">
  <div className="flex items-center mb-1">
  <IconComponent className="w-3 h-3 mr-1" style={{ color: BRAND_BLUE }} />
- <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">{item.label}</span>
+ <span className="text-xs font-medium text-gray-500 tracking-wide">{item.label}</span>
  </div>
  <p className="text-sm font-bold text-gray-900 truncate">{item.value}</p>
  </div>
@@ -388,7 +388,7 @@ style={{ backgroundImage: `linear-gradient(135deg, ${BRAND_BLUE} 0%, #1e40af 100
 <div className="px-6 mb-8">
  <div className="flex items-center justify-between mb-4">
  <h2 className="text-xl font-bold text-gray-900">Try-On History</h2>
- <Link href="/try-on-history" className="text-sm font-medium" style={{ color: BRAND_BLUE }}>
+ <Link href="/tryOnHistory" className="text-sm font-medium" style={{ color: BRAND_BLUE }}>
  View All
  </Link>
  </div>
