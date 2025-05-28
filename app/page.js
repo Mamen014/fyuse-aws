@@ -1,5 +1,3 @@
-
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -24,12 +22,24 @@ export default function HomePage() {
   const [apparelImage, setApparelImage] = useState(null);
   const [showForYouModal, setShowForYouModal] = useState(false);
   const [onboardingData, setOnboardingData] = useState({});
+  const [profileData, setProfileData] = useState({
+    gender: "Not Set",
+    bodyShape: "Not Set",
+    selectedType: "Not Set",
+    skinTone: "Not Set",
+    occupation: "Not Set",
+    country: "Not Set",
+    clothingType: "Top",
+    brands: [],
+    colors: []
+  });
   const userEmail = user?.profile?.email;
   const [lastUpdated, setLastUpdated] = useState("");
   const [tryOnCount, setTryOnCount] = useState(0);
   const [showPricingModal, setShowPricingModal] = useState(false);
   const [tipsCount, setTipsCount] = useState(0);
   const [selectedPlan, setSelectedPlan] = useState("Basic");
+  const [profileItems, setProfileItems] = useState([]);
   
   const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
 
@@ -91,10 +101,10 @@ export default function HomePage() {
           return;
         }
 
-        // const step = localStorage.getItem(`onboarding_step:${userEmail}`);
-        // if (step !== "appearance") {
-        //   window.location.href = "/onboarding/register";
-        // }
+        const step = localStorage.getItem(`onboarding_step:${userEmail}`);
+        if (step !== "appearance") {
+          window.location.href = "/onboarding/register";
+        }
 
         const apparelImg = localStorage.getItem("apparel_image");
         if (apparelImg) setApparelImage(apparelImg);
@@ -149,6 +159,59 @@ export default function HomePage() {
       }
     }
   }, [isLoading, user]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && userEmail) {
+      try {
+        // Get registration data
+        const registerData = JSON.parse(localStorage.getItem('onboarding_register') || '{}');
+        
+        // Get onboarding data
+        const data = getAllOnboardingData();
+        const flatData = Object.values(data).reduce((acc, section) => {
+          if (section && typeof section === "object") {
+            Object.entries(section).forEach(([key, value]) => {
+              acc[key] = value;
+            });
+          }
+          return acc;
+        }, {});
+
+        const gender = flatData.gender || "Not Set";
+        const bodyShape = flatData.bodyShape || "Not Set";
+        const selectedType = flatData.selectedType || "Not Set";
+        const skinTone = flatData.skinTone || "Not Set";
+        const clothingType = flatData.clothingType || "Top";
+        const occupation = registerData.occupation || flatData.occupation || "Not Set";
+        const country = registerData.country || flatData.country || "Not Set";
+
+        // Create display items
+        const items = [
+          { label: "User Preferences", items: [
+            { icon: Shirt, label: clothingType, value: selectedType },
+            { icon: Sparkles, label: "Skin", value: skinTone },
+            { icon: User, label: "Gender", value: gender },
+            { icon: Star, label: "Body", value: bodyShape },
+            { icon: TrendingUp, label: "Fashion Type", value: selectedType },
+          ]},
+          { label: "Monthly Status", items: [
+            { icon: Sparkles, label: "Fitting", value: `${tryOnCount}x` },
+            { icon: Star, label: "Styling", value: `${tipsCount}x` },
+            { icon: ChevronRight, label: "Plan", value: selectedPlan }
+          ]},
+          // { label: "User Profile", items: [
+          //   { icon: ChevronRight, label: "Location", value: country },
+          //   { icon: TrendingUp, label: "Occupation", value: occupation }
+          // ]}
+        ].filter(section => section.items.some(item => item.value !== "Not Set" && item.value !== ""));
+
+        setProfileItems(items);
+      } catch (err) {
+        console.error('Error loading profile data:', err);
+        setProfileItems([]);
+      }
+    }
+  }, [userEmail, tryOnCount, tipsCount, selectedPlan]);
 
   const getAllOnboardingData = () => {
     if (!userEmail) return {};
@@ -254,112 +317,54 @@ src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GOOG
  </h1>
  <p className="text-gray-600">Ready to style your day?</p>
  </div>
- <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center">
- <User className="w-6 h-6" style={{ color: BRAND_BLUE }} />
- </div>
  </div>
 
 {/* Profile Summary Cards */}
  <div className="mb-6">
 {(() => {
-const data = getAllOnboardingData()
-const flatData = Object.values(data).reduce((acc, section) => {
-if (section && typeof section === "object") {
- Object.entries(section).forEach(([key, value]) => {
- acc[key] = value
- })
- }
-return acc
- }, {})
-
-// Get key profile data
-const gender = flatData.gender || "Not Set"
-const bodyShape = flatData.bodyShape || "Not Set"
-const selectedType = flatData.selectedType || "Not Set"
-const skinTone = flatData.skinTone || "Not Set"
-const brands = flatData.brands || []
-const colors = flatData.colors || []
-
-// Create display items - only show set values
-const profileItems = [
- { label: "Style", value: selectedType, icon: Sparkles },
- { label: "Body", value: bodyShape, icon: User },
- { label: "Tone", value: skinTone, icon: Star },
- { label: "Try-Ons", value: `${tryOnCount} used`, icon: Shirt },
- { label: "Tips", value: `${tipsCount} generated`, icon: Zap },
- { label: "Plan", value: selectedPlan, icon: ChevronRight }
-].filter(item => item.value !== "Not Set")
-
-// Add brands/colors if available
-if (Array.isArray(brands) && brands.length > 0) {
- profileItems.push({ 
- label: "Brands", 
- value: brands.join(", "),
- icon: TrendingUp 
- })
-}
-if (Array.isArray(colors) && colors.length > 0) {
- profileItems.push({ 
- label: "Colors", 
- value: colors.join(", "),
- icon: Star 
- })
-}
-
-// If no profile data, show setup prompt
 if (profileItems.length === 0) {
-return (
-<div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-4 border border-blue-100">
- <div className="flex items-center justify-between">
- <div className="flex-1">
- <p className="font-semibold text-gray-900 mb-1">Complete Your Style Profile</p>
- <p className="text-sm text-gray-600">Tell us about your preferences</p>
- </div>
- <Link href="/onboarding/physical-attributes/step-1">
- <button className="bg-white text-blue-600 px-4 py-2 rounded-xl font-medium text-sm shadow-sm border border-blue-200">
- Setup
- </button>
- </Link>
- </div>
- </div>
-)
+  return (
+    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-4 border border-blue-100">
+      <div className="flex items-center justify-between">
+        <div className="flex-1">
+          <p className="font-semibold text-gray-900 mb-1">Complete Your Style Profile</p>
+          <p className="text-sm text-gray-600">Tell us about your preferences</p>
+        </div>
+        <Link href="/onboarding/physical-attributes/step-1">
+          <button className="bg-white text-blue-600 px-4 py-2 rounded-xl font-medium text-sm shadow-sm border border-blue-200">
+            Setup
+          </button>
+        </Link>
+      </div>
+    </div>
+  )
 }
 
-// Show profile summary in compact grid
-const itemsToShow = profileItems.slice(0, 6)
+// Show profile summary in sections
 return (
-<div>
- <div className="grid grid-cols-3 gap-2 mb-3">
-{itemsToShow.slice(0, 3).map((item, index) => {
-const IconComponent = item.icon
-return (
-<div key={index} className="bg-white rounded-xl p-3 shadow-sm border border-gray-100">
- <div className="flex items-center mb-1">
- <IconComponent className="w-3 h-3 mr-1" style={{ color: BRAND_BLUE }} />
- <span className="text-xs font-medium text-gray-500 tracking-wide">{item.label}</span>
- </div>
- <p className="text-sm font-bold text-gray-900 truncate">{item.value}</p>
- </div>
-)
- })}
- </div>
- {itemsToShow.length > 3 && (
- <div className="grid grid-cols-3 gap-2">
-{itemsToShow.slice(3, 6).map((item, index) => {
-const IconComponent = item.icon
-return (
-<div key={index + 3} className="bg-white rounded-xl p-3 shadow-sm border border-gray-100">
- <div className="flex items-center mb-1">
- <IconComponent className="w-3 h-3 mr-1" style={{ color: BRAND_BLUE }} />
- <span className="text-xs font-medium text-gray-500 tracking-wide">{item.label}</span>
- </div>
- <p className="text-sm font-bold text-gray-900 truncate">{item.value}</p>
- </div>
-)
- })}
- </div>
- )}
- </div>
+  <div className="flex flex-auto gap-2">
+    {profileItems.map((section, sectionIndex) => (
+      <div key={sectionIndex} className="bg-white rounded-2xl p-4 shadow-sm">
+        <h3 className="text-sm font-semibold mb-3 text-gray-800">{section.label}</h3>
+        <div className="flex flex-wrap flex-cols-2 gap-2">
+          {section.items.map((item, itemIndex) => {
+            const IconComponent = item.icon;
+            return (
+              <div key={itemIndex} className="bg-gray-50/50 w-auto rounded-xl p-3">
+                <div className="flex items-start gap-2">
+                  <IconComponent className="w-4 h-4 mt-0.5 text-gray-600" />
+                  <div>
+                    <span className="text-xs text-gray-500 block">{item.label}</span>
+                    <p className="text-sm font-medium text-gray-900">{item.value}</p>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    ))}
+  </div>
 )
  })()}
  </div>

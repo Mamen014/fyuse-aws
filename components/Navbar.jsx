@@ -3,90 +3,150 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { Menu, X, Home, Info, Phone, CreditCard, Sparkles, ChevronRight } from "lucide-react";
 import AuthActionsInNavbar from "./AuthActionInNavbar.jsx";
+import { useAuth } from "react-oidc-context";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const auth = useAuth();
+  const userEmail = auth?.user?.profile?.email;
+  const userName = auth?.user?.profile?.name || userEmail?.split('@')[0] || 'Guest';
 
   return (
-    <nav className="fixed top-0 left-0 w-full bg-primary text-primary-foreground z-50 shadow-md">
-      <div className="container mx-auto px-6 py-4 flex items-center justify-between h-20">
-        {/* Left Side - Hamburger on mobile, Nav links on desktop */}
-        <div className="flex items-center w-1/3 justify-start h-full">
-          {/* Mobile Hamburger - Visible on both mobile and desktop */}
-          <div className="flex items-center justify-start h-full">
-            <button
-              type="button"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="text-primary-foreground focus:outline-none h-12 w-12 flex items-center justify-center text-2xl"
-              aria-label="Toggle menu"
-            >
-              {isMenuOpen ? "✖" : "☰"}
-            </button>
-          </div>
+    <nav className="fixed top-0 left-0 w-full bg-white z-50 shadow-sm">
+      {/* Main Navbar */}
+      <div className="h-16 px-4 flex items-center justify-between max-w-7xl mx-auto">
+        {/* Left - Hamburger */}
+        <button
+          type="button"
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
+          className="w-12 h-12 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors"
+          aria-expanded={isMenuOpen}
+          aria-label="Toggle menu"
+        >
+          {isMenuOpen ? (
+            <X className="w-8 h-8 text-gray-700" />
+          ) : (
+            <Menu className="w-8 h-8 text-gray-700" />
+          )}
+        </button>
 
-          {/* Desktop Navigation Links - Now inside hamburger menu only */}
-          <div className="hidden">
-            <Link href="/" className="text-sm font-medium bg-accent text-accent-foreground px-3 py-1 rounded-md shadow">
-              Home
-            </Link>
-            <Link href="/features" className="text-sm font-medium hover:text-muted-foreground">
-              Features
-            </Link>
-            <Link href="/about" className="text-sm font-medium hover:text-muted-foreground">
-              About
-            </Link>
-            <Link href="/pricing" className="text-sm font-medium hover:text-muted-foreground">
-              Pricing
-            </Link>
-          </div>
-        </div>
-
-        {/* Centered Logo */}
-        <div className="flex w-1/3 justify-center h-full items-center">
-          <Link href="/" passHref>
+        {/* Center - Logo */}
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+          <Link href="/" className="block">
             <Image
               src="/favicon.PNG"
               alt="FYUSE Logo"
-              width={1024}
-              height={273}
+              width={96}
+              height={26}
               priority
-              className="cursor-pointer rounded-xl w-32 h-auto"
+              className="w-24 h-auto"
             />
           </Link>
         </div>
 
-        {/* Right Side - Additional Nav Links and Auth Actions */}
-        <div className="flex items-center w-1/3 justify-end h-full">
-          <div className="flex items-center h-full">
-            <AuthActionsInNavbar />
-          </div>
+        {/* Right - Auth Actions */}
+        <div className="flex items-center">
+          <AuthActionsInNavbar />
         </div>
       </div>
 
-      {/* Mobile Menu Dropdown */}
-      {isMenuOpen && (
-        <div className="bg-muted text-cta p-4 space-y-2">
-          <Link href="/" className="block py-1 text-sm font-medium">
-            Home
-          </Link>
-          <Link href="/features" className="block py-1 text-sm font-medium">
-            Features
-          </Link>
-          <Link href="/about" className="block py-1 text-sm font-medium">
-            About
-          </Link>
-          <Link href="/contact" className="block py-1 text-sm font-medium">
-            Contact
-          </Link>
-          <Link href="/pricing" className="block py-1 text-sm font-medium">
-            Pricing
-          </Link>
-
-          {/* Show Sign Out in mobile menu if signed in */}
-          <AuthActionsInNavbar isInMobileMenu />
+      {/* Mobile Menu - Slide from left */}
+      <div
+        className={`fixed inset-0 bg-black bg-opacity-50 transition-opacity duration-200 ${
+          isMenuOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+        }`}
+        onClick={() => setIsMenuOpen(false)}
+      />
+      <div
+        className={`fixed top-16 left-0 bottom-0 w-80 bg-white shadow-xl transform transition-transform duration-200 ease-in-out overflow-hidden ${
+          isMenuOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        {/* User Profile Section */}
+        <div className="px-6 py-6 bg-gray-50 border-b border-gray-200">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+              <span className="text-blue-600 font-semibold text-lg">
+                {userName.charAt(0).toUpperCase()}
+              </span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-base font-semibold text-gray-900 truncate">
+                {userName}
+              </h3>
+              {userEmail && (
+                <p className="text-sm text-gray-500 truncate">{userEmail}</p>
+              )}
+            </div>
+            <div className="px-4 text-red-600">
+            <AuthActionsInNavbar isInMobileMenu />
+          </div>
+          </div>
         </div>
-      )}
+
+        
+
+        {/* Menu Items */}
+        <div className="overflow-y-auto h-[calc(100%-160px)] py-4">
+          <div className="px-4 pb-2">
+            <p className="px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Menu
+            </p>
+          </div>
+          
+          <div className="px-4 space-y-1">
+            <Link
+              href="/"
+              className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              <Home className="w-5 h-5 text-gray-500" />
+              <span>Home</span>
+              <ChevronRight className="w-4 h-4 text-gray-400 ml-auto" />
+            </Link>
+            <Link
+              href="/features"
+              className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              <Sparkles className="w-5 h-5 text-gray-500" />
+              <span>Features</span>
+              <ChevronRight className="w-4 h-4 text-gray-400 ml-auto" />
+            </Link>
+            <Link
+              href="/about"
+              className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              <Info className="w-5 h-5 text-gray-500" />
+              <span>About</span>
+              <ChevronRight className="w-4 h-4 text-gray-400 ml-auto" />
+            </Link>
+            <Link
+              href="/pricing"
+              className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              <CreditCard className="w-5 h-5 text-gray-500" />
+              <span>Pricing</span>
+              <ChevronRight className="w-4 h-4 text-gray-400 ml-auto" />
+            </Link>
+            <Link
+              href="/contact"
+              className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              <Phone className="w-5 h-5 text-gray-500" />
+              <span>Contact</span>
+              <ChevronRight className="w-4 h-4 text-gray-400 ml-auto" />
+            </Link>
+          </div>
+          
+          
+        </div>
+      </div>
     </nav>
   );
 }
