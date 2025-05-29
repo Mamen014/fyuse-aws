@@ -68,9 +68,18 @@ export default function AIPhotoUpload() {
   const handleUpload = async () => {
     if (!fileToUpload || !userEmail) return;
 
-    const reader = new FileReader();
-    reader.onloadend = async () => {
-      const base64Data = reader.result.split(',')[1];
+    try {
+      setUploading(true);
+      
+      // Convert file to base64
+      const base64Data = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result.split(',')[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(fileToUpload);
+      });
+
+      // Prepare payload
       const payload = {
         fileName: fileToUpload.name,
         fileDataBase64: base64Data,
@@ -78,38 +87,52 @@ export default function AIPhotoUpload() {
         userEmail: userEmail,
       };
 
-      try {
-        setUploading(true);
-        // Upload image
-        const res = await fetch(`${API_BASE_URL}/upload-user-image`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-        const data = await res.json();
-        
-        if (data.imageUrl) {
-          localStorage.setItem('user_image', data.imageUrl);
-          
-          // Mock AI analysis - Replace this with actual AI analysis endpoint
-          const mockAIAnalysis = {
-            gender: 'Female',
-            skinTone: 'Medium',
-            bodyShape: 'Hourglass'
-          };
-          setAiAnalysis(mockAIAnalysis);
-          setShowAIModal(true);
-        } else {
-          toast.error('Upload failed. Please try again.');
-        }
-      } catch (err) {
-        console.error('Upload error:', err);
-        toast.error('An error occurred during upload.');
-      } finally {
-        setUploading(false);
+      // Upload image
+      const uploadResponse = await fetch(`${API_BASE_URL}/upload-user-image`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const uploadData = await uploadResponse.json();
+      
+      if (!uploadData.imageUrl) {
+        throw new Error('Upload failed: No image URL returned');
       }
-    };
-    reader.readAsDataURL(fileToUpload);
+
+      // Store the image URL
+      localStorage.setItem('user_image', uploadData.imageUrl);
+
+      // Analyze the uploaded image
+      const analyzerResponse = await fetch(`${API_BASE_URL}/userAnalyzer`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userImage: uploadData.imageUrl,
+          userEmail: userEmail
+        }),
+      });
+      const analyzerData = await analyzerResponse.json();
+      
+      // Store the analysis results
+      localStorage.setItem('gender', analyzerData.gender);
+      localStorage.setItem('skinTone', analyzerData.skinTone);
+      localStorage.setItem('bodyShape', analyzerData.bodyShape);
+
+      // Set AI analysis state
+      const aiAnalysisResults = {
+        gender: analyzerData.gender,
+        skinTone: analyzerData.skinTone,
+        bodyShape: analyzerData.bodyShape
+      };
+      setAiAnalysis(aiAnalysisResults);
+      setShowAIModal(true);
+
+    } catch (err) {
+      console.error('Upload error:', err);
+      toast.error('An error occurred during upload.');
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleAcceptAnalysis = () => {
