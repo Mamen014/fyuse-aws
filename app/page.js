@@ -29,7 +29,7 @@ export default function HomePage() {
     skinTone: "Not Set",
     occupation: "Not Set",
     country: "Not Set",
-    clothingType: "Top",
+    clothingType: "Category",
     brands: [],
     colors: []
   });
@@ -176,14 +176,14 @@ export default function HomePage() {
         const bodyShape = flatData.bodyShape || "Not Set";
         const selectedType = flatData.selectedType || "Not Set";
         const skinTone = flatData.skinTone || "Not Set";
-        const clothingType = flatData.clothingType || "Top"; // Changed to Top for consistency
+        const clothingType = flatData.clothingType || "Category"; // Changed to Top for consistency
         const occupation = registerData.occupation || flatData.occupation || "Not Set";
         const country = registerData.country || flatData.country || "Not Set";
 
         // Create display items based on the image
         const items = [
           { label: "User Preferences", items: [
-            { icon: Shirt, label: "Top", value: clothingType }, // Use Shirt icon for 'Top' and value from clothingType
+            { icon: Shirt, label: "Category", value: clothingType }, // Use Shirt icon for 'Top' and value from clothingType
             { icon: Sparkles, label: "Skin Tone", value: skinTone }, // Use Sparkles for Skin Tone
             { icon: User, label: "Gender", value: gender }, // Use User for Gender
             { icon: Star, label: "Body Shape", value: bodyShape }, // Use Star for Body Shape
@@ -198,7 +198,7 @@ export default function HomePage() {
             { icon: MapPin, label: "Location", value: country }, // MapPin for Location
             { icon: Briefcase, label: "Occupation", value: occupation } // Briefcase for Occupation
           ]}
-        ].filter(section => section.items.some(item => item.value !== "Not Set" && item.value !== "" && item.value !== "Top")); // Filter out 'Top' if it's the default and not explicitly set.
+        ].filter(section => section.items.some(item => item.value !== "Not Set" && item.value !== "" && item.value !== "Category")); // Filter out 'Top' if it's the default and not explicitly set.
 
         setProfileItems(items);
       } catch (err) {
@@ -313,6 +313,74 @@ src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GOOG
  <p className="text-gray-600">Ready to style your day?</p>
  </div>
  </div>
+     <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+      {(() => {
+        const section = profileItems.find((s) => s.label === "Monthly Status");
+        if (!section) return null;
+
+        const itemMap = {};
+        section.items.forEach((item) => {
+          itemMap[item.label] = item;
+        });
+
+        return (
+          <div className="bg-white rounded-2xl p-4 shadow-sm w-full">
+            <h3 className="text-lg font-semibold mb-3 text-gray-800">{section.label}</h3>
+            <div className="flex gap-2 w-full">
+              {[itemMap["Fitting"], itemMap["Styling"]].map((item, i) => (
+                item && (
+                  <div
+                    key={i}
+                    className="flex flex-col justify-between bg-gray-50 rounded-xl p-3 w-full"
+                  >
+                    <div className="flex items-start gap-2">
+                      <item.icon className="w-4 h-4 mt-0.5 text-gray-600" />
+                      <div className="flex flex-col">
+                        <span className="text-lg text-gray-500">{item.label}</span>
+                        <p className="text-lg font-bold text-gray-900">{item.value}</p>
+                      </div>
+                    </div>
+                  </div>
+                )
+              ))}
+
+              {itemMap["Plan"] && (
+                <div className="col-span-2 bg-gray-50 rounded-xl p-3 flex items-start gap-2 w-full">
+                  {(() => {
+                    const IconComponent = itemMap["Plan"].icon;
+                    return <IconComponent className="w-4 h-4 mt-0.5 text-gray-600" />;
+                  })()}
+                  <div>
+                    <span className="text-lg text-gray-500 block">Plan</span>
+                    <p className="text-lg font-bold text-gray-900">{itemMap["Plan"].value}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* User Profile subsection is commented out */}
+              {/*
+              <div className="col-span-2">
+                <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">User Profile</h4>
+              </div>
+              {["Location", "Occupation"].map((label, i) => {
+                const item = profileItems.find(s => s.label === "User Profile")?.items?.find(it => it.label === label);
+                return item ? (
+                  <div key={i} className="bg-gray-50 rounded-xl p-3 flex items-start gap-2">
+                    <item.icon className="w-4 h-4 mt-0.5 text-gray-600" />
+                    <div>
+                      <span className="text-xs text-gray-500 block">{item.label}</span>
+                      <p className="text-sm font-medium text-gray-900">{item.value}</p>
+                    </div>
+                  </div>
+                ) : null;
+              })}
+              */}
+            </div>
+          </div>
+        );
+      })()}
+    </div>
+
 
 {/* Profile Summary Cards */}
  <div className="mb-6">
@@ -335,146 +403,6 @@ if (profileItems.length === 0) {
   )
 }
 
-// Show profile summary in sections
-return (
-  <div className="flex w-full gap-2">
-    {profileItems
-      .filter(
-        (section) =>
-          section.label === "User Preferences" ||
-          section.label === "Monthly Status" ||
-          section.label === "User Profile"
-      )
-      .map((section, sectionIndex, arr) => {
-        const isPreferences = section.label === "User Preferences";
-        const isMonthly = section.label === "Monthly Status";
-        const isProfile = section.label === "User Profile";
-
-        // For Monthly + Profile merged section, combine data
-        if (isMonthly) {
-          const itemMap = {};
-          section.items.forEach((item) => {
-            itemMap[item.label] = item;
-          });
-
-          // Add user profile items if available
-          const profileSection = arr.find((s) => s.label === "User Profile");
-          const profileItems = profileSection?.items || [];
-          const profileMap = {};
-          profileItems.forEach((item) => {
-            profileMap[item.label] = item;
-          });
-
-          return (
-            <div key={sectionIndex} className="flex-1 bg-white rounded-2xl p-4 shadow-sm">
-              <h3 className="text-sm font-semibold mb-3 text-gray-800">{section.label}</h3>
-
-              <div className="grid grid-cols-2 gap-2">
-                {/* Row 1: Fitting + Styling */}
-                {[itemMap["Fitting"], itemMap["Styling"]].map((item, i) => (
-                  item && (
-                    <div key={`status-row1-${i}`} className="bg-gray-50 rounded-xl p-3 flex items-start gap-2">
-                      <item.icon className="w-4 h-4 mt-0.5 text-gray-600" />
-                      <div>
-                        <span className="text-xs text-gray-500 block">{item.label}</span>
-                        <p className="text-sm font-medium text-gray-900">{item.value}</p>
-                      </div>
-                    </div>
-                  )
-                ))}
-
-                {/* Row 2: Plan */}
-                {itemMap["Plan"] && (
-                  <div className="col-span-2 bg-gray-50 rounded-xl p-3 flex items-start gap-2">
-                    {(() => {
-                      const IconComponent = itemMap["Plan"].icon;
-                      return <IconComponent className="w-4 h-4 mt-0.5 text-gray-600" />;
-                    })()}
-
-                    <div>
-                      <span className="text-xs text-gray-500 block">Plan</span>
-                      <p className="text-sm font-medium text-gray-900">{itemMap["Plan"].value}</p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Row 3: User Profile – Location + Occupation */}
-                {profileItems.length > 0 && (
-                  <>
-                    <div className="col-span-3">
-                      <h4 className="text-sm font-semibold mb-3 text-gray-800">User Profile</h4>
-                    </div>
-                    {["Location", "Occupation"].map((label, i) => {
-
-                      const item = profileMap[label];
-                      return item ? (
-                        <div key={`profile-${i}`} className="bg-gray-50 rounded-xl p-3 flex items-start gap-2">
-                          <item.icon className="w-4 h-4 mt-0.5 text-gray-600" />
-                          <div>
-                            <span className="text-xs text-gray-500 block">{item.label}</span>
-                            <p className="text-sm font-medium text-gray-900">{item.value}</p>
-                          </div>
-                        </div>
-                      ) : null;
-                    })}
-                  </>
-                )}
-              </div>
-            </div>
-          );
-        }
-
-        // Handle "User Preferences"
-        if (isPreferences) {
-          const itemMap = {};
-          section.items.forEach((item) => {
-            itemMap[item.label] = item;
-          });
-
-          return (
-            <div key={sectionIndex} className="flex-1 bg-white rounded-2xl p-4 shadow-sm">
-              <h3 className="text-sm font-semibold mb-3 text-gray-800">{section.label}</h3>
-              <div className="grid grid-cols-2 gap-2">
-                {[itemMap["Top"], itemMap["Body Shape"]].map((item, i) => item && (
-                  <div key={`row1-${i}`} className="bg-gray-50 rounded-xl p-3 flex items-start gap-2">
-                    <item.icon className="w-4 h-4 mt-0.5 text-gray-600" />
-                    <div>
-                      <span className="text-xs text-gray-500 block">{item.label}</span>
-                      <p className="text-sm font-medium text-gray-900">{item.value}</p>
-                    </div>
-                  </div>
-                ))}
-                {[itemMap["Skin Tone"], itemMap["Gender"]].map((item, i) => item && (
-                  <div key={`row2-${i}`} className="bg-gray-50 rounded-xl p-3 flex items-start gap-2">
-                    <item.icon className="w-4 h-4 mt-0.5 text-gray-600" />
-                    <div>
-                      <span className="text-xs text-gray-500 block">{item.label}</span>
-                      <p className="text-sm font-medium text-gray-900">{item.value}</p>
-                    </div>
-                  </div>
-                ))}
-                {itemMap["Fashion Type"] && (
-                  <div className="col-span-2 bg-gray-50 rounded-xl p-3 flex items-start gap-2">
-                    {(() => {
-                      const IconComponent = itemMap["Fashion Type"].icon;
-                      return <IconComponent className="w-4 h-4 mt-0.5 text-gray-600" />;
-                    })()}
-                    <div>
-                      <span className="text-xs text-gray-500 block">Fashion Type</span>
-                      <p className="text-sm font-medium text-gray-900">{itemMap["Fashion Type"].value}</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          );
-        }
-
-        // Skip "User Profile" as it's merged
-        return null;
-      })}
-  </div>
-);
 
 
  })()}
@@ -571,7 +499,58 @@ className="min-w-36 h-48 rounded-3xl overflow-hidden flex-shrink-0 bg-gradient-t
 ))}
  </div>
 </div>
+  {/* User Preferences - moved here, above Wardrobe */}
+  <div className="px-6 mb-8">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+      {(() => {
+        const section = profileItems.find((s) => s.label === "User Preferences");
+        if (!section) return null;
 
+        const itemMap = {};
+        section.items.forEach((item) => {
+          itemMap[item.label] = item;
+        });
+
+        return (
+          <div className="bg-white rounded-2xl p-4 shadow-sm w-full">
+            <h3 className="text-sm font-semibold mb-3 text-gray-800">{section.label}</h3>
+            <div className="grid grid-cols-2 gap-2">
+              {[itemMap["Category"], itemMap["Body Shape"]].map((item, i) => item && (
+                <div key={i} className="bg-gray-50 rounded-xl p-3 flex items-start gap-2">
+                  <item.icon className="w-4 h-4 mt-0.5 text-gray-600" />
+                  <div>
+                    <span className="text-xs text-gray-500 block">{item.label}</span>
+                    <p className="text-sm font-medium text-gray-900">{item.value}</p>
+                  </div>
+                </div>
+              ))}
+              {[itemMap["Skin Tone"], itemMap["Gender"]].map((item, i) => item && (
+                <div key={i} className="bg-gray-50 rounded-xl p-3 flex items-start gap-2">
+                  <item.icon className="w-4 h-4 mt-0.5 text-gray-600" />
+                  <div>
+                    <span className="text-xs text-gray-500 block">{item.label}</span>
+                    <p className="text-sm font-medium text-gray-900">{item.value}</p>
+                  </div>
+                </div>
+              ))}
+              {itemMap["Fashion Type"] && (
+                <div className="col-span-2 bg-gray-50 rounded-xl p-3 flex items-start gap-2">
+                  {(() => {
+                      const IconComponent = itemMap["Fashion Type"].icon;
+                      return <IconComponent className="w-4 h-4 mt-0.5 text-gray-600" />;
+                    })()}
+                  <div>
+                    <span className="text-xs text-gray-500 block">Fashion Type</span>
+                    <p className="text-sm font-medium text-gray-900">{itemMap["Fashion Type"].value}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })()}
+    </div>
+  </div>
 {/* Wardrobe Collection */}
  <div className="px-6 pb-8">
  <div className="flex justify-between items-center mb-6">
