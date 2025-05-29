@@ -101,11 +101,6 @@ export default function HomePage() {
           return;
         }
 
-        const step = localStorage.getItem(`onboarding_step:${userEmail}`);
-        if (step !== "appearance") {
-          window.location.href = "/onboarding/register";
-        }
-
         const apparelImg = localStorage.getItem("apparel_image");
         if (apparelImg) setApparelImage(apparelImg);
 
@@ -385,10 +380,9 @@ setShowForYouModal(true)
 className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-5 rounded-3xl font-bold text-lg flex items-center justify-center shadow-lg shadow-blue-200/50 mb-2"
 style={{ backgroundImage: `linear-gradient(135deg, ${BRAND_BLUE} 0%, #1e40af 100%)` }}
 >
- <Sparkles className="w-6 h-6 mr-3" />
- Get AI Style Recommendations
+ <div className="w-6 h-6 mr-3" />
+ For You Style
  </button>
- <p className="text-center text-xs text-gray-500 mb-8">Powered by personalized AI matching</p>
  </div>
 
 {/* Try-On History Section */}
@@ -410,11 +404,11 @@ className="min-w-36 h-48 rounded-3xl overflow-hidden flex-shrink-0 bg-white shad
 >
 {item?.generatedImageUrl ? (
 <Image
-src={item.generatedImageUrl}
-alt={`Try-on #${tryonItems.length - index}`}
-width={144}
-height={192}
-className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
+  src={item.generatedImageUrl}
+  alt={`Try-on #${tryonItems.length - index}`}
+  fill
+  sizes="144px"
+  className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
 />
 ) : (
 <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
