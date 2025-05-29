@@ -6,22 +6,14 @@ import { useAuth } from 'react-oidc-context';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-export default function PhysicalAttributesStep2() {
+export default function AIPhotoUpload() {
   const router = useRouter();
-
-  useEffect(() => {
-    // Check if user has already uploaded a photo in AI flow
-    const hasUploadedPhoto = localStorage.getItem('photo_uploaded') === 'true';
-    if (hasUploadedPhoto) {
-      // Skip to next step if photo was already uploaded
-      router.push('/onboarding/physical-attributes/step-3');
-    }
-  }, [router]);
-
   const [photoPreview, setPhotoPreview] = useState('');
   const [fileToUpload, setFileToUpload] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [isValidUserImage, setIsValidUserImage] = useState(false);
+  const [showAIModal, setShowAIModal] = useState(false);
+  const [aiAnalysis, setAiAnalysis] = useState(null);
   const { user } = useAuth();
   const userEmail = user?.profile?.email;
   const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
@@ -73,7 +65,7 @@ export default function PhysicalAttributesStep2() {
     reader.readAsDataURL(file);
   };
 
-  const handleSubmit = async () => {
+  const handleUpload = async () => {
     if (!fileToUpload || !userEmail) return;
 
     const reader = new FileReader();
@@ -88,17 +80,25 @@ export default function PhysicalAttributesStep2() {
 
       try {
         setUploading(true);
+        // Upload image
         const res = await fetch(`${API_BASE_URL}/upload-user-image`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
         });
         const data = await res.json();
-        const raw_user_image = JSON.stringify(data.imageUrl)
-        const user_image = raw_user_image.substring(1, raw_user_image.length - 1)
-        if (user_image) {
-          localStorage.setItem('user_image', user_image);
-          router.push('/onboarding/physical-attributes/step-3');
+        
+        if (data.imageUrl) {
+          localStorage.setItem('user_image', data.imageUrl);
+          
+          // Mock AI analysis - Replace this with actual AI analysis endpoint
+          const mockAIAnalysis = {
+            gender: 'Female',
+            skinTone: 'Medium',
+            bodyShape: 'Hourglass'
+          };
+          setAiAnalysis(mockAIAnalysis);
+          setShowAIModal(true);
         } else {
           toast.error('Upload failed. Please try again.');
         }
@@ -112,6 +112,24 @@ export default function PhysicalAttributesStep2() {
     reader.readAsDataURL(fileToUpload);
   };
 
+  const handleAcceptAnalysis = () => {
+    // Store AI analysis results
+    localStorage.setItem('ai_analysis_results', JSON.stringify(aiAnalysis));
+    // Redirect to style preferences
+    router.push('/onboarding-ai/style-preferences');
+  };
+
+  const handleCustomize = () => {
+    // Store that the user has already uploaded a photo
+    localStorage.setItem('photo_uploaded', 'true');
+    // Store the AI analysis in case user wants to reference it
+    localStorage.setItem('ai_analysis_suggestion', JSON.stringify(aiAnalysis));
+    // Track that user switched to manual flow
+    localStorage.setItem('onboarding_version', 'ai-to-manual');
+    // Redirect to manual physical attributes flow
+    router.push('/onboarding/physical-attributes/step-1');
+  };
+
   return (
     <div className="flex flex-col justify-between min-h-screen bg-white px-5 py-8" style={{ maxWidth: "375px", margin: "0 auto" }}>
       <ToastContainer position="top-center" autoClose={3000} hideProgressBar />
@@ -119,11 +137,11 @@ export default function PhysicalAttributesStep2() {
       {/* Header */}
       <div className="relative">
         <h1 className="text-[22px] font-bold leading-tight text-[#0B1F63]">
-          Physical<br />attribute
+          Let's analyze<br />your style
         </h1>
         <div className="absolute top-0 right-0">
           <span className="inline-block px-3 py-0.5 text-xs text-white bg-[#0B1F63] rounded-full">
-            Step 3/7
+            Step 2/4
           </span>
         </div>
       </div>
@@ -149,7 +167,6 @@ export default function PhysicalAttributesStep2() {
                 className="max-w-full max-h-full object-contain"
               />
             ) : (
-              
               <div className="flex flex-col items-center justify-center h-48 text-primary-300">
                 Click to upload
                 <p className="text-[10px] text-gray-400 mt-2 text-center px-4">
@@ -159,12 +176,11 @@ export default function PhysicalAttributesStep2() {
             )}
           </label>
         </div>
-
       </div>
 
       {/* Next Button */}
       <button
-        onClick={handleSubmit}
+        onClick={handleUpload}
         disabled={!fileToUpload || uploading || !isValidUserImage}
         className={`w-full py-3.5 font-medium rounded-lg transition-opacity duration-200 ${
           fileToUpload && isValidUserImage && !uploading
@@ -173,8 +189,47 @@ export default function PhysicalAttributesStep2() {
         }`}
         style={{ borderRadius: "8px" }}
       >
-        {uploading ? 'Uploading...' : 'Next'}
+        {uploading ? 'Analyzing...' : 'Analyze Photo'}
       </button>
+
+      {/* AI Analysis Modal */}
+      {showAIModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full">
+            <h3 className="text-xl font-bold text-[#0B1F63] mb-4">AI Analysis Results</h3>
+            
+            <div className="space-y-4 mb-6">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Gender</p>
+                <p className="text-lg text-[#0B1F63]">{aiAnalysis.gender}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-600">Skin Tone</p>
+                <p className="text-lg text-[#0B1F63]">{aiAnalysis.skinTone}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-600">Body Shape</p>
+                <p className="text-lg text-[#0B1F63]">{aiAnalysis.bodyShape}</p>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <button
+                onClick={handleAcceptAnalysis}
+                className="w-full py-3 bg-[#0B1F63] text-white rounded-lg font-medium"
+              >
+                Accept Analysis
+              </button>
+              <button
+                onClick={handleCustomize}
+                className="w-full py-3 border border-[#0B1F63] text-[#0B1F63] rounded-lg font-medium"
+              >
+                Customize Manually
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
-}
+} 

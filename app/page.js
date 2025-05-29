@@ -11,6 +11,7 @@ import Navbar from "@/components/Navbar";
 import axios from "axios";
 import PricingPlans from "@/components/PricingPlanCard";
 import { Home, Search, Heart, User, ChevronRight, Zap, X, Shirt, Sparkles, Star, TrendingUp, MapPin, Briefcase } from "lucide-react"; // Import MapPin and Briefcase
+import ReferralModal from "@/components/ReferralModal";
 
 // Define brand colors
 const BRAND_BLUE = '#0B1F63';
@@ -21,6 +22,8 @@ export default function HomePage() {
   const [tryonItems, setTryonItems] = useState([]);
   const [apparelImage, setApparelImage] = useState(null);
   const [showForYouModal, setShowForYouModal] = useState(false);
+  const [showReferralModal, setShowReferralModal] = useState(false);
+  const [referralHandled, setReferralHandled] = useState(false);
   const [onboardingData, setOnboardingData] = useState({});
   const [profileData, setProfileData] = useState({
     gender: "Not Set",
@@ -91,6 +94,20 @@ export default function HomePage() {
           }
         }
 
+        // Check for referral modal first
+        const hasSeenReferral = localStorage.getItem("hasSeenReferralModal");
+        if (!hasSeenReferral) {
+          setShowReferralModal(true);
+          localStorage.setItem("hasSeenReferralModal", "true");
+        } else {
+          // Only check for pricing modal if referral has been handled
+          const hasShown = sessionStorage.getItem("hasShownPricingModal");
+          if (!hasShown) {
+            setShowPricingModal(true);
+            sessionStorage.setItem("hasShownPricingModal", "true");
+          }
+        }
+
         refreshTryOnCount();
         fetchTipsCount();
 
@@ -99,6 +116,18 @@ export default function HomePage() {
           localStorage.removeItem("postLoginRedirect");
           window.location.href = redirect;
           return;
+        }
+
+        const step = localStorage.getItem(`onboarding_step:${userEmail}`);
+        const onboardingVersion = localStorage.getItem('onboarding_version');
+        
+        // If onboarding is not complete and no version is set yet, default to AI flow
+        if (step !== "appearance") {
+          if (onboardingVersion === 'ai-to-manual') {
+            window.location.href = "/onboarding/physical-attributes/step-1";
+          } else {
+            window.location.href = "/onboarding-ai/register";
+          }
         }
 
         const apparelImg = localStorage.getItem("apparel_image");
@@ -132,7 +161,7 @@ export default function HomePage() {
               const sortedTryonItems = data.tryonItems
                 .filter(item => item.timestamp)
                 .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-              setTryonItems(sortedTryonItems.slice(0, 3));
+              setTryonItems(sortedTryonItems.slice(0, 1));
             } else {
               setTryonItems([]);
             }
@@ -154,6 +183,16 @@ export default function HomePage() {
       }
     }
   }, [isLoading, user]);
+
+  useEffect(() => {
+    if (referralHandled) {
+      const hasShown = sessionStorage.getItem("hasShownPricingModal");
+      if (!hasShown) {
+        setShowPricingModal(true);
+        sessionStorage.setItem("hasShownPricingModal", "true");
+      }
+    }
+  }, [referralHandled]);
 
   useEffect(() => {
     if (typeof window !== 'undefined' && userEmail) {
@@ -281,6 +320,12 @@ export default function HomePage() {
 
 const toCamelCase = (str) =>
   str.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
+
+  const handleReferralSelect = (source) => {
+    handleTrack("Referral Source Selected", { source });
+    setShowReferralModal(false);
+    setReferralHandled(true);
+  };
 
   return (
 <>
@@ -410,17 +455,18 @@ if (profileItems.length === 0) {
 
  <button
 onClick={() => {
-if (!user) {
- localStorage.setItem("postLoginRedirect", "/onboarding/register")
- toast.error("Please sign in to use this feature.")
-setTimeout(() => signinRedirect(), 1500)
- } else {
-const data = getAllOnboardingData()
-setOnboardingData(data)
-setShowForYouModal(true)
- }
- }}
-className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-5 rounded-3xl font-bold text-lg flex items-center justify-center shadow-lg shadow-blue-200/50 mb-2"
+  handleTrack("Click For You Style Button");
+  if (!user) {
+    localStorage.setItem("postLoginRedirect", "/onboarding-ai/register");
+    toast.error("Please sign in to use this feature.");
+    setTimeout(() => signinRedirect(), 1500);
+  } else {
+    const data = getAllOnboardingData();
+    setOnboardingData(data);
+    setShowForYouModal(true);
+  }
+}}
+className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-5 rounded-3xl font-bold text-lg flex items-center justify-center text-center shadow-lg shadow-blue-200/50 mb-2"
 style={{ backgroundImage: `linear-gradient(135deg, ${BRAND_BLUE} 0%, #1e40af 100%)` }}
 >
  <div className="w-6 h-6 mr-3" />
@@ -760,6 +806,25 @@ setShowForYouModal(false)
  </Link>
  </div>
  </div>
+
+{showReferralModal && (
+  <ReferralModal
+    isOpen={showReferralModal}
+    handleTrack={handleTrack}
+    onClose={() => {
+      setShowReferralModal(false);
+      setReferralHandled(true);
+    }}
+  />
+)}
+
+{showPricingModal && (
+  <PricingPlans
+    isOpen={showPricingModal}
+    onClose={() => setShowPricingModal(false)}
+    sourcePage="HomePage"
+  />
+)}
 </>
  )
 }
