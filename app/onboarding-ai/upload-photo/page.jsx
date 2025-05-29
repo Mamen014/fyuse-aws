@@ -138,7 +138,7 @@ export default function AIPhotoUpload() {
   const handleAcceptAnalysis = () => {
     // Store AI analysis results
     localStorage.setItem('ai_analysis_results', JSON.stringify(aiAnalysis));
-    // Redirect to style preferences
+    // Redirect to AI style preferences
     router.push('/onboarding-ai/style-preferences');
   };
 
@@ -149,7 +149,9 @@ export default function AIPhotoUpload() {
     localStorage.setItem('ai_analysis_suggestion', JSON.stringify(aiAnalysis));
     // Track that user switched to manual flow
     localStorage.setItem('onboarding_version', 'ai-to-manual');
-    // Redirect to manual physical attributes flow
+    // Add flag to skip step 2
+    localStorage.setItem('skip_photo_upload', 'true');
+    // Redirect to manual physical attributes flow, but will eventually go to AI style preferences
     router.push('/onboarding/physical-attributes/step-1');
   };
 
