@@ -111,24 +111,24 @@ export default function HomePage() {
         refreshTryOnCount();
         fetchTipsCount();
 
-        const redirect = localStorage.getItem("postLoginRedirect");
-        if (redirect && window.location.pathname !== redirect) {
-          localStorage.removeItem("postLoginRedirect");
-          window.location.href = redirect;
-          return;
-        }
+        // const redirect = localStorage.getItem("postLoginRedirect");
+        // if (redirect && window.location.pathname !== redirect) {
+        //   localStorage.removeItem("postLoginRedirect");
+        //   window.location.href = redirect;
+        //   return;
+        // }
 
-        const step = localStorage.getItem(`onboarding_step:${userEmail}`);
-        const onboardingVersion = localStorage.getItem('onboarding_version');
+        // const step = localStorage.getItem(`onboarding_step:${userEmail}`);
+        // const onboardingVersion = localStorage.getItem('onboarding_version');
         
-        // If onboarding is not complete and no version is set yet, default to AI flow
-        if (step !== "appearance") {
-          if (onboardingVersion === 'ai-to-manual') {
-            window.location.href = "/onboarding/physical-attributes/step-1";
-          } else {
-            window.location.href = "/onboarding-ai/register";
-          }
-        }
+        // // If onboarding is not complete and no version is set yet, default to AI flow
+        // if (step !== "appearance") {
+        //   if (onboardingVersion === 'ai-to-manual') {
+        //     window.location.href = "/onboarding/physical-attributes/step-1";
+        //   } else {
+        //     window.location.href = "/onboarding-ai/register";
+        //   }
+        // }
 
         const apparelImg = localStorage.getItem("apparel_image");
         if (apparelImg) setApparelImage(apparelImg);
