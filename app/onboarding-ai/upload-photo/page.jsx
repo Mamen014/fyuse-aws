@@ -113,12 +113,35 @@ export default function AIPhotoUpload() {
       });
       const analyzerData = await analyzerResponse.json();
       
-      // Store the analysis results
-      localStorage.setItem('gender', analyzerData.gender);
-      localStorage.setItem('skinTone', analyzerData.skinTone);
-      localStorage.setItem('bodyShape', analyzerData.bodyShape);
+      // Store physical attributes data in the same format as regular onboarding
+      // First call - PhysicalAttributes1 (gender and skin tone)
+      await fetch(`${API_BASE_URL}/userPref`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userEmail,
+          section: 'PhysicalAttributes1',
+          data: {
+            gender: analyzerData.gender,
+            skinTone: analyzerData.skinTone
+          }
+        })
+      });
 
-      // Set AI analysis state
+      // Second call - PhysicalAttributes3 (body shape)
+      await fetch(`${API_BASE_URL}/userPref`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userEmail,
+          section: 'PhysicalAttributes3',
+          data: {
+            bodyShape: analyzerData.bodyShape
+          }
+        })
+      });
+
+      // Set AI analysis state for the modal
       const aiAnalysisResults = {
         gender: analyzerData.gender,
         skinTone: analyzerData.skinTone,
@@ -126,6 +149,12 @@ export default function AIPhotoUpload() {
       };
       setAiAnalysis(aiAnalysisResults);
       setShowAIModal(true);
+      
+      localStorage.setItem('photo_uploaded', 'true');
+      
+      localStorage.setItem('onboarding_version', 'ai-to-manual');
+      
+      localStorage.setItem('skip_photo_upload', 'true');
 
     } catch (err) {
       console.error('Upload error:', err);
@@ -136,22 +165,42 @@ export default function AIPhotoUpload() {
   };
 
   const handleAcceptAnalysis = () => {
-    // Store AI analysis results
-    localStorage.setItem('ai_analysis_results', JSON.stringify(aiAnalysis));
+    // Store AI analysis results in standard onboarding localStorage format
+    localStorage.setItem('onboarding_physical_attributes_1', 
+      JSON.stringify({ 
+        gender: aiAnalysis.gender,
+        skinTone: aiAnalysis.skinTone 
+      })
+    );
+    localStorage.setItem('onboarding_physical_attributes_3', 
+      JSON.stringify({ 
+        bodyShape: aiAnalysis.bodyShape 
+      })
+    );
     // Redirect to AI style preferences
     router.push('/onboarding-ai/style-preferences');
   };
 
   const handleCustomize = () => {
+    // Store AI analysis in standard onboarding localStorage format
+    localStorage.setItem('onboarding_physical_attributes_1', 
+      JSON.stringify({ 
+        gender: aiAnalysis.gender,
+        skinTone: aiAnalysis.skinTone 
+      })
+    );
+    localStorage.setItem('onboarding_physical_attributes_3', 
+      JSON.stringify({ 
+        bodyShape: aiAnalysis.bodyShape 
+      })
+    );
     // Store that the user has already uploaded a photo
     localStorage.setItem('photo_uploaded', 'true');
-    // Store the AI analysis in case user wants to reference it
-    localStorage.setItem('ai_analysis_suggestion', JSON.stringify(aiAnalysis));
     // Track that user switched to manual flow
     localStorage.setItem('onboarding_version', 'ai-to-manual');
     // Add flag to skip step 2
     localStorage.setItem('skip_photo_upload', 'true');
-    // Redirect to manual physical attributes flow, but will eventually go to AI style preferences
+    // Redirect to manual physical attributes flow
     router.push('/onboarding/physical-attributes/step-1');
   };
 

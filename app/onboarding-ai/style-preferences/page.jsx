@@ -21,29 +21,42 @@ export default function CombinedStylePreferences() {
   };
 
   const handleSubmit = async () => {
-    const aiAnalysis = JSON.parse(localStorage.getItem('ai_analysis_results') || '{}');
-    
-    const data = {
-      ...aiAnalysis,
-      clothingType,
-      fashionType,
-    };
-
     try {
-      const res = await fetch(`${API_BASE_URL}/userPref`, {
+      // First call - StylePref1 (fashion type)
+      await fetch(`${API_BASE_URL}/userPref`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           userEmail,
-          section: 'aiStylePreferences',
-          data,
+          section: 'StylePref1',
+          data: {
+            selectedType: fashionType
+          }
         }),
       });
 
-      const result = await res.json();
-      console.log('Preferences saved:', result);
+      // Second call - StylePref2 (clothing type)
+      await fetch(`${API_BASE_URL}/userPref`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userEmail,
+          section: 'StylePref2',
+          data: {
+            clothingType
+          }
+        }),
+      });
+
+      // Store in localStorage to match regular onboarding
+      localStorage.setItem('onboarding_style_preferences_1', 
+        JSON.stringify({ selectedType: fashionType }));
+      localStorage.setItem('onboarding_style_preferences_2', 
+        JSON.stringify({ clothingType }));
       
       // Redirect to recommended products
       router.push('/onboarding/recommended-product');

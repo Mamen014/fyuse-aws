@@ -112,7 +112,7 @@ export default function RegisterAI() {
         },
         body: JSON.stringify({
           userEmail,
-          section: 'registration',
+          section: 'userProfile',
           data: updatedFormData,
         }),
       });
