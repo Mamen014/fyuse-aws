@@ -37,7 +37,7 @@ export default function CombinedStylePreferences() {
         }),
       });
 
-      // Second call - StylePref2 (clothing type)
+      // Second call - StylePref2 (brands and colors)
       await fetch(`${API_BASE_URL}/userPref`, {
         method: 'POST',
         headers: {
@@ -46,6 +46,22 @@ export default function CombinedStylePreferences() {
         body: JSON.stringify({
           userEmail,
           section: 'StylePref2',
+          data: {
+            brands: [],  // Default empty since AI flow doesn't collect these
+            colors: []   // Default empty since AI flow doesn't collect these
+          }
+        }),
+      });
+
+      // Third call - StylePref3 (clothing type)
+      await fetch(`${API_BASE_URL}/userPref`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userEmail,
+          section: 'StylePref3',
           data: {
             clothingType
           }
@@ -56,6 +72,8 @@ export default function CombinedStylePreferences() {
       localStorage.setItem('onboarding_style_preferences_1', 
         JSON.stringify({ selectedType: fashionType }));
       localStorage.setItem('onboarding_style_preferences_2', 
+        JSON.stringify({ brands: [], colors: [] }));
+      localStorage.setItem('onboarding_style_preferences_3', 
         JSON.stringify({ clothingType }));
       
       // Redirect to recommended products

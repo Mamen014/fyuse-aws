@@ -114,13 +114,13 @@ export default function AIPhotoUpload() {
       const analyzerData = await analyzerResponse.json();
       
       // Store physical attributes data in the same format as regular onboarding
-      // First call - PhysicalAttributes1 (gender and skin tone)
+      // First call - physicalAppearance1 (gender and skin tone)
       await fetch(`${API_BASE_URL}/userPref`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userEmail,
-          section: 'PhysicalAttributes1',
+          section: 'physicalAppearance1',
           data: {
             gender: analyzerData.gender,
             skinTone: analyzerData.skinTone
@@ -128,13 +128,13 @@ export default function AIPhotoUpload() {
         })
       });
 
-      // Second call - PhysicalAttributes3 (body shape)
+      // Second call - physicalAppearance2 (body shape)
       await fetch(`${API_BASE_URL}/userPref`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userEmail,
-          section: 'PhysicalAttributes3',
+          section: 'physicalAppearance2',
           data: {
             bodyShape: analyzerData.bodyShape
           }
@@ -172,7 +172,7 @@ export default function AIPhotoUpload() {
         skinTone: aiAnalysis.skinTone 
       })
     );
-    localStorage.setItem('onboarding_physical_attributes_3', 
+    localStorage.setItem('onboarding_physical_attributes_2', 
       JSON.stringify({ 
         bodyShape: aiAnalysis.bodyShape 
       })
@@ -189,7 +189,7 @@ export default function AIPhotoUpload() {
         skinTone: aiAnalysis.skinTone 
       })
     );
-    localStorage.setItem('onboarding_physical_attributes_3', 
+    localStorage.setItem('onboarding_physical_attributes_2', 
       JSON.stringify({ 
         bodyShape: aiAnalysis.bodyShape 
       })
