@@ -38,13 +38,8 @@ export default function Navbar() {
             <Image
               src="/logo.PNG"
               alt="FYUSE Logo"
-<<<<<<< HEAD
-              width={128}
-              height={34}
-=======
               width={96}
               height={26}
->>>>>>> testing
               priority
               className="w-24 h-auto"
             />

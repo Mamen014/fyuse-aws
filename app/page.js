@@ -10,13 +10,8 @@ import "react-toastify/dist/ReactToastify.css";
 import Navbar from "@/components/Navbar";
 import axios from "axios";
 import PricingPlans from "@/components/PricingPlanCard";
-<<<<<<< HEAD
-import ReferralModal from "@/components/ReferralModal";
-import { Home, Search, Heart, User, ChevronRight, Zap, X, Shirt } from "lucide-react";
-=======
 import { Home, Search, Heart, User, ChevronRight, Zap, X, Shirt, Sparkles, Star, TrendingUp, MapPin, Briefcase } from "lucide-react"; // Import MapPin and Briefcase
 import ReferralModal from "@/components/ReferralModal";
->>>>>>> testing
 
 const BRAND_BLUE = '#0B1F63';
 
@@ -25,14 +20,8 @@ export default function HomePage() {
   const [likedRecommendations, setLikedRecommendations] = useState([]);
   const [referralHandled, setReferralHandled] = useState(false);
   const [tryonItems, setTryonItems] = useState([]);
-<<<<<<< HEAD
-  const [apparelImage, setApparelImage] = useState(null);
-  const [showReferralModal, setShowReferralModal] = useState(false);
-=======
->>>>>>> testing
   const [showForYouModal, setShowForYouModal] = useState(false);
   const [showReferralModal, setShowReferralModal] = useState(false);
-  const [referralHandled, setReferralHandled] = useState(false);
   const [onboardingData, setOnboardingData] = useState({});
   const [lastUpdated, setLastUpdated] = useState("");
   const [tryOnCount, setTryOnCount] = useState(0);
@@ -49,52 +38,6 @@ useEffect(() => {
   setLastUpdated(new Date().toLocaleDateString());
 }, []);
 
-<<<<<<< HEAD
-  useEffect(() => {
-    if (!isLoading) {
-      if (!user) {
-        localStorage.setItem("postLoginRedirect", "/");
-        signinRedirect();
-      } else {
-        const userEmail = user.profile.email;
-
-        const refreshTryOnCount = async () => {
-          try {
-            const res = await axios.get(`${API_BASE_URL}/getrack?userEmail=${userEmail}`);
-            const updatedCount = res.data.tryOnCount || 0;
-            setTryOnCount(updatedCount);
-            sessionStorage.setItem('tryOnCount', updatedCount);
-            setLastUpdated(new Date().toLocaleDateString());
-          } catch (err) {
-            console.error('Error updating try-on count:', err);
-          }
-        };
-
-        refreshTryOnCount();
-
-        const redirect = localStorage.getItem("postLoginRedirect");
-        if (redirect && window.location.pathname !== redirect) {
-          localStorage.removeItem("postLoginRedirect");
-          window.location.href = redirect;
-          return;
-        }
-
-        const step = localStorage.getItem(`onboarding_step:${userEmail}`);
-        if (step !== "appearance") {
-          window.location.href = "/onboarding/register";
-        }
-
-        const apparelImg = localStorage.getItem("apparel_image");
-        if (apparelImg) setApparelImage(apparelImg);
-
-        if (!isLoading && user) {     
-          const hasSeenReferral = localStorage.getItem("hasSeenReferralModal");
-          if (!hasSeenReferral) {
-            setShowReferralModal(true);
-            localStorage.setItem("hasSeenReferralModal", "true");
-          }
-        }        
-=======
 useEffect(() => {
   if (!isLoading && user) {
     const userEmail = user.profile.email;
@@ -130,7 +73,6 @@ useEffect(() => {
     }
   }
   
->>>>>>> testing
 
   if (!isLoading && !user) {
     localStorage.setItem("postLoginRedirect", "/");
@@ -184,18 +126,6 @@ useEffect(() => {
     if (step !== "appearance") {
       window.location.href = "/onboarding-ai/register";
     }
-<<<<<<< HEAD
-  }, [isLoading, user]);
-  useEffect(() => {
-    if (referralHandled) {
-      const hasShown = sessionStorage.getItem("hasShownPricingModal");
-      if (!hasShown) {
-        setShowPricingModal(true);
-        sessionStorage.setItem("hasShownPricingModal", "true");
-      }
-    }
-  }, [referralHandled]);
-=======
   }
 }, [referralHandled, user]);
 useEffect(() => {
@@ -283,7 +213,6 @@ useEffect(() => {
     }
   }
 }, [userEmail, tryOnCount, tipsCount, selectedPlan]);
->>>>>>> testing
 
   const getAllOnboardingData = () => {
     if (!userEmail) return {};
@@ -333,11 +262,7 @@ useEffect(() => {
       console.error("Failed to track user event:", err);
     }
   };
-  const handleReferralSelect = (source) => {
-    handleTrack("Referral Source Selected", { source });
-    setShowReferralModal(false);
-    setReferralHandled(true);
-  };
+
   // Define key display mappings
     const keyDisplays = {
       gender: "Gender",
@@ -387,24 +312,6 @@ src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GOOG
  <div className="bg-gradient-to-b from-gray-50 to-white w-full min-h-screen flex flex-col">
  <Navbar />
 
-<<<<<<< HEAD
-      <div className="bg-white w-full min-h-screen flex flex-col relative">
-        {/* Keeping the original Navbar for now */}
-        <Navbar />
-        {/* Main container with scrollable content */}
-        <div className="flex-1 overflow-y-auto p-4 mt-20">
-          {/* Header section with greeting and profile */}
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <h1 className="text-2xl font-semibold" style={{ color: BRAND_BLUE }}>
-                👋 {user ? `Hi, ${user.profile?.given_name || 'there'}!` : 'Hi, there!'}
-              </h1>
-              <p className="text-gray-600 text-sm">
-                {user?.profile ? 'Welcome to your personal styling assistant' : 'Sign in to get started'}
-              </p>
-            </div>         
-          </div>
-=======
 {/* Main Content */}
  <div className="flex-1 overflow-y-auto pb-20 pt-16">
  
@@ -427,7 +334,6 @@ src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GOOG
         section.items.forEach((item) => {
           itemMap[item.label] = item;
         });
->>>>>>> testing
 
         return (
           <div className="bg-white rounded-2xl p-4 shadow-sm w-full">
@@ -499,46 +405,6 @@ if (profileItems.length === 0) {
           <p className="font-semibold text-gray-900 mb-1">Complete Your Style Profile</p>
           <p className="text-sm text-gray-600">Tell us about your preferences</p>
         </div>
-<<<<<<< HEAD
-
-        <ToastContainer />
-        
-        {/* Bottom Navigation Bar */}
-        <div className="fixed bottom-0 left-0 right-0 w-full bg-white shadow-[0_-2px_10px_rgba(0,0,0,0.1)] flex justify-around items-center px-4 pt-2 pb-3 z-50">
-          <Link href="/" className="flex flex-col items-center text-blue-600">
-            <Home size={20} />
-            <span className="text-xs mt-1">Home</span>
-          </Link>
-          <Link href="/profile" className="flex flex-col items-center text-gray-400 hover:text-blue-900">
-            <Shirt className="w-5 h-5 mb-0.5" />
-            <span className="text-xs mt-1">Wardrobe</span>
-          </Link>
-          <Link href="/insights" className="flex flex-col items-center text-gray-400 hover:text-blue-900">
-            <User className="w-5 h-5 mb-0.5" />
-            <span className="text-xs mt-1">Profile</span>
-          </Link>
-        </div>
-      </div>
-      {showPricingModal && (
-        <PricingPlans
-          isOpen={showPricingModal}
-          onClose={() => setShowPricingModal(false)}
-          sourcePage="HomePage"
-        />
-      )}
-      {showReferralModal && (
-        <ReferralModal
-          isOpen={showReferralModal}
-          handleTrack={handleTrack}
-          onClose={() => {
-            setShowReferralModal(false);
-            setReferralHandled(true);
-          }}
-        />
-      )}
-    </>
-  );
-=======
         <Link href="/onboarding/physical-attributes/step-1">
           <button className="bg-white text-blue-600 px-4 py-2 rounded-xl font-medium text-sm shadow-sm border border-blue-200">
             Setup
@@ -935,5 +801,4 @@ setShowForYouModal(false)
 )}
 </>
  )
->>>>>>> testing
 }
