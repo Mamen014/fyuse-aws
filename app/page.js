@@ -440,6 +440,15 @@ style={{ backgroundImage: `linear-gradient(135deg, ${BRAND_BLUE} 0%, #1e40af 100
  <div className="w-6 h-6 mr-3" />
  For You Style
  </button>
+<button
+  onClick={() => (window.location.href = "/tryon")}
+  className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-5 rounded-3xl font-bold text-lg flex items-center justify-center text-center shadow-lg shadow-blue-200/50 mb-2"
+  style={{ backgroundImage: `linear-gradient(135deg, ${BRAND_BLUE} 0%, #1e40af 100%)` }}
+>
+  <div className="w-6 h-6 mr-3" />
+  Fitting
+</button>
+
  </div>
 
 {/* Try-On History Section */}

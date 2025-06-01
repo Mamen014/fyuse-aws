@@ -12,7 +12,7 @@ export default function VirtualTryOnResultPage() {
   const { user } = useAuth();
   const userEmail = user?.profile?.email;
   const router = useRouter();
-
+  const [isDownloading, setIsDownloading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -117,21 +117,69 @@ export default function VirtualTryOnResultPage() {
         
         {/* Buttons Container */}
         <div className="space-y-4 px-4 md:px-12">
+          {/* Download Button (matching style/spacing) */}
+          {resultImageUrl && (
+          <button
+            onClick={async () => {
+              setIsDownloading(true);
+              try {
+                const res = await fetch(resultImageUrl, { mode: 'cors' });
+                const blob = await res.blob();
+                const blobUrl = URL.createObjectURL(blob);
+
+                const link = document.createElement('a');
+                link.href = blobUrl;
+                link.download = 'virtual-tryon-result.jpg';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(blobUrl);
+              } catch (err) {
+                console.error('Download failed:', err);
+                toast.error('Failed to download image. Try again later.');
+              } finally {
+                setIsDownloading(false);
+              }
+            }}
+            disabled={isDownloading}
+            className={`w-full py-4 px-4 font-medium text-white rounded-full transition-all duration-300 text-center shadow-lg transform ${
+              isDownloading ? 'bg-green-500/60 cursor-wait' : 'bg-green-600 hover:bg-green-700 hover:shadow-xl hover:-translate-y-0.5'
+            }`}
+          >
+            {isDownloading ? (
+              <span className="flex items-center justify-center">
+                <svg
+                  className="animate-spin mr-2 h-5 w-5 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                  ></path>
+                </svg>
+                Downloading...
+              </span>
+            ) : (
+              'Download Your Look'
+            )}
+          </button>
+          )}         
+          {/* Try Another Style */}
           <button
             onClick={() => router.push('/onboarding/recommended-product')}
-            className="w-full py-4 px-4 bg-white border border-[#0B1F63]/30 text-[#0B1F63] font-medium rounded-full hover:bg-[#0B1F63]/5 transition-all duration-300 flex items-center justify-center shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+            className="w-full py-4 px-4 bg-foreground border border-primary text-background font-medium rounded-full"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16" className="mr-2">
-              <path d="M14 2a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1h12zM2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2z"/>
-              <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
-            </svg>
             Try Another Style
           </button>
-
+          {/* Continue to Wardrobe */}
           <button
             onClick={handleHomeClick}
             disabled={isLoading}
-            className="w-full py-4 px-4 font-medium text-white bg-[#0B1F63] rounded-full hover:bg-[#0A1A50] transition-all duration-300 flex items-center justify-center shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+            className="w-full py-4 px-4 font-medium text[20px] text-primary bg-white border border-primary rounded-full"
           >
             {isLoading ? (
               <span className="flex items-center">
@@ -142,11 +190,11 @@ export default function VirtualTryOnResultPage() {
                 Loading...
               </span>
             ) : (
-              "Continue to My Wardrobe"
+              "Back to Home"
             )}
-          </button>
+          </button>           
         </div>
-        
+
         {/* Additional Info */}
         <p className="text-center text-gray-500 text-sm mt-8">
           You can access this style anytime in your personal wardrobe
