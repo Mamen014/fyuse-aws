@@ -27,7 +27,7 @@ export default function PhysicalAttributesStep3() {
       'onboarding_physical_attributes_3',
       JSON.stringify({ bodyShape })
     );
-    window.location.href = '/onboarding/style-preferences/step-1';
+    window.location.href = '/onboarding-ai/style-preferences';
   };
 
   const maleBodyTypeImages = {

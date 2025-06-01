@@ -51,7 +51,8 @@ export default function PhysicalAttributesStep1() {
   };
 
   const handleSubmit = () => {
-    router.push('/onboarding/physical-attributes/step-2');
+    const skipPhotoUpload = localStorage.getItem('skip_photo_upload') === 'true';
+    router.push(skipPhotoUpload ? '/onboarding/physical-attributes/step-3' : '/onboarding/physical-attributes/step-2');
   };
 
   const data = {
@@ -177,7 +178,9 @@ export default function PhysicalAttributesStep1() {
 
           {/* Next Button */}
           <button
-            onClick={physic1}
+            onClick={async () => {
+              await physic1();
+            }}
             disabled={!gender || !skinTone}
             className="w-full bg-[#0B1F63] text-white py-3 px-4 rounded-lg hover:bg-[#0a1b56] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0B1F63] disabled:opacity-50 disabled:cursor-not-allowed mt-4"
           >

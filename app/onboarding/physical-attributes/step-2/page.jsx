@@ -8,6 +8,16 @@ import 'react-toastify/dist/ReactToastify.css';
 
 export default function PhysicalAttributesStep2() {
   const router = useRouter();
+
+  useEffect(() => {
+    // Check if user has already uploaded a photo in AI flow
+    const hasUploadedPhoto = localStorage.getItem('photo_uploaded') === 'true';
+    if (hasUploadedPhoto) {
+      // Skip to next step if photo was already uploaded
+      router.push('/onboarding/physical-attributes/step-3');
+    }
+  }, [router]);
+
   const [photoPreview, setPhotoPreview] = useState('');
   const [fileToUpload, setFileToUpload] = useState(null);
   const [uploading, setUploading] = useState(false);
