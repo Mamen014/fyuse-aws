@@ -4,11 +4,13 @@ import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { ToastContainer, toast } from 'react-toastify';
+import Image from 'next/image';
 import 'react-toastify/dist/ReactToastify.css';
 
 export default function AIPhotoUpload() {
   const router = useRouter();
   const [photoPreview, setPhotoPreview] = useState('');
+  const [isUserPhotoGuidanceOpen, setIsUserPhotoGuidanceOpen] = useState(false);
   const [fileToUpload, setFileToUpload] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [isValidUserImage, setIsValidUserImage] = useState(false);
@@ -211,7 +213,7 @@ export default function AIPhotoUpload() {
       {/* Header */}
       <div className="relative">
         <h1 className="text-[22px] font-bold leading-tight text-[#0B1F63]">
-          Let's analyze<br />your style
+          Please Upload<br />Your Photo
         </h1>
         <div className="absolute top-0 right-0">
           <span className="inline-block px-3 py-0.5 text-xs text-white bg-[#0B1F63] rounded-full">
@@ -250,6 +252,14 @@ export default function AIPhotoUpload() {
             )}
           </label>
         </div>
+          <p>
+            <button
+              onClick={() => setIsUserPhotoGuidanceOpen(true)}
+              className="underline text-[16px] text-blue-400 cursor-pointer"
+            >
+              Upload Photo Guidance
+            </button>
+          </p>
       </div>
 
       {/* Next Button */}
@@ -265,6 +275,55 @@ export default function AIPhotoUpload() {
       >
         {uploading ? 'Analyzing...' : 'Analyze Photo'}
       </button>
+
+      {isUserPhotoGuidanceOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 px-4">
+          <div className="bg-white rounded-2xl p-6 w-[90%] max-w-3xl shadow-xl relative overflow-y-auto">
+            
+            {/* Close Button */}
+            <button
+              onClick={() => setIsUserPhotoGuidanceOpen(false)}
+              className="absolute top-4 right-4 w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center"
+            >
+              <div className="w-6 h-6 text-gray-600" />
+              X
+            </button>
+
+            {/* Title */}
+            <h2 className="text-xl font-bold text-center text-gray-800 mb-6">
+              Example Photos Guide
+            </h2>
+
+            {/* Side-by-Side Images, scrollable if too wide */}
+            <div className="flex flex-row gap-6 overflow-x-auto">
+              {/* Good Example */}
+              <div className="flex flex-col items-center min-w-[45%]">
+                <Image
+                  src="/examples/user/good.png"
+                  alt="Good example"
+                  width={200}
+                  height={300}
+                  className="rounded-xl object-cover max-w-full h-auto"
+                />
+                <p className="text-green-600 font-medium mt-2">Good Example</p>
+              </div>
+
+              {/* Bad Example */}
+              <div className="flex flex-col items-center min-w-[45%]">
+                <Image
+                  src="/examples/user/bad.png"
+                  alt="Bad example"
+                  width={200}
+                  height={300}
+                  className="rounded-xl object-cover max-w-full h-auto"
+                />
+                <p className="text-red-600 font-medium mt-2">Bad Example</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
 
       {/* AI Analysis Modal */}
       {showAIModal && (
