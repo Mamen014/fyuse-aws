@@ -20,127 +20,65 @@ export default function HomePage() {
   const { user, isLoading, signinRedirect } = useAuth();
   const [likedRecommendations, setLikedRecommendations] = useState([]);
   const [tryonItems, setTryonItems] = useState([]);
-  const [apparelImage, setApparelImage] = useState(null);
   const [showForYouModal, setShowForYouModal] = useState(false);
   const [showReferralModal, setShowReferralModal] = useState(false);
   const [referralHandled, setReferralHandled] = useState(false);
   const [onboardingData, setOnboardingData] = useState({});
-  const [profileData, setProfileData] = useState({
-    gender: "Not Set",
-    bodyShape: "Not Set",
-    selectedType: "Not Set",
-    skinTone: "Not Set",
-    occupation: "Not Set",
-    country: "Not Set",
-    clothingType: "Category",
-    brands: [],
-    colors: []
-  });
   const userEmail = user?.profile?.email;
   const [lastUpdated, setLastUpdated] = useState("");
   const [tryOnCount, setTryOnCount] = useState(0);
   const [showPricingModal, setShowPricingModal] = useState(false);
+  const [pricingHandled, setPricingHandled] = useState(false);
   const [tipsCount, setTipsCount] = useState(0);
   const [selectedPlan, setSelectedPlan] = useState("Basic");
   const [profileItems, setProfileItems] = useState([]);
   
   const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
 
-  useEffect(() => {
-    setLastUpdated(new Date().toLocaleDateString());
-  }, []);
+useEffect(() => {
+  setLastUpdated(new Date().toLocaleDateString());
+}, []);
 
-  useEffect(() => {
-    if (!isLoading) {
-      if (!user) {
-        localStorage.setItem("postLoginRedirect", "/");
-        signinRedirect();
-      } else {
-        const userEmail = user.profile.email;
+useEffect(() => {
+  if (!isLoading && user) {
+    const userEmail = user.profile.email;
+    const refreshTryOnCount = async () => {
+      try {
+        const res = await axios.get(`${API_BASE_URL}/getrack?userEmail=${userEmail}`);
+        const updatedCount = res.data.tryOnCount || 0;
+        setTryOnCount(updatedCount);
+        sessionStorage.setItem('tryOnCount', updatedCount);
+        setLastUpdated(new Date().toLocaleDateString());
+      } catch (err) {
+        console.error('Error updating try-on count:', err);
+      }
+    };
+    const fetchTipsCount = async () => {
+      try {
+        const res = await axios.get(`${API_BASE_URL}/getTipsTrack?userEmail=${userEmail}`);
+        const count = res.data.tipsCount || 0;
+        setTipsCount(count);
+        sessionStorage.setItem('tipsCount', count);
+      } catch (err) {
+        console.error('Error fetching tips count:', err);
+      }
+    };
+    refreshTryOnCount();
+    fetchTipsCount();
+    const hasSeenReferral = localStorage.getItem("hasSeenReferralModal") === "true";
+    if (!hasSeenReferral) {
+      setShowReferralModal(true);
+      localStorage.setItem("hasSeenReferralModal", "true");
+    } else {
+      setReferralHandled(true); // proceed if already seen
+    }
+  }
+  
 
-        const refreshTryOnCount = async () => {
-          try {
-            const res = await axios.get(`${API_BASE_URL}/getrack?userEmail=${userEmail}`);
-            const updatedCount = res.data.tryOnCount || 0;
-            setTryOnCount(updatedCount);
-            sessionStorage.setItem('tryOnCount', updatedCount);
-            setLastUpdated(new Date().toLocaleDateString());
-          } catch (err) {
-            console.error('Error updating try-on count:', err);
-          }
-        };
-
-        const fetchTipsCount = async () => {
-          try {
-            const res = await axios.get(`${API_BASE_URL}/getTipsTrack?userEmail=${userEmail}`);
-            const count = res.data.tipsCount || 0;
-            setTipsCount(count);
-            sessionStorage.setItem('tipsCount', count);
-          } catch (err) {
-            console.error('Error fetching tips count:', err);
-          }
-        };
-
-        // Get selected plan from localStorage
-        const loggedInUser = localStorage.getItem("loggedInUser");
-        if (loggedInUser) {
-          try {
-            const userData = JSON.parse(loggedInUser);
-            if (userData.selectedPlan) {
-              setSelectedPlan(userData.selectedPlan);
-            }
-          } catch (err) {
-            console.error('Error parsing user data:', err);
-          }
-        }
-
-        // Check for referral modal first
-        const hasSeenReferral = localStorage.getItem("hasSeenReferralModal");
-        if (!hasSeenReferral) {
-          setShowReferralModal(true);
-          localStorage.setItem("hasSeenReferralModal", "true");
-        } else {
-          // Only check for pricing modal if referral has been handled
-          const hasShown = sessionStorage.getItem("hasShownPricingModal");
-          if (!hasShown) {
-            setShowPricingModal(true);
-            sessionStorage.setItem("hasShownPricingModal", "true");
-          }
-        }
-
-        refreshTryOnCount();
-        fetchTipsCount();
-
-        // const redirect = localStorage.getItem("postLoginRedirect");
-        // if (redirect && window.location.pathname !== redirect) {
-        //   localStorage.removeItem("postLoginRedirect");
-        //   window.location.href = redirect;
-        //   return;
-        // }
-
-        // const step = localStorage.getItem(`onboarding_step:${userEmail}`);
-        // const onboardingVersion = localStorage.getItem('onboarding_version');
-        
-        // // If onboarding is not complete and no version is set yet, default to AI flow
-        // if (step !== "appearance") {
-        //   if (onboardingVersion === 'ai-to-manual') {
-        //     window.location.href = "/onboarding/physical-attributes/step-1";
-        //   } else {
-        //     window.location.href = "/onboarding-ai/register";
-        //   }
-        // }
-
-        const apparelImg = localStorage.getItem("apparel_image");
-        if (apparelImg) setApparelImage(apparelImg);
-
-        if (!isLoading && user) {
-          const hasShown = sessionStorage.getItem("hasShownPricingModal");
-          if (!hasShown) {
-            setShowPricingModal(true);
-            sessionStorage.setItem("hasShownPricingModal", "true");
-          }
-        }        
-
+  if (!isLoading && !user) {
+    localStorage.setItem("postLoginRedirect", "/");
+    signinRedirect();
+  }
         const fetchHistory = async () => {
           try {
             const endpoint = `${API_BASE_URL}/historyHandler`;
@@ -179,73 +117,103 @@ export default function HomePage() {
           }
         };
 
-        fetchHistory();
-      }
+        fetchHistory();  
+}, [isLoading, user]);
+
+useEffect(() => {
+  if (user && referralHandled) {
+    const userEmail = user.profile.email;
+    const step = localStorage.getItem(`onboarding_step:${userEmail}`);
+    if (step !== "appearance") {
+      window.location.href = "/onboarding-ai/register";
     }
-  }, [isLoading, user]);
+  }
+}, [referralHandled, user]);
+useEffect(() => {
+  const hasShownPricing = sessionStorage.getItem("hasShownPricingModal") === "true";
+  const onboardingStep = localStorage.getItem(`onboarding_step:${user?.profile?.email}`);
+  const onboardingCompleted = onboardingStep === "appearance";
 
-  useEffect(() => {
-    if (referralHandled) {
-      const hasShown = sessionStorage.getItem("hasShownPricingModal");
-      if (!hasShown) {
-        setShowPricingModal(true);
-        sessionStorage.setItem("hasShownPricingModal", "true");
-      }
+  if (
+    user &&
+    referralHandled &&
+    onboardingCompleted &&
+    !hasShownPricing &&
+    !pricingHandled
+  ) {
+    setShowPricingModal(true);
+  }
+}, [referralHandled, pricingHandled, user]);
+
+const handleReferralClose = () => {
+  setShowReferralModal(false);
+  setReferralHandled(true);
+};
+
+const handlePricingClose = () => {
+  setShowPricingModal(false);
+  sessionStorage.setItem("hasShownPricingModal", "true");
+  setPricingHandled(true);
+};
+
+// Load profile display data
+useEffect(() => {
+  if (typeof window !== 'undefined' && userEmail) {
+    try {
+      const registerData = JSON.parse(localStorage.getItem('onboarding_register') || '{}');
+      const data = getAllOnboardingData();
+      const flatData = Object.values(data).reduce((acc, section) => {
+        if (section && typeof section === "object") {
+          Object.entries(section).forEach(([key, value]) => {
+            acc[key] = value;
+          });
+        }
+        return acc;
+      }, {});
+
+      const gender = flatData.gender || "Not Set";
+      const bodyShape = flatData.bodyShape || "Not Set";
+      const selectedType = flatData.selectedType || "Not Set";
+      const skinTone = flatData.skinTone || "Not Set";
+      const clothingType = flatData.clothingType || "Category";
+      const occupation = registerData.occupation || flatData.occupation || "Not Set";
+      const country = registerData.country || flatData.country || "Not Set";
+
+      const items = [
+        {
+          label: "User Preferences",
+          items: [
+            { icon: Shirt, label: "Category", value: clothingType },
+            { icon: Sparkles, label: "Skin Tone", value: skinTone },
+            { icon: User, label: "Gender", value: gender },
+            { icon: Star, label: "Body Shape", value: bodyShape },
+            { icon: TrendingUp, label: "Fashion Type", value: selectedType },
+          ],
+        },
+        {
+          label: "Monthly Status",
+          items: [
+            { icon: Sparkles, label: "Fitting", value: `${tryOnCount}x` },
+            { icon: Star, label: "Styling", value: `${tipsCount}x` },
+            { icon: ChevronRight, label: "Plan", value: selectedPlan },
+          ],
+        },
+        {
+          label: "User Profile",
+          items: [
+            { icon: MapPin, label: "Location", value: country },
+            { icon: Briefcase, label: "Occupation", value: occupation },
+          ],
+        },
+      ].filter(section => section.items.some(item => item.value !== "Not Set" && item.value !== "" && item.value !== "Category"));
+
+      setProfileItems(items);
+    } catch (err) {
+      console.error('Error loading profile data:', err);
+      setProfileItems([]);
     }
-  }, [referralHandled]);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined' && userEmail) {
-      try {
-        // Get registration data
-        const registerData = JSON.parse(localStorage.getItem('onboarding_register') || '{}');
-        
-        // Get onboarding data
-        const data = getAllOnboardingData();
-        const flatData = Object.values(data).reduce((acc, section) => {
-          if (section && typeof section === "object") {
-            Object.entries(section).forEach(([key, value]) => {
-              acc[key] = value;
-            });
-          }
-          return acc;
-        }, {});
-
-        const gender = flatData.gender || "Not Set";
-        const bodyShape = flatData.bodyShape || "Not Set";
-        const selectedType = flatData.selectedType || "Not Set";
-        const skinTone = flatData.skinTone || "Not Set";
-        const clothingType = flatData.clothingType || "Category"; // Changed to Top for consistency
-        const occupation = registerData.occupation || flatData.occupation || "Not Set";
-        const country = registerData.country || flatData.country || "Not Set";
-
-        // Create display items based on the image
-        const items = [
-          { label: "User Preferences", items: [
-            { icon: Shirt, label: "Category", value: clothingType }, // Use Shirt icon for 'Top' and value from clothingType
-            { icon: Sparkles, label: "Skin Tone", value: skinTone }, // Use Sparkles for Skin Tone
-            { icon: User, label: "Gender", value: gender }, // Use User for Gender
-            { icon: Star, label: "Body Shape", value: bodyShape }, // Use Star for Body Shape
-            { icon: TrendingUp, label: "Fashion Type", value: selectedType }, // Use TrendingUp for Fashion Type
-          ]},
-          { label: "Monthly Status", items: [
-            { icon: Sparkles, label: "Fitting", value: `${tryOnCount}x` }, // Sparkles for Fitting
-            { icon: Star, label: "Styling", value: `${tipsCount}x` }, // Star for Styling
-            { icon: ChevronRight, label: "Plan", value: selectedPlan }
-          ]},
-          { label: "User Profile", items: [ // Added User Profile section
-            { icon: MapPin, label: "Location", value: country }, // MapPin for Location
-            { icon: Briefcase, label: "Occupation", value: occupation } // Briefcase for Occupation
-          ]}
-        ].filter(section => section.items.some(item => item.value !== "Not Set" && item.value !== "" && item.value !== "Category")); // Filter out 'Top' if it's the default and not explicitly set.
-
-        setProfileItems(items);
-      } catch (err) {
-        console.error('Error loading profile data:', err);
-        setProfileItems([]);
-      }
-    }
-  }, [userEmail, tryOnCount, tipsCount, selectedPlan]);
+  }
+}, [userEmail, tryOnCount, tipsCount, selectedPlan]);
 
   const getAllOnboardingData = () => {
     if (!userEmail) return {};
@@ -497,6 +465,7 @@ className="min-w-36 h-48 rounded-3xl overflow-hidden flex-shrink-0 bg-white shad
   alt={`Try-on #${tryonItems.length - index}`}
   fill
   sizes="144px"
+  priority
   className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
 />
 ) : (
@@ -506,7 +475,6 @@ className="min-w-36 h-48 rounded-3xl overflow-hidden flex-shrink-0 bg-white shad
 )}
 <div className="absolute bottom-3 left-3 right-3 space-y-1">
  <div className="bg-white/90 backdrop-blur-sm rounded-xl px-3 py-1.5">
- <p className="text-xs font-medium text-gray-800">Try-On #{tryonItems.length - index}</p>
  {item.timestamp && (
  <p className="text-xs text-gray-500">
  {new Date(item.timestamp).toLocaleDateString()}
@@ -691,7 +659,7 @@ className="flex-1 aspect-[3/4] rounded-2xl overflow-hidden bg-gradient-to-br fro
 
 {/* Style Modal - Enhanced */}
 {showForYouModal && (
-<div className="fixed inset-0 z-50 flex items-end justify-center bg-black bg-opacity-50 backdrop-blur-sm">
+<div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
  <div className="bg-white rounded-t-3xl w-full max-w-md mx-auto shadow-2xl overflow-hidden animate-slide-up">
  <div className="flex items-center justify-between px-6 py-6 border-b border-gray-100">
  <div>
@@ -704,7 +672,8 @@ className="flex-1 aspect-[3/4] rounded-2xl overflow-hidden bg-gradient-to-br fro
 onClick={() => setShowForYouModal(false)}
 className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
 >
- <X className="w-5 h-5 text-gray-600" />
+ <div className="w-5 h-5 text-gray-600" />
+ X
  </button>
  </div>
  
@@ -777,7 +746,7 @@ setShowForYouModal(false)
 className="flex-1 py-4 rounded-2xl font-semibold border-2 border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors"
 onClick={() => {
 setShowForYouModal(false)
- window.location.href = "/onboarding/physical-attributes/step-1"
+ window.location.href = "/onboarding-ai/upload-photo"
  }}
 >
  Edit Profile
@@ -811,17 +780,14 @@ setShowForYouModal(false)
   <ReferralModal
     isOpen={showReferralModal}
     handleTrack={handleTrack}
-    onClose={() => {
-      setShowReferralModal(false);
-      setReferralHandled(true);
-    }}
+    onClose={handleReferralClose}
   />
 )}
 
 {showPricingModal && (
   <PricingPlans
     isOpen={showPricingModal}
-    onClose={() => setShowPricingModal(false)}
+    onClose={handlePricingClose}
     sourcePage="HomePage"
   />
 )}

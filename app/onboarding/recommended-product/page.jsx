@@ -66,7 +66,7 @@ export default function RecommendedProductPage() {
           duration: 3000,
         });
         setTimeout(() => {
-          router.push('/onboarding/physical-attributes/step-1');
+          router.push('/onboarding-ai/style-preferences');
         }, 3200);
       }
     } catch (err) {

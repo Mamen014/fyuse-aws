@@ -270,7 +270,7 @@ export default function AIPhotoUpload() {
       {showAIModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl p-6 max-w-sm w-full">
-            <h3 className="text-xl font-bold text-[#0B1F63] mb-4">AI Analysis Results</h3>
+            <h3 className="text-xl font-bold text-[#0B1F63] mb-4">Analysis Results</h3>
             
             <div className="space-y-4 mb-6">
               <div>

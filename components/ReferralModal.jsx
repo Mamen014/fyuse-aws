@@ -19,8 +19,8 @@ const ReferralModal = ({ isOpen, handleTrack, onClose }) => {
 
   return (
     <div className="fixed inset-0 z-50 bg-black bg-opacity-40 flex items-center justify-center">
-      <div className="bg-white rounded-2xl shadow-xl w-[90%] max-w-md p-6">
-        <div className="bg-[#0A1B5E] text-white text-center py-4 rounded-t-2xl">
+      <div className="bg-background rounded-2xl shadow-xl w-[90%] max-w-md p-6">
+        <div className="bg-background text-primary text-center py-4 rounded-t-2xl">
           <h2 className="text-xl font-bold">
             How Did You Hear<br />About FYUSE?
           </h2>
