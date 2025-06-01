@@ -161,7 +161,7 @@ export default function HomePage() {
               const sortedTryonItems = data.tryonItems
                 .filter(item => item.timestamp)
                 .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-              setTryonItems(sortedTryonItems.slice(0, 1));
+              setTryonItems(sortedTryonItems.slice(0, 3));
             } else {
               setTryonItems([]);
             }
