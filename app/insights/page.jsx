@@ -164,7 +164,7 @@ export default function UserFashionInsight() {
                 <p className="text-xs text-gray-500">Type</p>
                 <p className="font-medium mt-1" style={{ color: BRAND_BLUE }}>{StylePref1.selectedType}</p>
               </div>
-              <div className="bg-white rounded-lg p-3 shadow-sm">
+{/*               <div className="bg-white rounded-lg p-3 shadow-sm">
                 <p className="text-xs text-gray-500">Colors</p>
                 <p className="font-medium mt-1" style={{ color: BRAND_BLUE }}>{StylePref2.colors?.join(", ")}</p>
               </div>
@@ -175,7 +175,7 @@ export default function UserFashionInsight() {
               <div className="bg-white rounded-lg p-3 shadow-sm">
                 <p className="text-xs text-gray-500">Fit</p>
                 <p className="font-medium mt-1" style={{ color: BRAND_BLUE }}>{StylePref3.fit}</p>
-              </div>
+              </div> */}
               <div className="bg-white rounded-lg p-3 shadow-sm">
                 <p className="text-xs text-gray-500">Clothing Type</p>
                 <p className="font-medium mt-1" style={{ color: BRAND_BLUE }}>{StylePref3.clothingType}</p>
