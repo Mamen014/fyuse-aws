@@ -30,7 +30,7 @@ export default function About() {
 
         {/* Vision */}
         <section>
-          <h2 className="text-2xl font-bold text-cta mb-4">🌟 Our Vision</h2>
+          <h2 className="text-2xl font-bold text-cta mb-4">Our Vision</h2>
           <p className="text-base md:text-lg text-foreground">
             We believe everyone deserves to feel good in what they wear. FYUSE
             reimagines how you explore outfits — making the experience personal,
@@ -41,7 +41,7 @@ export default function About() {
         {/* Mission */}
         <section>
           <h2 className="text-2xl font-bold text-cta mb-4">
-            🚀 What We Do for You
+            What We Do for You
           </h2>
           <ul className="space-y-4 text-base md:text-lg text-foreground list-disc pl-5">
             <li>
@@ -69,7 +69,7 @@ export default function About() {
 
         {/* Philosophy / Brand Essence */}
         <section>
-          <h2 className="text-2xl font-bold text-cta mb-4">🎨 Why We Care</h2>
+          <h2 className="text-2xl font-bold text-cta mb-4">Why We Care</h2>
           <p className="text-base md:text-lg text-foreground">
             Style should be playful, expressive, and comfortable. FYUSE was
             created for people who want to feel good about what they wear — even
