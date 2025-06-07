@@ -464,7 +464,7 @@ style={{ backgroundImage: `linear-gradient(135deg, ${BRAND_BLUE} 0%, #1e40af 100
 ? tryonItems.slice(0, 3).map((item, index) => (
 <Link
 key={index}
-href="/try-on-history"
+href="/tryOnHistory"
 className="min-w-36 h-48 rounded-3xl overflow-hidden flex-shrink-0 bg-white shadow-md border border-gray-100 relative group"
 >
 {item?.generatedImageUrl ? (
