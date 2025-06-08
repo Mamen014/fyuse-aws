@@ -175,3 +175,62 @@ body {
   min-width: 48px;
   min-height: 48px;
 }
+
+
+@keyframes carousel-slide {
+  0% {
+    transform: translateX(0);
+  }
+  33.33% {
+    transform: translateX(-33.33%);
+  }
+  66.66% {
+    transform: translateX(-66.66%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+.carousel-container {
+  width: 300%;
+  display: flex;
+}
+
+.carousel-slide {
+  animation: carousel-slide 9s linear infinite;
+  display: flex;
+  width: 100%;
+}
+
+.carousel-item {
+  flex: 1;
+  transition: all 0.3s ease;
+}
+
+.carousel-item.active {
+  transform: scale(1.2);
+  opacity: 1;
+}
+
+.carousel-item.inactive {
+  transform: scale(0.8);
+  opacity: 0.5;
+}
+
+@keyframes scroll-left {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-scroll-left {
+  animation: scroll-left 30s linear infinite;
+}
+
+.animate-scroll-left:hover {
+  animation-play-state: paused;
+}

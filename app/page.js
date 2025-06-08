@@ -12,12 +12,14 @@ import axios from "axios";
 import PricingPlans from "@/components/PricingPlanCard";
 import { Home, Search, Heart, User, ChevronRight, Zap, X, Shirt, Sparkles, Star, TrendingUp, MapPin, Briefcase } from "lucide-react"; // Import MapPin and Briefcase
 import ReferralModal from "@/components/ReferralModal";
+import { useRouter } from "next/navigation";
 
 // Define brand colors
 const BRAND_BLUE = '#0B1F63';
 
 export default function HomePage() {
   const { user, isLoading, signinRedirect } = useAuth();
+  const router = useRouter();
   const [likedRecommendations, setLikedRecommendations] = useState([]);
   const [tryonItems, setTryonItems] = useState([]);
   const [showForYouModal, setShowForYouModal] = useState(false);
@@ -35,185 +37,213 @@ export default function HomePage() {
   
   const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
 
-useEffect(() => {
-  setLastUpdated(new Date().toLocaleDateString());
-}, []);
-
-useEffect(() => {
-  if (!isLoading && user) {
-    const userEmail = user.profile.email;
-    const refreshTryOnCount = async () => {
-      try {
-        const res = await axios.get(`${API_BASE_URL}/getrack?userEmail=${userEmail}`);
-        const updatedCount = res.data.tryOnCount || 0;
-        setTryOnCount(updatedCount);
-        sessionStorage.setItem('tryOnCount', updatedCount);
-        setLastUpdated(new Date().toLocaleDateString());
-      } catch (err) {
-        console.error('Error updating try-on count:', err);
-      }
-    };
-    const fetchTipsCount = async () => {
-      try {
-        const res = await axios.get(`${API_BASE_URL}/getTipsTrack?userEmail=${userEmail}`);
-        const count = res.data.tipsCount || 0;
-        setTipsCount(count);
-        sessionStorage.setItem('tipsCount', count);
-      } catch (err) {
-        console.error('Error fetching tips count:', err);
-      }
-    };
-    refreshTryOnCount();
-    fetchTipsCount();
-    const hasSeenReferral = localStorage.getItem("hasSeenReferralModal") === "true";
-    if (!hasSeenReferral) {
-      setShowReferralModal(true);
-      localStorage.setItem("hasSeenReferralModal", "true");
-    } else {
-      setReferralHandled(true); // proceed if already seen
+  // Redirect to landing page if not authenticated
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.push('/landing');
+      return;
     }
-  }
-  
+  }, [isLoading, user, router]);
 
-  if (!isLoading && !user) {
-    localStorage.setItem("postLoginRedirect", "/");
-    signinRedirect();
-  }
-        const fetchHistory = async () => {
-          try {
-            const endpoint = `${API_BASE_URL}/historyHandler`;
-            const res = await fetch(
-              `${endpoint}?email=${encodeURIComponent(userEmail)}`,
-              {
-                method: "GET",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-              }
-            );
-            if (!res.ok) throw new Error(`Failed to fetch history: ${res.status}`);
-            const data = await res.json();
-            console.log("Fetched History Data:", data);
+  useEffect(() => {
+    setLastUpdated(new Date().toLocaleDateString());
+  }, []);
 
-            if (Array.isArray(data.tryonItems)) {
-              const sortedTryonItems = data.tryonItems
-                .filter(item => item.timestamp)
-                .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-              setTryonItems(sortedTryonItems.slice(0, 3));
-            } else {
-              setTryonItems([]);
+  useEffect(() => {
+    if (!isLoading && user) {
+      const userEmail = user.profile.email;
+      const refreshTryOnCount = async () => {
+        try {
+          const res = await axios.get(`${API_BASE_URL}/getrack?userEmail=${userEmail}`);
+          const updatedCount = res.data.tryOnCount || 0;
+          setTryOnCount(updatedCount);
+          sessionStorage.setItem('tryOnCount', updatedCount);
+          setLastUpdated(new Date().toLocaleDateString());
+        } catch (err) {
+          console.error('Error updating try-on count:', err);
+        }
+      };
+      const fetchTipsCount = async () => {
+        try {
+          const res = await axios.get(`${API_BASE_URL}/getTipsTrack?userEmail=${userEmail}`);
+          const count = res.data.tipsCount || 0;
+          setTipsCount(count);
+          sessionStorage.setItem('tipsCount', count);
+        } catch (err) {
+          console.error('Error fetching tips count:', err);
+        }
+      };
+      refreshTryOnCount();
+      fetchTipsCount();
+
+      // Handle post-login redirects
+      const redirectPath = localStorage.getItem("postLoginRedirect");
+      if (redirectPath) {
+        localStorage.removeItem("postLoginRedirect");
+        
+        // Handle pending download if any
+        const pendingDownload = localStorage.getItem("pendingDownload");
+        if (pendingDownload) {
+          localStorage.removeItem("pendingDownload");
+          const link = document.createElement('a');
+          link.href = pendingDownload;
+          link.download = 'virtual-tryon-result.jpg';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        }
+        
+        router.push(redirectPath);
+        return;
+      }
+
+      const hasSeenReferral = localStorage.getItem("hasSeenReferralModal") === "true";
+      if (!hasSeenReferral) {
+        setShowReferralModal(true);
+        localStorage.setItem("hasSeenReferralModal", "true");
+      } else {
+        setReferralHandled(true);
+      }
+
+      const fetchHistory = async () => {
+        try {
+          const endpoint = `${API_BASE_URL}/historyHandler`;
+          const res = await fetch(
+            `${endpoint}?email=${encodeURIComponent(userEmail)}`,
+            {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+              },
             }
+          );
+          if (!res.ok) throw new Error(`Failed to fetch history: ${res.status}`);
+          const data = await res.json();
+          console.log("Fetched History Data:", data);
 
-            if (Array.isArray(data.likedRecommendations)) {
-              setLikedRecommendations(data.likedRecommendations.slice(0, 5));
-            } else {
-              setLikedRecommendations([]);
-            }
-
-          } catch (err) {
-            console.error("Error fetching history:", err);
+          if (Array.isArray(data.tryonItems)) {
+            const sortedTryonItems = data.tryonItems
+              .filter(item => item.timestamp)
+              .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            setTryonItems(sortedTryonItems.slice(0, 3));
+          } else {
             setTryonItems([]);
+          }
+
+          if (Array.isArray(data.likedRecommendations)) {
+            setLikedRecommendations(data.likedRecommendations.slice(0, 5));
+          } else {
             setLikedRecommendations([]);
           }
-        };
 
-        fetchHistory();  
-}, [isLoading, user]);
-
-useEffect(() => {
-  if (user && referralHandled) {
-    const userEmail = user.profile.email;
-    const step = localStorage.getItem(`onboarding_step:${userEmail}`);
-    if (step !== "appearance") {
-      window.location.href = "/onboarding-ai/register";
-    }
-  }
-}, [referralHandled, user]);
-useEffect(() => {
-  const hasShownPricing = sessionStorage.getItem("hasShownPricingModal") === "true";
-  const onboardingStep = localStorage.getItem(`onboarding_step:${user?.profile?.email}`);
-  const onboardingCompleted = onboardingStep === "appearance";
-
-  if (
-    user &&
-    referralHandled &&
-    onboardingCompleted &&
-    !hasShownPricing &&
-    !pricingHandled
-  ) {
-    setShowPricingModal(true);
-  }
-}, [referralHandled, pricingHandled, user]);
-
-const handleReferralClose = () => {
-  setShowReferralModal(false);
-  setReferralHandled(true);
-};
-
-const handlePricingClose = () => {
-  setShowPricingModal(false);
-  sessionStorage.setItem("hasShownPricingModal", "true");
-  setPricingHandled(true);
-};
-
-// Load profile display data
-useEffect(() => {
-  if (typeof window !== 'undefined' && userEmail) {
-    try {
-      const registerData = JSON.parse(localStorage.getItem('onboarding_register') || '{}');
-      const data = getAllOnboardingData();
-      const flatData = Object.values(data).reduce((acc, section) => {
-        if (section && typeof section === "object") {
-          Object.entries(section).forEach(([key, value]) => {
-            acc[key] = value;
-          });
+        } catch (err) {
+          console.error("Error fetching history:", err);
+          setTryonItems([]);
+          setLikedRecommendations([]);
         }
-        return acc;
-      }, {});
+      };
 
-      const gender = flatData.gender || "Not Set";
-      const bodyShape = flatData.bodyShape || "Not Set";
-      const selectedType = flatData.selectedType || "Not Set";
-      const skinTone = flatData.skinTone || "Not Set";
-      const clothingType = flatData.clothingType || "Category";
-      const occupation = registerData.occupation || flatData.occupation || "Not Set";
-      const country = registerData.country || flatData.country || "Not Set";
-
-      const items = [
-        {
-          label: "User Preferences",
-          items: [
-            { icon: Shirt, label: "Category", value: clothingType },
-            { icon: Sparkles, label: "Skin Tone", value: skinTone },
-            { icon: User, label: "Gender", value: gender },
-            { icon: Star, label: "Body Shape", value: bodyShape },
-            { icon: TrendingUp, label: "Fashion Type", value: selectedType },
-          ],
-        },
-        {
-          label: "Monthly Status",
-          items: [
-            { icon: Sparkles, label: "Fitting", value: `${tryOnCount}x` },
-            { icon: Star, label: "Styling", value: `${tipsCount}x` },
-            { icon: ChevronRight, label: "Plan", value: selectedPlan },
-          ],
-        },
-        {
-          label: "User Profile",
-          items: [
-            { icon: MapPin, label: "Location", value: country },
-            { icon: Briefcase, label: "Occupation", value: occupation },
-          ],
-        },
-      ].filter(section => section.items.some(item => item.value !== "Not Set" && item.value !== "" && item.value !== "Category"));
-
-      setProfileItems(items);
-    } catch (err) {
-      console.error('Error loading profile data:', err);
-      setProfileItems([]);
+      fetchHistory();
     }
-  }
-}, [userEmail, tryOnCount, tipsCount, selectedPlan]);
+  }, [isLoading, user, API_BASE_URL, router]);
+
+  // Commented out to prevent redirection based on onboarding_step
+  // useEffect(() => {
+  //   if (user && referralHandled) {
+  //     const userEmail = user.profile.email;
+  //     const step = localStorage.getItem(`onboarding_step:${userEmail}`);
+  //     if (step !== "appearance") {
+  //       window.location.href = "/onboarding-ai/register";
+  //     }
+  //   }
+  // }, [referralHandled, user]);
+
+  useEffect(() => {
+    const hasShownPricing = sessionStorage.getItem("hasShownPricingModal") === "true";
+    // Removed onboarding step check for pricing modal
+    // const onboardingStep = localStorage.getItem(`onboarding_step:${user?.profile?.email}`);
+    // const onboardingCompleted = onboardingStep === "appearance";
+
+    if (
+      user &&
+      referralHandled &&
+      // Removed onboardingCompleted check
+      !hasShownPricing &&
+      !pricingHandled
+    ) {
+      setShowPricingModal(true);
+    }
+  }, [referralHandled, pricingHandled, user]);
+
+  const handleReferralClose = () => {
+    setShowReferralModal(false);
+    setReferralHandled(true);
+  };
+
+  const handlePricingClose = () => {
+    setShowPricingModal(false);
+    sessionStorage.setItem("hasShownPricingModal", "true");
+    setPricingHandled(true);
+  };
+
+  // Load profile display data
+  useEffect(() => {
+    if (typeof window !== 'undefined' && userEmail) {
+      try {
+        const registerData = JSON.parse(localStorage.getItem('onboarding_register') || '{}');
+        const data = getAllOnboardingData();
+        const flatData = Object.values(data).reduce((acc, section) => {
+          if (section && typeof section === "object") {
+            Object.entries(section).forEach(([key, value]) => {
+              acc[key] = value;
+            });
+          }
+          return acc;
+        }, {});
+
+        const gender = flatData.gender || "Not Set";
+        const bodyShape = flatData.bodyShape || "Not Set";
+        const selectedType = flatData.selectedType || "Not Set";
+        const skinTone = flatData.skinTone || "Not Set";
+        const clothingType = flatData.clothingType || "Category";
+        const occupation = registerData.occupation || flatData.occupation || "Not Set";
+        const country = registerData.country || flatData.country || "Not Set";
+
+        const items = [
+          {
+            label: "User Preferences",
+            items: [
+              { icon: Shirt, label: "Category", value: clothingType },
+              { icon: Sparkles, label: "Skin Tone", value: skinTone },
+              { icon: User, label: "Gender", value: gender },
+              { icon: Star, label: "Body Shape", value: bodyShape },
+              { icon: TrendingUp, label: "Fashion Type", value: selectedType },
+            ],
+          },
+          {
+            label: "Monthly Status",
+            items: [
+              { icon: Sparkles, label: "Fitting", value: `${tryOnCount}x` },
+              { icon: Star, label: "Styling", value: `${tipsCount}x` },
+              { icon: ChevronRight, label: "Plan", value: selectedPlan },
+            ],
+          },
+          {
+            label: "User Profile",
+            items: [
+              { icon: MapPin, label: "Location", value: country },
+              { icon: Briefcase, label: "Occupation", value: occupation },
+            ],
+          },
+        ].filter(section => section.items.some(item => item.value !== "Not Set" && item.value !== "" && item.value !== "Category"));
+
+        setProfileItems(items);
+      } catch (err) {
+        console.error('Error loading profile data:', err);
+        setProfileItems([]);
+      }
+    }
+  }, [userEmail, tryOnCount, tipsCount, selectedPlan]);
 
   const getAllOnboardingData = () => {
     if (!userEmail) return {};
@@ -465,7 +495,7 @@ style={{ backgroundImage: `linear-gradient(135deg, ${BRAND_BLUE} 0%, #1e40af 100
 ? tryonItems.slice(0, 3).map((item, index) => (
 <Link
 key={index}
-href="/try-on-history"
+href="/tryOnHistory"
 className="min-w-36 h-48 rounded-3xl overflow-hidden flex-shrink-0 bg-white shadow-md border border-gray-100 relative group"
 >
 {item?.generatedImageUrl ? (

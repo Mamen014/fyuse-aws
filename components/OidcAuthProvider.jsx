@@ -19,6 +19,10 @@ const getOidcConfig = () => {
     scope: "openid profile email",
     loadUserInfo: true,
     response_mode: "query",
+    onSigninCallback: () => {
+      // Handle the redirect in the app instead of automatic redirect
+      window.history.replaceState({}, document.title, window.location.pathname);
+    },
   };
 };
 
