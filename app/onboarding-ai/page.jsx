@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useAuth } from 'react-oidc-context';
 
-export default function OnboardingAIRedirect() {
+function OnboardingAIRedirectContent() {
   const searchParams = useSearchParams();
   const skipRegister = searchParams.get('skipRegister') === 'true';
   const { user, isLoading, signinRedirect } = useAuth();
@@ -34,5 +34,17 @@ export default function OnboardingAIRedirect() {
     <div className="flex items-center justify-center min-h-screen bg-white">
       <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#0B1F63]"></div>
     </div>
+  );
+}
+
+export default function OnboardingAIRedirect() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen bg-white">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#0B1F63]"></div>
+      </div>
+    }>
+      <OnboardingAIRedirectContent />
+    </Suspense>
   );
 }
