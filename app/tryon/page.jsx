@@ -189,7 +189,7 @@ export default function VirtualTryOn() {
       return;
     }
 
-    if (tryOnCount >= 15) return setShowPricingPlans(true);
+    if (tryOnCount >= 10) return setShowPricingPlans(true);
 
     if (
       !userImage ||

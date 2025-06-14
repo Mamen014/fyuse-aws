@@ -48,7 +48,7 @@ export default function PricingPlans() {
       name: "Basic",
       price: "Free",
       features: [
-        "10 Style Me",
+        "10 Virtual Fitting",
         "20 Personalized Styling",
         "20 Change Preferences",
         "15 Saved Items in Wardrobe",
@@ -60,10 +60,10 @@ export default function PricingPlans() {
       name: "Elegant",
       price: "Rp. 29.999/Month",
       features: [
-        "25 Style Me",
-        "30 Personalized Styling Recommendations",
+        "20 Virtual Fitting",
+        "40 Personalized Styling Recommendations",
         "30 Change Preferences",
-        "Unlimited Saved Items in Wardrobe",
+        "50 Saved Items in Wardrobe",
       ],
       promo: "",
       buttonText: "Upgrade to Elegant – Rp.29.999/Mo",
@@ -72,8 +72,8 @@ export default function PricingPlans() {
       name: "Glamour",
       price: "Rp. 59.999/Month",
       features: [
-        "40 Style Me",
-        "Unlimited Personalized Styling",
+        "40 Virtual Fitting",
+        "60 Personalized Styling",
         "Unlimited Change Preferences",
         "Unlimited Saved Items in Wardrobe",
       ],

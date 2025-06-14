@@ -14,7 +14,7 @@ export default function PricingPlans({ isOpen, onClose, sourcePage = "Unknown" }
       name: "Basic",
       price: "Free Forever",
       features: [
-        "10 Style Me",
+        "10 Virtual Fitting",
         "20 Personalized Styling",
         "20 Change Preferences",
         "15 Saved Items in Wardrobe",
@@ -25,10 +25,10 @@ export default function PricingPlans({ isOpen, onClose, sourcePage = "Unknown" }
       name: "Elegant",
       price: "Rp. 29,999/mo",
       features: [
-        "25 Style Me",
-        "30 Personalized Styling",
+        "20 Virtual Fitting",
+        "40 Personalized Styling",
         "30 Change Preferences",
-        "Unlimited Saved Items in Wardrobe",
+        "50 Saved Items in Wardrobe",
       ],
       buttonText: "Upgrade to Elegant – Rp.29,999",
     },
@@ -36,8 +36,8 @@ export default function PricingPlans({ isOpen, onClose, sourcePage = "Unknown" }
       name: "Glamour",
       price: "Rp. 59,999/mo",
       features: [
-        "40 Style Me",
-        "Unlimited Personalized Styling",
+        "40 Virtual Fitting",
+        "60 Personalized Styling",
         "Unlimited Change Preferences",
         "Unlimited Saved Items in Wardrobe",
       ],
