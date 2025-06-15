@@ -207,10 +207,17 @@ export default function AIPhotoUpload() {
       );
     }
     
-    // Show loading state before navigation
-    setTimeout(() => {
-      router.push('/discover-your-style/style-preferences');
-    }, 500);
+    // Navigate immediately
+    router.push('/discover-your-style/style-preferences');
+    
+    // Fallback in case navigation doesn't complete
+    const navigationTimeout = setTimeout(() => {
+      if (isNavigating) {
+        window.location.href = '/discover-your-style/style-preferences';
+      }
+    }, 5000);
+    
+    return () => clearTimeout(navigationTimeout);
   };
 
   const handleCustomize = () => {
@@ -224,6 +231,15 @@ export default function AIPhotoUpload() {
       // Redirect to the first step of manual physical attributes
       router.push('/onboarding/physical-attributes/step-1');
       
+      // Fallback in case navigation doesn't complete
+      const navigationTimeout = setTimeout(() => {
+        if (isNavigating) {
+          window.location.href = '/onboarding/physical-attributes/step-1';
+        }
+      }, 5000);
+      
+      return () => clearTimeout(navigationTimeout);
+      
     } catch (error) {
       console.error('Error in handleCustomize:', error);
       setIsNavigating(false);
@@ -231,7 +247,17 @@ export default function AIPhotoUpload() {
   };
 
   return (
-    <div className="flex flex-col justify-between min-h-screen bg-white px-5 py-8" style={{ maxWidth: "375px", margin: "0 auto" }}>
+    <div className="min-h-screen bg-white p-4 md:p-8 relative">
+      {isNavigating && (
+        <div className="fixed inset-0 bg-white/90 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="flex flex-col items-center">
+            <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#0B1F63]/20 border-t-[#0B1F63] border-b-[#0B1F63] mb-4"></div>
+            <p className="text-[#0B1F63] font-medium text-lg">Preparing your experience...</p>
+            <p className="text-gray-500 text-sm">Just a moment please</p>
+          </div>
+        </div>
+      )}
+      <div className="flex flex-col justify-between min-h-screen bg-white px-5 py-8" style={{ maxWidth: "375px", margin: "0 auto" }}>
       <ToastContainer position="top-center" autoClose={3000} hideProgressBar />
 
       {/* Header */}
@@ -393,6 +419,7 @@ export default function AIPhotoUpload() {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 } 

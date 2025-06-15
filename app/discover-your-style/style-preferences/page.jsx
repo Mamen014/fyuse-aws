@@ -9,6 +9,7 @@ export default function CombinedStylePreferences() {
   const [clothingType, setClothingType] = useState('');
   const [fashionType, setFashionType] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
   const { user } = useAuth();
   const userEmail = user?.profile?.email;
   const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
@@ -21,79 +22,92 @@ export default function CombinedStylePreferences() {
     'Streetwear': 'Urban-inspired casual clothing rooted in skate and hip-hop culture. Features graphic tees, hoodies, sneakers, and statement accessories.'
   };
 
-  const handleSubmit = async () => {
-    if (isSubmitting) return;
-    setIsSubmitting(true);
+  const handleSubmit = () => {
+    if (isSubmitting || isNavigating) return;
     
-    try {
-      // First call - StylePref1 (fashion type)
-      await fetch(`${API_BASE_URL}/userPref`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userEmail,
-          section: 'StylePref1',
-          data: {
-            selectedType: fashionType
-          }
-        }),
-      });
-
-      // Second call - StylePref2 (brands and colors)
-      await fetch(`${API_BASE_URL}/userPref`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userEmail,
-          section: 'StylePref2',
-          data: {
-            brands: [],  // Default empty since AI flow doesn't collect these
-            colors: []   // Default empty since AI flow doesn't collect these
-          }
-        }),
-      });
-
-      // Third call - StylePref3 (clothing type)
-      await fetch(`${API_BASE_URL}/userPref`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userEmail,
-          section: 'StylePref3',
-          data: {
-            clothingType
-          }
-        }),
-      });
-
-      // Store in localStorage to match regular onboarding
-      localStorage.setItem('onboarding_style_preferences_1', 
-        JSON.stringify({ selectedType: fashionType }));
-      localStorage.setItem('onboarding_style_preferences_2', 
-        JSON.stringify({ brands: [], colors: [] }));
-      localStorage.setItem('onboarding_style_preferences_3', 
-        JSON.stringify({ clothingType }));
-      
-      // Redirect to recommended products
-      // Let the loading state handle the transition
-      setTimeout(() => {
-        router.push('/onboarding/recommended-product');
-      }, 500);
-    } catch (error) {
-      console.error('Error saving preferences:', error);
-    } finally {
-      setIsSubmitting(false);
-    }
+    // Show loading state immediately
+    setIsNavigating(true);
+    
+    // Don't await the API calls, let them run in the background
+    const savePreferences = async () => {
+      try {
+        // Make all API calls in parallel
+        await Promise.all([
+          // StylePref1 (fashion type)
+          fetch(`${API_BASE_URL}/userPref`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userEmail,
+              section: 'StylePref1',
+              data: { selectedType: fashionType }
+            }),
+          }),
+          
+          // StylePref2 (brands and colors)
+          fetch(`${API_BASE_URL}/userPref`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userEmail,
+              section: 'StylePref2',
+              data: { brands: [], colors: [] }
+            }),
+          }),
+          
+          // StylePref3 (clothing type)
+          fetch(`${API_BASE_URL}/userPref`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userEmail,
+              section: 'StylePref3',
+              data: { clothingType }
+            }),
+          })
+        ]);
+        
+        // Store in localStorage to match regular onboarding
+        localStorage.setItem('onboarding_style_preferences_1', 
+          JSON.stringify({ selectedType: fashionType }));
+        localStorage.setItem('onboarding_style_preferences_2', 
+          JSON.stringify({ brands: [], colors: [] }));
+        localStorage.setItem('onboarding_style_preferences_3', 
+          JSON.stringify({ clothingType }));
+          
+      } catch (error) {
+        console.error('Error saving preferences:', error);
+        // Continue with navigation even if there's an error
+      }
+    };
+    
+    // Start the API calls but don't wait for them
+    savePreferences();
+    
+    // Navigate immediately
+    router.push('/onboarding/recommended-product');
+    
+    // Fallback in case navigation doesn't complete
+    const navigationTimeout = setTimeout(() => {
+      if (isNavigating) {
+        window.location.href = '/onboarding/recommended-product';
+      }
+    }, 5000);
+    
+    return () => clearTimeout(navigationTimeout);
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-white p-4">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-white p-4 relative">
+      {isNavigating && (
+        <div className="fixed inset-0 bg-white/90 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="flex flex-col items-center">
+            <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#0B1F63]/20 border-t-[#0B1F63] border-b-[#0B1F63] mb-4"></div>
+            <p className="text-[#0B1F63] font-medium text-lg">Preparing your recommendations...</p>
+            <p className="text-gray-500 text-sm">Just a moment please</p>
+          </div>
+        </div>
+      )}
       <div className="w-full max-w-md bg-white rounded-3xl border border-gray-200 shadow-sm p-6 md:p-8">
         <div className="flex justify-between items-center mb-6">
           <div>

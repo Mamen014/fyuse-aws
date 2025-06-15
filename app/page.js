@@ -11,7 +11,6 @@ import Navbar from "@/components/Navbar";
 import axios from "axios";
 import PricingPlans from "@/components/PricingPlanCard";
 import { Home, Search, Heart, User, ChevronRight, Zap, X, Shirt, Sparkles, Star, TrendingUp, MapPin, Briefcase } from "lucide-react"; // Import MapPin and Briefcase
-import ReferralModal from "@/components/ReferralModal";
 import { useRouter } from "next/navigation";
 
 // Define brand colors
@@ -23,8 +22,6 @@ export default function HomePage() {
   const [likedRecommendations, setLikedRecommendations] = useState([]);
   const [tryonItems, setTryonItems] = useState([]);
   const [showForYouModal, setShowForYouModal] = useState(false);
-  const [showReferralModal, setShowReferralModal] = useState(false);
-  const [referralHandled, setReferralHandled] = useState(false);
   const [onboardingData, setOnboardingData] = useState({});
   const userEmail = user?.profile?.email;
   const [lastUpdated, setLastUpdated] = useState("");
@@ -97,14 +94,6 @@ export default function HomePage() {
         return;
       }
 
-      const hasSeenReferral = localStorage.getItem("hasSeenReferralModal") === "true";
-      if (!hasSeenReferral) {
-        setShowReferralModal(true);
-        localStorage.setItem("hasSeenReferralModal", "true");
-      } else {
-        setReferralHandled(true);
-      }
-
       const fetchHistory = async () => {
         try {
           const endpoint = `${API_BASE_URL}/historyHandler`;
@@ -147,38 +136,16 @@ export default function HomePage() {
     }
   }, [isLoading, user, API_BASE_URL, router]);
 
-  // Commented out to prevent redirection based on onboarding_step
-  // useEffect(() => {
-  //   if (user && referralHandled) {
-  //     const userEmail = user.profile.email;
-  //     const step = localStorage.getItem(`onboarding_step:${userEmail}`);
-  //     if (step !== "appearance") {
-  //       window.location.href = "/discover-your-style/register";
-  //     }
-  //   }
-  // }, [referralHandled, user]);
-
   useEffect(() => {
     const hasShownPricing = sessionStorage.getItem("hasShownPricingModal") === "true";
-    // Removed onboarding step check for pricing modal
-    // const onboardingStep = localStorage.getItem(`onboarding_step:${user?.profile?.email}`);
-    // const onboardingCompleted = onboardingStep === "appearance";
-
     if (
       user &&
-      referralHandled &&
-      // Removed onboardingCompleted check
       !hasShownPricing &&
       !pricingHandled
     ) {
       setShowPricingModal(true);
     }
-  }, [referralHandled, pricingHandled, user]);
-
-  const handleReferralClose = () => {
-    setShowReferralModal(false);
-    setReferralHandled(true);
-  };
+  }, [pricingHandled, user]);
 
   const handlePricingClose = () => {
     setShowPricingModal(false);
@@ -319,12 +286,6 @@ export default function HomePage() {
 const toCamelCase = (str) =>
   str.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
 
-  const handleReferralSelect = (source) => {
-    handleTrack("Referral Source Selected", { source });
-    setShowReferralModal(false);
-    setReferralHandled(true);
-  };
-
   return (
 <>
  <Script
@@ -450,33 +411,12 @@ if (profileItems.length === 0) {
 
  })()}
  </div>
-
- <button
-onClick={() => {
-  handleTrack("Click For You Style Button");
-  if (!user) {
-    localStorage.setItem("postLoginRedirect", "/discover-your-style/register");
-    toast.error("Please sign in to use this feature.");
-    setTimeout(() => signinRedirect(), 1500);
-  } else {
-    const data = getAllOnboardingData();
-    setOnboardingData(data);
-    setShowForYouModal(true);
-  }
-}}
-className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-5 rounded-3xl font-bold text-lg flex items-center justify-center text-center shadow-lg shadow-blue-200/50 mb-2"
-style={{ backgroundImage: `linear-gradient(135deg, ${BRAND_BLUE} 0%, #1e40af 100%)` }}
->
- <div className="w-6 h-6 mr-3" />
- For You Style
- </button>
 <button
-  onClick={() => (window.location.href = "/digital-fitting-room")}
-  className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-5 rounded-3xl font-bold text-lg flex items-center justify-center text-center shadow-lg shadow-blue-200/50 mb-2"
+  onClick={() => (window.location.href = "/style-discovery")}
+  className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-5 rounded-3xl font-bold text-lg flex items-center justify-center shadow-lg shadow-blue-200/50 mb-2 px-4"
   style={{ backgroundImage: `linear-gradient(135deg, ${BRAND_BLUE} 0%, #1e40af 100%)` }}
 >
-  <div className="w-6 h-6 mr-3" />
-  Fitting
+  <span>Style discovery</span>
 </button>
 
  </div>
@@ -814,14 +754,6 @@ setShowForYouModal(false)
  </Link>
  </div>
  </div>
-
-{showReferralModal && (
-  <ReferralModal
-    isOpen={showReferralModal}
-    handleTrack={handleTrack}
-    onClose={handleReferralClose}
-  />
-)}
 
 {showPricingModal && (
   <PricingPlans

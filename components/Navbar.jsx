@@ -21,14 +21,14 @@ export default function Navbar() {
         <button
           type="button"
           onClick={() => setIsMenuOpen(!isMenuOpen)}
-          className="w-12 h-12 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors"
+          className="w-16 h-16 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors"
           aria-expanded={isMenuOpen}
           aria-label="Toggle menu"
         >
           {isMenuOpen ? (
-            <X className="w-8 h-8 text-gray-700" />
+            <X className="w-10 h-10 text-gray-700" />
           ) : (
-            <Menu className="w-8 h-8 text-gray-700" />
+            <Menu className="w-10 h-10 text-gray-700" />
           )}
         </button>
 
@@ -38,10 +38,10 @@ export default function Navbar() {
             <Image
               src="/favicon.PNG"
               alt="FYUSE Logo"
-              width={96}
-              height={26}
+              width={144}
+              height={39}
               priority
-              className="w-24 h-auto"
+              className="w-36 h-auto"
             />
           </Link>
         </div>

@@ -1,26 +1,58 @@
 "use client";
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Shirt, Sparkles, ArrowRight, Zap, Target } from 'lucide-react';
 import { useAuth } from "react-oidc-context";
 import Image from 'next/image';
+import dynamic from 'next/dynamic';
 import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+
+// Dynamically import the ReferralModal to avoid SSR issues
+const ReferralModal = dynamic(
+  () => import('@/components/ReferralModal'),
+  { ssr: false }
+);
 
 export default function StyleChoice() {
   const router = useRouter();
   const { user, isLoading, signinRedirect } = useAuth();
+  const [showReferralModal, setShowReferralModal] = useState(false);
+  const [referralHandled, setReferralHandled] = useState(false);
+
+  // Check if user has seen the referral modal before
+  const hasSeenReferral = () => {
+    if (typeof window === 'undefined') return true;
+    return localStorage.getItem('hasSeenReferral') === 'true';
+  };
+
+  const handleTrack = (event, data) => {
+    // Implement your tracking logic here
+    console.log('Track event:', event, data);
+  };
+
+  const handleReferralSelect = (source) => {
+    handleTrack("Referral Source Selected", { source });
+    setShowReferralModal(false);
+    setReferralHandled(true);
+    localStorage.setItem('hasSeenReferral', 'true');
+  };
 
   // Redirect to login if not authenticated
-  React.useEffect(() => {
+  useEffect(() => {
     if (isLoading) return;
     
     if (!user) {
-      localStorage.setItem('postLoginRedirect', '/style-choice');
+      localStorage.setItem('postLoginRedirect', '/style-discovery');
       signinRedirect();
+      return;
     }
-  }, [user, isLoading, signinRedirect]);
+
+    // If user is logged in and hasn't seen the referral modal, show it
+    if (user && !hasSeenReferral() && !referralHandled) {
+      setShowReferralModal(true);
+    }
+  }, [user, isLoading, signinRedirect, referralHandled]);
 
   const options = [
     {
@@ -41,6 +73,8 @@ export default function StyleChoice() {
     }
   ];
 
+
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-white">
@@ -51,6 +85,18 @@ export default function StyleChoice() {
 
   return (
     <div className="flex flex-col min-h-screen bg-white text-[#0B1F63] overflow-x-hidden">
+      {/* Referral Modal */}
+      {showReferralModal && (
+        <ReferralModal
+          isOpen={showReferralModal}
+          handleTrack={handleReferralSelect}
+          onClose={() => {
+            setShowReferralModal(false);
+            setReferralHandled(true);
+            localStorage.setItem('hasSeenReferral', 'true');
+          }}
+        />
+      )}
 
       <main className="flex-grow">
         {/* Hero Section */}

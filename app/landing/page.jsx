@@ -58,25 +58,25 @@ export default function LandingPage() {
   const howItWorks = [
     {
       number: "1",
-      icon: "/images/icon/step-1.png",
+      icon: "/images/step-1.png",
       title: "Upload Your Photo",
       description: "We'll analyze your physical attributes securely and create your personalized profile."
     },
     {
       number: "2",
-      icon: "/images/icon/step-2.png",
+      icon: "/images/step-2.png",
       title: "Tell Us Your Style",
       description: "Answer a few quick questions about what you like and discover your unique aesthetic."
     },
     {
       number: "3",
-      icon: "/images/icon/step-3.png",
+      icon: "/images/step-3.png",
       title: "Discover your style",
       description: "Discover outfit recommendations tailored to your body shape, skin tone, and styling preference"
     },
     {
       number: "4",
-      icon: "/images/icon/step-4.png",
+      icon: "/images/step-4.png",
       title: "Digital Fitting Room",
       description: "Try on clothes virtually before buying. See how they look on your actual body"
     }
@@ -85,12 +85,12 @@ export default function LandingPage() {
   // Key features highlighting both main functionalities
   const keyFeatures = [
     {
-      icon: "/images/icon/Discover-your-style.png",
+      icon: "/images/Discover-your-style.png",
       title: "Discover your style",
       description: "Discover outfit recommendations tailored to your body shape, skin tone, and styling preference"
     },
     {
-      icon: "/images/icon/Digital-fitting-room.png",
+      icon: "/images/Digital-fitting-room.png",
       title: "Digital Fitting Room",
       description: "Try on clothes virtually before buying. See how they look on your actual body"
     },
@@ -201,15 +201,13 @@ export default function LandingPage() {
                   className="p-6 sm:p-8 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 hover:border-white/30 transition-all duration-300 hover:shadow-lg hover:scale-105"
                 >
                   <div className="flex flex-col items-center text-center">
-                    <div className="p-8 sm:p-12 rounded-2xl bg-[#0B1F63] w-32 h-32 sm:w-40 sm:h-40 flex items-center justify-center mx-auto mb-6 sm:mb-8">
-                      <Image 
+                    <Image 
                         src={feature.icon} 
                         alt={feature.title} 
                         width={80} 
                         height={80} 
                         className="w-16 h-16 sm:w-20 sm:h-20 object-contain"
                       />
-                    </div>
                     <div>
                       <h3 className="text-lg sm:text-xl font-bold text-white mb-2">
                         {feature.title}
@@ -330,7 +328,7 @@ export default function LandingPage() {
 
 
         {/* Final CTA Section - Mobile Optimized */}
-        <section className="py-12 sm:py-24 bg-gradient-to-br from-[#0B1F63] to-[#0B1F63]/80">
+        <section className="py-12 sm:py-24 bg-[#0B1F63]">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
             <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 sm:mb-8 leading-tight tracking-tight">
               Ready to find your style?

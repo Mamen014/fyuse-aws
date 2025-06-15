@@ -24,6 +24,7 @@ export default function RegisterAI() {
   const citySelectId = useId();
 
   const [formData, setFormData] = useState({
+    nickname: '',
     birthdate: '',
     phoneNumber: '',
     country: '',
@@ -41,6 +42,7 @@ export default function RegisterAI() {
   const [isClient, setIsClient] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -67,7 +69,8 @@ export default function RegisterAI() {
     }
   }, [isClient, userEmail]);
 
-  const isFormValid = formData.birthdate && 
+  const isFormValid = formData.nickname &&
+                     formData.birthdate && 
                      formData.phoneNumber && 
                      selectedCountry && 
                      selectedCity && 
@@ -105,7 +108,6 @@ export default function RegisterAI() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (isLoading || isSubmitting) return;
-    
     setIsLoading(true);
     setIsSubmitting(true);
     setError('');
@@ -130,10 +132,18 @@ export default function RegisterAI() {
       
       localStorage.setItem('onboarding_register', JSON.stringify(updatedFormData));
       localStorage.setItem('onboarding_version', 'ai-flow');
-      // Let the loading state handle the transition
-      setTimeout(() => {
-        router.push('/discover-your-style/upload-photo');
-      }, 500);
+      // Show loading state and navigate
+      setIsNavigating(true);
+      router.push('/discover-your-style/upload-photo');
+      
+      // Fallback in case navigation doesn't complete
+      const navigationTimeout = setTimeout(() => {
+        if (isNavigating) {
+          window.location.href = '/discover-your-style/upload-photo';
+        }
+      }, 5000);
+      
+      return () => clearTimeout(navigationTimeout);
     } catch (err) {
       console.error('Failed to save registration data:', err);
     } finally {
@@ -160,12 +170,35 @@ export default function RegisterAI() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-white p-4">
+      {isNavigating && (
+        <div className="fixed inset-0 bg-white/90 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="flex flex-col items-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#0B1F63]/20 border-t-[#0B1F63] border-b-[#0B1F63] mb-4"></div>
+            <p className="text-[#0B1F63] font-medium text-lg">Preparing your experience...</p>
+            <p className="text-gray-500 text-sm">Just a moment please</p>
+          </div>
+        </div>
+      )}
       <div className="w-full max-w-md bg-white rounded-3xl border border-gray-200 shadow-sm p-6 md:p-8">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-bold text-[#0B1F63]">Register</h2>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Nickname
+            </label>
+            <input
+              type="text"
+              name="nickname"
+              value={formData.nickname}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+              placeholder="Enter your nickname"
+              required
+            />
+          </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Birthdate

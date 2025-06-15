@@ -229,40 +229,58 @@ export default function RecommendedProductPage() {
         )}
 
         {!showPricingPlans && product && (
-          <div className="flex flex-col items-center space-y-4">
-            <img
-              src={product.imageS3Url}
-              alt={product.productName}
-              className="w-48 rounded-md object-cover"
-            />
-            {product.modelRef?.length > 0 && (
-              <img
-                src={product.modelRef}
-                alt="Model Preview"
-                className="w-48 rounded-md object-cover"
-              />
-            )}
-            <div className="text-center">
-              <h2 className="font-semibold text-primary-100">{product.productName}</h2>
-              <p className="text-sm text-primary-300">{product.brand}</p>
-                <a
-                  href={product.productLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-cta underline"
-                  onClick={() => handleTrack("Click Product Link", { 
-                    productId: product.productId,
-                    productName: product.productName,
-                    brand: product.brand
-                  })}
-                >
-                  View Product
-                </a>
+          <div className="w-full max-w-4xl mx-auto">
+            <div className="bg-white rounded-2xl p-6 shadow-2xl mb-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* Product Image */}
+                <div className="relative w-full h-96 rounded-xl overflow-hidden">
+                  <img
+                    src={product.imageS3Url}
+                    alt={product.productName}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute bottom-4 right-4 bg-white/90 text-[#0B1F63] px-3 py-1 rounded-full text-sm font-medium z-20">
+                    Recommended For You
+                  </div>
+                </div>
+
+                {/* Product Info */}
+                <div className="flex flex-col justify-between">
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-2">{product.productName}</h2>
+                    {product.brand && (
+                      <p className="text-lg text-gray-600 mb-6">{product.brand}</p>
+                    )}
+                    {product.description && (
+                      <p className="text-gray-600 mb-6">{product.description}</p>
+                    )}
+                  </div>
+                  
+                  <div className="space-y-4">
+                    {product.productLink && (
+                      <a
+                        href={product.productLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-block w-full text-center text-white bg-[#0B1F63] hover:bg-[#0a1a57] px-6 py-3 rounded-full transition-colors font-medium"
+                        onClick={() => handleTrack("Click Product Link", { 
+                          productId: product.productId || 'unknown',
+                          productName: product.productName || 'unknown',
+                          brand: product.brand || 'unknown',
+                          fromPage: 'RecommendedProducts'
+                        })}
+                      >
+                        View Product
+                      </a>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
 
-            {error && <p className="text-sm text-red-500">{error}</p>}
+            {error && <p className="text-sm text-red-500 text-center mb-4">{error}</p>}
 
-            <div className="flex flex-col gap-4 w-full md:w-1/2">
+            <div className="flex flex-col md:flex-row gap-4 w-full max-w-md mx-auto">
               <button
                 onClick={async () => {
                   try {
@@ -287,17 +305,27 @@ export default function RecommendedProductPage() {
                   router.push('/onboarding/virtual-tryon-result');
                 }}
                 disabled={isSubmitting}
-                className={`py-2 px-4 rounded-lg ${
-                  isSubmitting ? 'bg-primary/70 cursor-not-allowed' : 'bg-primary'
-                } text-white`}
+                className={`py-3 px-6 rounded-full font-medium text-white transition-all ${
+                  isSubmitting 
+                    ? 'bg-[#0B1F63]/70 cursor-not-allowed' 
+                    : 'bg-[#0B1F63] hover:bg-[#0a1a57] shadow-lg hover:shadow-xl hover:-translate-y-0.5'
+                }`}
               >
-                {isSubmitting ? 'Styling...' : 'Style Me'}
+                {isSubmitting ? (
+                  <span className="flex items-center justify-center">
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Styling...
+                  </span>
+                ) : 'Style Me'}
               </button>
               <button
                 onClick={() => window.location.reload()}
-                className="bg-white text-primary-100 border border-primary-100 py-2 px-4 rounded-lg"
+                className="py-3 px-6 rounded-full font-medium text-[#0B1F63] border-2 border-[#0B1F63] hover:bg-[#0B1F63]/5 transition-colors"
               >
-                Retry
+                Try Another Style
               </button>
             </div>
           </div>
