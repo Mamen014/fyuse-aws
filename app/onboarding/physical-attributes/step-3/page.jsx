@@ -27,7 +27,7 @@ export default function PhysicalAttributesStep3() {
       'onboarding_physical_attributes_3',
       JSON.stringify({ bodyShape })
     );
-    window.location.href = '/onboarding-ai/style-preferences';
+    window.location.href = '/discover-your-style/style-preferences';
   };
 
   const maleBodyTypeImages = {
@@ -100,9 +100,6 @@ export default function PhysicalAttributesStep3() {
         <div className="p-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold" style={{ color: '#0B1F63' }}>Physical attribute</h2>
-            <div className="text-white text-sm font-semibold px-3 py-1 rounded-full" style={{ backgroundColor: '#0B1F63' }}>
-              Step 4/7
-            </div>
           </div>
           <p className="mb-6" style={{ color: '#0B1F63' }}>Body shape</p>
 

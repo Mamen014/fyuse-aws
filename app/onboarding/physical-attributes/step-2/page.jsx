@@ -121,11 +121,6 @@ export default function PhysicalAttributesStep2() {
         <h1 className="text-[22px] font-bold leading-tight text-[#0B1F63]">
           Physical<br />attribute
         </h1>
-        <div className="absolute top-0 right-0">
-          <span className="inline-block px-3 py-0.5 text-xs text-white bg-[#0B1F63] rounded-full">
-            Step 3/7
-          </span>
-        </div>
       </div>
 
       {/* Upload box */}

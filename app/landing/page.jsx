@@ -55,60 +55,42 @@ export default function LandingPage() {
     }
   }, [user, isLoading, router]);
 
-  const testimonials = [
-    {
-      quote: "I finally found pieces that fit me. Not just models.",
-      author: "Dita",
-      rating: 5
-    },
-    {
-      quote: "The virtual try-on is incredibly accurate!",
-      author: "Sarah",
-      rating: 5
-    },
-    {
-      quote: "Saved me so much time and money on returns.",
-      author: "Michael",
-      rating: 5
-    }
-  ];
-
   const howItWorks = [
     {
       number: "1",
-      icon: <Camera className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4 sm:mb-8 text-[#0B1F63] opacity-80" />,
+      icon: "/images/icon/step-1.png",
       title: "Upload Your Photo",
       description: "We'll analyze your physical attributes securely and create your personalized profile."
     },
     {
       number: "2",
-      icon: <Sparkles className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4 sm:mb-8 text-[#0B1F63] opacity-80" />,
+      icon: "/images/icon/step-2.png",
       title: "Tell Us Your Style",
       description: "Answer a few quick questions about what you like and discover your unique aesthetic."
     },
     {
       number: "3",
-      icon: <Shirt className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4 sm:mb-8 text-[#0B1F63] opacity-80" />,
+      icon: "/images/icon/step-3.png",
       title: "Discover your style",
-      description: "Get personalized recommended product tailored to your physical attributes and style preferences"
+      description: "Discover outfit recommendations tailored to your body shape, skin tone, and styling preference"
     },
     {
       number: "4",
-      icon: <Shirt className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4 sm:mb-8 text-[#0B1F63] opacity-80" />,
-      title: "Fitting",
-      description: "See how the recommended product looks on your actual body."
+      icon: "/images/icon/step-4.png",
+      title: "Digital Fitting Room",
+      description: "Try on clothes virtually before buying. See how they look on your actual body"
     }
   ];
 
   // Key features highlighting both main functionalities
   const keyFeatures = [
     {
-      icon: <Target className="w-8 h-8 text-white" />,
-      title: "Personalized Styling",
-      description: "Get personalized recommended product tailored to your physical attributes and style preferences"
+      icon: "/images/icon/Discover-your-style.png",
+      title: "Discover your style",
+      description: "Discover outfit recommendations tailored to your body shape, skin tone, and styling preference"
     },
     {
-      icon: <Zap className="w-8 h-8 text-white" />,
+      icon: "/images/icon/Digital-fitting-room.png",
       title: "Digital Fitting Room",
       description: "Try on clothes virtually before buying. See how they look on your actual body"
     },
@@ -130,28 +112,20 @@ export default function LandingPage() {
   // FAQ Data
   const faqs = [
     {
-      question: "How accurate is the virtual try-on?",
-      answer: "Our AI technology is 95% accurate in predicting fit and appearance. We use advanced computer vision and machine learning to map clothing onto your body type with precision comparable to in-store fitting."
-    },
-    {
-      question: "Is my photo data secure?",
-      answer: "Absolutely. We use end-to-end encryption for all photos and personal data. Your images are processed locally and securely, never stored permanently, and never shared with brands or third parties."
+      question: "Is my data secure?",
+      answer: "Absolutely. We only collect what we need—your photos and style choices—to style you better. Your data is locked away in secure cloud storage, never sold, and only shared with trusted partners when the law requires. You can view, update, or delete it at any time."
     },
     {
       question: "How does the personalized styling work?",
-      answer: "Our AI analyzes your body measurements, style preferences, lifestyle, and fashion goals to curate personalized recommendations from thousands of brands and retailers that match your unique profile."
+      answer: "Our system recommends clothing based on your physical features—like gender, body shape, and skin tone—and your style preferences, such as fashion type and clothing category. It matches you with the best items from our collection and keeps learning to improve your recommendations over time."
     },
     {
-      question: "Can I try clothes from any brand?",
-      answer: "We partner with over 500 fashion brands and retailers. If you find an item we don't support yet, you can request it and we'll prioritize adding it to our platform."
+      question: "Can I try on my own clothing items?",
+      answer: 'Yes, you can! Simply select the "Direct Fitting" option after clicking the "Free Styling" button. This allows you to upload animage of your own clothing item and see how it looks on you'
     },
     {
-      question: "How much does Fyuse cost?",
-      answer: "Fyuse is completely free to use! We earn commission from partner brands when you make purchases, so you get personalized styling and virtual try-ons at no cost."
-    },
-    {
-      question: "Do you support all body types and sizes?",
-      answer: "Yes! Our AI is trained on diverse body types, sizes (XS-5XL), ages, and ethnicities. We believe fashion should be inclusive and work for everyone."
+      question: "What makes FYUSE different from other fashion platforms?",
+      answer: 'FYUSE combines smart styling recommendations based on your body shape, skin tone, and preferences—with try-on tech that lets you see before you shop.'
     }
   ];
 
@@ -171,12 +145,15 @@ export default function LandingPage() {
     <div className="flex flex-col min-h-screen bg-white text-[#0B1F63] overflow-x-hidden">
       <Navbar />
       
-      <main className="flex-grow">
+      <main className="flex-grow font-sans">
         {/* Hero Section - Mobile Optimized with Fade Transition */}
         <section className="relative overflow-hidden pt-20 sm:pt-28 pb-8 sm:pb-13 bg-white">
+          <h1 className="font-sans text-center max-w-4xl mx-auto text-2xl sm:text-4xl md:text-5xl pt-3 lg:text-6xl text-[#0B1F63] mb-4 sm:mb-8 font-semibold leading-tight tracking-tight px-4">
+            Personalized styling recommendation <br className="hidden sm:block"/>with digital fitting room
+          </h1>
           <div className="max-w-6xl mx-auto px-4 sm:px-6">
             {/* Single Centered Image Container with Fade Effect - Mobile Responsive */}
-            <div className="relative overflow-hidden py-10 flex justify-center">
+            <div className="relative overflow-hidden pb-3 flex justify-center">
               <div className="relative w-[300px] h-[400px]">
                 {heroImages.map((image, index) => (
                   <div
@@ -199,10 +176,6 @@ export default function LandingPage() {
 
             {/* Content - Mobile Optimized */}
             <div className="text-center max-w-4xl mx-auto">
-              <h1 className="text-xl sm:text-3xl md:text-4xl lg:text-5xl text-[#0B1F63] mb-4 sm:mb-8 leading-tight tracking-tight px-4">
-              Personalized styling recommendation <br></br> with digital fitting room
-                <br />
-              </h1>
               
               <LandingCTA />
             </div>
@@ -227,9 +200,15 @@ export default function LandingPage() {
                   key={index}
                   className="p-6 sm:p-8 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 hover:border-white/30 transition-all duration-300 hover:shadow-lg hover:scale-105"
                 >
-                  <div className="flex items-start gap-4">
-                    <div className="flex-shrink-0 p-3 bg-white/20 rounded-xl shadow-sm">
-                      {feature.icon}
+                  <div className="flex flex-col items-center text-center">
+                    <div className="p-8 sm:p-12 rounded-2xl bg-[#0B1F63] w-32 h-32 sm:w-40 sm:h-40 flex items-center justify-center mx-auto mb-6 sm:mb-8">
+                      <Image 
+                        src={feature.icon} 
+                        alt={feature.title} 
+                        width={80} 
+                        height={80} 
+                        className="w-16 h-16 sm:w-20 sm:h-20 object-contain"
+                      />
                     </div>
                     <div>
                       <h3 className="text-lg sm:text-xl font-bold text-white mb-2">
@@ -279,8 +258,14 @@ export default function LandingPage() {
                   </div>
                   
                   <div className="pt-4 sm:pt-6">
-                    <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4 sm:mb-8 text-[#0B1F63] opacity-80">
-                      {React.cloneElement(step.icon, { className: "w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4 sm:mb-8 text-[#0B1F63] opacity-80" })}
+                    <div className="w-24 h-24 sm:w-32 sm:h-32 mx-auto mb-6 sm:mb-8">
+                      <Image 
+                        src={step.icon} 
+                        alt={`Step ${step.number}: ${step.title}`} 
+                        width={128} 
+                        height={128}
+                        className="w-full h-full object-contain"
+                      />
                     </div>
                     
                     <h3 className="text-lg sm:text-2xl font-bold text-[#0B1F63] mb-3 sm:mb-6 leading-tight">
@@ -297,83 +282,6 @@ export default function LandingPage() {
           </div>
         </section>
         
-
-        {/* Try-On Carousel with Testimonials - Mobile Optimized */}
-        <section className="py-12 sm:py-24 bg-[#0B1F63] relative overflow-hidden">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 relative z-10">
-            <div className="text-center mb-12 sm:mb-20">
-              <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 sm:mb-8 leading-tight tracking-tight">
-                See yourself in a new way
-              </h2>
-              <p className="text-base sm:text-lg lg:text-xl text-white/70 max-w-3xl mx-auto leading-relaxed">
-                Real people. Real results. Real confidence.
-              </p>
-            </div>
-
-            {/* Scrolling Results Carousel with Testimonials - Mobile Responsive */}
-            <div className="overflow-x-auto flex space-x-4 p-4">
-              {[
-                {
-                  caption: "What Fyuse picked for Maya",
-                  image: "/examples/tryon-1.jpg",
-                  testimonial: "Finally found clothes that actually fit my body type perfectly!",
-                  author: "Maya K."
-                },
-                {
-                  caption: "Virtual try-on for Alex — before buying",
-                  image: "/examples/tryon-2.jpg",
-                  testimonial: "Saved me from so many disappointing online purchases. This is a game changer!",
-                  author: "Alex R."
-                },
-                {
-                  caption: "Perfect fit recommendations for Emma",
-                  image: "/examples/tryon-3.jpg",
-                  testimonial: "I used to hate shopping online, now I'm confident every time I order.",
-                  author: "Emma L."
-                }
-              ].map((item, index) => (
-                <div key={index} className="min-w-64 sm:min-w-80 bg-white/10 backdrop-blur-sm rounded-2xl p-4 sm:p-6 text-center shadow-xl flex-shrink-0 border border-white/20">
-                  <div className="flex items-center justify-center gap-3 sm:gap-6 mb-4 sm:mb-6">
-                    <div className="w-16 h-20 sm:w-24 sm:h-32 bg-white/10 rounded-xl relative overflow-hidden">
-                      <Image
-                        src={item.image}
-                        alt={item.caption}
-                        layout="fill"
-                        objectFit="cover"
-                        className="opacity-70"
-                      />
-                    </div>
-                    <span className="text-xl sm:text-3xl text-white/60">→</span>
-                    <div className="w-16 h-20 sm:w-24 sm:h-32 bg-white/10 rounded-xl flex items-center justify-center">
-                      <span className="text-xl sm:text-3xl text-white/60">✨</span>
-                    </div>
-                  </div>
-                  <p className="font-semibold text-sm sm:text-base text-white mb-4 leading-relaxed">
-                    {item.caption}
-                  </p>
-                  <div className="border-t border-white/10 pt-4">
-                    <div className="flex justify-center mb-2">
-                      {[...Array(5)].map((_, i) => (
-                        <Star key={i} className="w-3 h-3 sm:w-4 sm:h-4 fill-yellow-400 text-yellow-400" />
-                      ))}
-                    </div>
-                    <blockquote className="text-xs sm:text-sm text-white/80 italic mb-2 leading-relaxed">
-                      "{item.testimonial}"
-                    </blockquote>
-                    <cite className="text-xs sm:text-sm font-semibold text-white">
-                      — {item.author}
-                    </cite>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-
-
-
-
         {/* FAQ Section - Mobile Optimized */}
         <section className="py-12 sm:py-24 bg-white">
           <div className="max-w-4xl mx-auto px-4 sm:px-6">
@@ -428,7 +336,8 @@ export default function LandingPage() {
               Ready to find your style?
             </h2>
             <p className="text-base sm:text-lg lg:text-xl text-white/80 mb-8 sm:mb-12 leading-relaxed max-w-2xl mx-auto">
-              Join thousands who've revolutionized their shopping experience with personalized styling and virtual try-ons
+            A personalized fashion experience, crafted for the few
+            who seek more. Be among the first to explore it.
             </p>
             <div className="space-y-4 sm:space-y-0 sm:space-x-4 sm:flex sm:justify-center sm:items-center">
               <a
@@ -437,7 +346,6 @@ export default function LandingPage() {
               >
                 Start Free Styling
               </a>
-              <p className="text-sm text-white/70">✨ No credit card required</p>
             </div>
           </div>
         </section>

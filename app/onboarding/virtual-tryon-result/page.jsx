@@ -1,4 +1,5 @@
 'use client'
+
 import React, { useState, useEffect } from "react";
 import { useRouter } from 'next/navigation';
 import { useAuth } from "react-oidc-context";
@@ -7,6 +8,7 @@ import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer } from "react-toastify";
 import LoadingModalSpinner from '@/components/LoadingModal';
+import Image from 'next/image';
 
 export default function VirtualTryOnResultPage() {
   const { user } = useAuth();
@@ -19,9 +21,37 @@ export default function VirtualTryOnResultPage() {
   const [polling, setPolling] = useState(false);
   const [pollIntervalId, setPollIntervalId] = useState(null);
   const [resultImageUrl, setResultImageUrl] = useState(null);
+  const [product, setProduct] = useState(null);
 
   const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
   const taskId = typeof window !== "undefined" ? localStorage.getItem("taskId") : null;
+  
+  // Track user events
+  const handleTrack = async (action, metadata = {}) => {
+    if (!userEmail) return;
+    
+    const payload = {
+      userEmail,
+      action,
+      timestamp: new Date().toISOString(),
+      page: "VirtualTryOnResultPage",
+      ...metadata,
+    };
+
+    try {
+      await axios.post(`${API_BASE_URL}/trackevent`, payload);
+    } catch (err) {
+      console.error("Failed to track event:", err);
+    }
+  };
+  
+  // Load product data from localStorage
+  useEffect(() => {
+    const savedProduct = localStorage.getItem('tryonProduct');
+    if (savedProduct) {
+      setProduct(JSON.parse(savedProduct));
+    }
+  }, []);
 
   const handleHomeClick = () => {
     localStorage.setItem(`onboarding_step:${userEmail}`, "appearance");
@@ -49,6 +79,7 @@ export default function VirtualTryOnResultPage() {
             window.generatedImageUrl = data.generatedImageUrl;
             setPolling(false);
             setLoading(false);
+            
             toast.success("Added to your wardrobe!", {
               position: "top-right",
               autoClose: 5000,
@@ -88,33 +119,98 @@ export default function VirtualTryOnResultPage() {
     return <LoadingModalSpinner message="Styling..." />;
   }
 
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen p-4">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-red-600 mb-4">Error</h2>
+          <p className="text-gray-700 mb-8">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen w-full bg-gradient-to-b from-blue-50 to-white px-4 py-8">
       {/* Decorative Elements */}
       <div className="absolute top-0 left-0 w-full h-32 bg-[#0B1F63]/5 rounded-b-full blur-xl opacity-50 z-0"></div>
       
-      <div className="relative z-10 w-full max-w-lg">
+      <div className="relative z-10 w-full max-w-6xl">
         {/* Header */}
         <h1 className="text-[#0B1F63] text-3xl md:text-4xl font-bold mb-3 text-center">
           Your Perfect Look
         </h1>
         <p className="text-gray-600 text-center mb-10">The style has been added to your wardrobe</p>
         
-        {/* Result Image Container */}
-        <div className="flex justify-center mb-12">
-          <div className="relative overflow-hidden rounded-2xl shadow-2xl">
-            <div className="absolute inset-0 bg-gradient-to-t from-[#0B1F63]/20 to-transparent z-10"></div>
-            <img
-              src={resultImageUrl}
-              alt="Virtual Try-On Result"
-              className="w-full h-auto object-cover"
-            />
-            <div className="absolute bottom-4 right-4 bg-white/90 text-[#0B1F63] px-3 py-1 rounded-full text-sm font-medium z-20">
-              Perfect Match
+        {/* Results Container */}
+        <div className="flex flex-col md:flex-row gap-8 justify-center items-start mb-12">
+          {/* Try-On Result */}
+          <div className="w-full md:w-1/2">
+            <h2 className="text-xl font-semibold text-[#0B1F63] mb-4 text-center">Your Virtual Try-On</h2>
+            <div className="relative overflow-hidden rounded-2xl shadow-2xl">
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0B1F63]/20 to-transparent z-10"></div>
+              {resultImageUrl ? (
+                <img
+                  src={resultImageUrl}
+                  alt="Virtual Try-On Result"
+                  className="w-full h-auto object-cover"
+                />
+              ) : (
+                <div className="w-full h-96 bg-gray-200 flex items-center justify-center">
+                  <p className="text-gray-500">No image available</p>
+                </div>
+              )}
+              <div className="absolute bottom-4 right-4 bg-white/90 text-[#0B1F63] px-3 py-1 rounded-full text-sm font-medium z-20">
+                Perfect Match
+              </div>
             </div>
           </div>
+
+          {/* Original Product */}
+          {product && (
+            <div className="w-full md:w-1/2">
+              <h2 className="text-xl font-semibold text-[#0B1F63] mb-4 text-center">Original Product</h2>
+              <div className="bg-white rounded-2xl p-6 shadow-2xl h-full">
+                <div className="relative w-full h-64 mb-4 rounded-xl overflow-hidden">
+                  <img
+                    src={product.imageS3Url}
+                    alt={product.productName || 'Product image'}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="text-center">
+                  <h3 className="text-lg font-semibold text-gray-900">{product.productName}</h3>
+                  {product.brand && (
+                    <p className="text-gray-600 mb-4">{product.brand}</p>
+                  )}
+                  {product.productLink && (
+                    <a
+                      href={product.productLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-block mt-2 text-sm text-white bg-[#0B1F63] hover:bg-[#0a1a57] px-4 py-2 rounded-full transition-colors"
+                      onClick={() => handleTrack("Click Product Link", { 
+                        productId: product.productId || 'unknown',
+                        productName: product.productName || 'unknown',
+                        brand: product.brand || 'unknown',
+                        fromPage: 'TryOnResult'
+                      })}
+                    >
+                      View Product
+                    </a>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
-        
+
         {/* Buttons Container */}
         <div className="space-y-4 px-4 md:px-12">
           {/* Download Button (matching style/spacing) */}
@@ -173,7 +269,7 @@ export default function VirtualTryOnResultPage() {
             onClick={() => router.push('/onboarding/recommended-product')}
             className="w-full py-4 px-4 bg-foreground border border-primary text-background font-medium rounded-full"
           >
-            Try Another Style
+            Try Another Product
           </button>
           {/* Continue to Wardrobe */}
           <button

@@ -12,10 +12,13 @@ export default function AIPhotoUpload() {
   const [photoPreview, setPhotoPreview] = useState('');
   const [isUserPhotoGuidanceOpen, setIsUserPhotoGuidanceOpen] = useState(false);
   const [fileToUpload, setFileToUpload] = useState(null);
-  const [uploading, setUploading] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
   const [isValidUserImage, setIsValidUserImage] = useState(false);
   const [showAIModal, setShowAIModal] = useState(false);
   const [aiAnalysis, setAiAnalysis] = useState(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [error, setError] = useState(null);
   const { user } = useAuth();
   const userEmail = user?.profile?.email;
   const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
@@ -71,7 +74,9 @@ export default function AIPhotoUpload() {
     if (!fileToUpload || !userEmail) return;
 
     try {
-      setUploading(true);
+      setLoading(true);
+      setIsAnalyzing(true);
+      setShowAIModal(true);
       
       // Convert file to base64
       const base64Data = await new Promise((resolve, reject) => {
@@ -115,95 +120,114 @@ export default function AIPhotoUpload() {
       });
       const analyzerData = await analyzerResponse.json();
       
-      // Store physical attributes data in the same format as regular onboarding
-      // First call - physicalAppearance1 (gender and skin tone)
-      await fetch(`${API_BASE_URL}/userPref`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userEmail,
-          section: 'physicalAppearance1',
-          data: {
-            gender: analyzerData.gender,
-            skinTone: analyzerData.skinTone
-          }
-        })
-      });
-
-      // Second call - physicalAppearance2 (body shape)
-      await fetch(`${API_BASE_URL}/userPref`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userEmail,
-          section: 'physicalAppearance2',
-          data: {
-            bodyShape: analyzerData.bodyShape
-          }
-        })
-      });
-
-      // Set AI analysis state for the modal
+      // Format the AI analysis results
       const aiAnalysisResults = {
         gender: analyzerData.gender,
         skinTone: analyzerData.skinTone,
         bodyShape: analyzerData.bodyShape
       };
+      
+      // Save to state for the modal
       setAiAnalysis(aiAnalysisResults);
-      setShowAIModal(true);
       
-      localStorage.setItem('photo_uploaded', 'true');
+      // Save to localStorage in the format expected by the onboarding flow
+      localStorage.setItem('onboarding_physical_attributes_1', JSON.stringify({
+        gender: analyzerData.gender,
+        skinTone: analyzerData.skinTone
+      }));
       
-      localStorage.setItem('onboarding_version', 'ai-to-manual');
+      localStorage.setItem('onboarding_physical_attributes_2', JSON.stringify({
+        bodyShape: analyzerData.bodyShape
+      }));
       
-      localStorage.setItem('skip_photo_upload', 'true');
+      // Save to backend API
+      try {
+        // First call - physicalAppearance1 (gender and skin tone)
+        await fetch(`${API_BASE_URL}/userPref`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userEmail,
+            section: 'physicalAppearance1',
+            data: {
+              gender: analyzerData.gender,
+              skinTone: analyzerData.skinTone
+            }
+          })
+        });
+
+        // Second call - physicalAppearance2 (body shape)
+        await fetch(`${API_BASE_URL}/userPref`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userEmail,
+            section: 'physicalAppearance2',
+            data: {
+              bodyShape: analyzerData.bodyShape
+            }
+          })
+        });
+        
+        // Mark photo as uploaded and set onboarding version
+        localStorage.setItem('photo_uploaded', 'true');
+        localStorage.setItem('onboarding_version', 'ai-flow');
+        localStorage.setItem('skip_photo_upload', 'true');
+        
+      } catch (error) {
+        console.error('Error saving to backend:', error);
+        // Even if backend save fails, we can continue with the flow
+        // since we've saved to localStorage
+      }
+      
+      setIsAnalyzing(false);
 
     } catch (err) {
       console.error('Upload error:', err);
+      setError(err);
+      setShowAIModal(false);
+      setIsAnalyzing(false);
       toast.error('An error occurred during upload.');
     } finally {
-      setUploading(false);
+      setLoading(false);
     }
   };
 
   const handleAcceptAnalysis = () => {
-    // Store AI analysis results in standard onboarding localStorage format
-    localStorage.setItem('onboarding_physical_attributes_1', 
-      JSON.stringify({ 
-        gender: aiAnalysis.gender,
-        skinTone: aiAnalysis.skinTone 
-      })
-    );
-    localStorage.setItem('onboarding_physical_attributes_2', 
-      JSON.stringify({ 
-        bodyShape: aiAnalysis.bodyShape 
-      })
-    );
-    // Redirect to AI style preferences
-    router.push('/onboarding-ai/style-preferences');
+    if (isNavigating) return;
+    
+    setIsNavigating(true);
+    
+    // Save to local storage that user has accepted the analysis
+    const userEmail = user?.profile?.email;
+    if (userEmail) {
+      localStorage.setItem(
+        `onboarding_photo_analysis_accepted:${userEmail}`,
+        'true'
+      );
+    }
+    
+    // Show loading state before navigation
+    setTimeout(() => {
+      router.push('/discover-your-style/style-preferences');
+    }, 500);
   };
 
   const handleCustomize = () => {
-    // Store AI analysis in standard onboarding localStorage format
-    localStorage.setItem('onboarding_physical_attributes_1', 
-      JSON.stringify({ 
-        gender: aiAnalysis.gender,
-        skinTone: aiAnalysis.skinTone 
-      })
-    );
-    localStorage.setItem('onboarding_physical_attributes_2', 
-      JSON.stringify({ 
-        bodyShape: aiAnalysis.bodyShape 
-      })
-    );
-    // Store that the user has already uploaded a photo
-    localStorage.setItem('photo_uploaded', 'true');
-    // Track that user switched to manual flow
-    localStorage.setItem('onboarding_version', 'ai-to-manual');
-    // Add flag to skip step 2
-    localStorage.setItem('skip_photo_upload', 'true');
-    // Redirect to manual physical attributes flow
-    router.push('/onboarding/physical-attributes/step-1');
+    if (isNavigating) return;
+    setIsNavigating(true);
+    
+    try {
+      // Update the onboarding version to indicate manual customization
+      localStorage.setItem('onboarding_version', 'ai-to-manual');
+      
+      // Redirect to the first step of manual physical attributes
+      router.push('/onboarding/physical-attributes/step-1');
+      
+    } catch (error) {
+      console.error('Error in handleCustomize:', error);
+      setIsNavigating(false);
+    }
   };
 
   return (
@@ -216,9 +240,6 @@ export default function AIPhotoUpload() {
           Please Upload<br />Your Photo
         </h1>
         <div className="absolute top-0 right-0">
-          <span className="inline-block px-3 py-0.5 text-xs text-white bg-[#0B1F63] rounded-full">
-            Step 2/4
-          </span>
         </div>
       </div>
 
@@ -265,15 +286,15 @@ export default function AIPhotoUpload() {
       {/* Next Button */}
       <button
         onClick={handleUpload}
-        disabled={!fileToUpload || uploading || !isValidUserImage}
+        disabled={!fileToUpload || loading || !isValidUserImage}
         className={`w-full py-3.5 font-medium rounded-lg transition-opacity duration-200 ${
-          fileToUpload && isValidUserImage && !uploading
+          fileToUpload && isValidUserImage && !loading
             ? 'bg-[#0B1F63] text-white'
             : 'bg-gray-300 text-gray-500 cursor-not-allowed'
         }`}
         style={{ borderRadius: "8px" }}
       >
-        {uploading ? 'Analyzing...' : 'Analyze Photo'}
+        {loading ? 'Analyzing...' : 'Analyze Photo'}
       </button>
 
       {isUserPhotoGuidanceOpen && (
@@ -327,39 +348,48 @@ export default function AIPhotoUpload() {
 
       {/* AI Analysis Modal */}
       {showAIModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl p-6 max-w-sm w-full">
-            <h3 className="text-xl font-bold text-[#0B1F63] mb-4">Analysis Results</h3>
-            
-            <div className="space-y-4 mb-6">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Gender</p>
-                <p className="text-lg text-[#0B1F63]">{aiAnalysis.gender}</p>
+            {isAnalyzing ? (
+              <div className="py-8 flex flex-col items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#0B1F63] mb-4"></div>
+                <p className="text-lg font-medium text-[#0B1F63]">Analyzing your photo...</p>
+                <p className="text-sm text-gray-500 mt-2 text-center">This may take a few moments</p>
               </div>
-              <div>
-                <p className="text-sm font-medium text-gray-600">Skin Tone</p>
-                <p className="text-lg text-[#0B1F63]">{aiAnalysis.skinTone}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-600">Body Shape</p>
-                <p className="text-lg text-[#0B1F63]">{aiAnalysis.bodyShape}</p>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <button
-                onClick={handleAcceptAnalysis}
-                className="w-full py-3 bg-[#0B1F63] text-white rounded-lg font-medium"
-              >
-                Accept Analysis
-              </button>
-              <button
-                onClick={handleCustomize}
-                className="w-full py-3 border border-[#0B1F63] text-[#0B1F63] rounded-lg font-medium"
-              >
-                Customize Manually
-              </button>
-            </div>
+            ) : (
+              <>
+                <h3 className="text-xl font-bold text-[#0B1F63] mb-4">Analysis Results</h3>
+                <div className="space-y-4 mb-6">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Gender</p>
+                    <p className="text-lg text-[#0B1F63]">{aiAnalysis?.gender || 'Not detected'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Skin Tone</p>
+                    <p className="text-lg text-[#0B1F63]">{aiAnalysis?.skinTone || 'Not detected'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Body Shape</p>
+                    <p className="text-lg text-[#0B1F63]">{aiAnalysis?.bodyShape || 'Not detected'}</p>
+                  </div>
+                </div>
+                
+                <div className="space-y-3">
+                  <button
+                    onClick={handleAcceptAnalysis}
+                    className="w-full py-3 bg-[#0B1F63] text-white rounded-lg font-medium hover:bg-[#0a1b56] transition-colors"
+                  >
+                    Accept Analysis
+                  </button>
+                  <button
+                    onClick={handleCustomize}
+                    className="w-full py-3 border border-[#0B1F63] text-[#0B1F63] rounded-lg font-medium hover:bg-gray-50 transition-colors"
+                  >
+                    Customize Manually
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}

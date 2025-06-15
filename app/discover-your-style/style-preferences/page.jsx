@@ -8,6 +8,7 @@ export default function CombinedStylePreferences() {
   const router = useRouter();
   const [clothingType, setClothingType] = useState('');
   const [fashionType, setFashionType] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { user } = useAuth();
   const userEmail = user?.profile?.email;
   const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
@@ -21,6 +22,9 @@ export default function CombinedStylePreferences() {
   };
 
   const handleSubmit = async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    
     try {
       // First call - StylePref1 (fashion type)
       await fetch(`${API_BASE_URL}/userPref`, {
@@ -77,9 +81,14 @@ export default function CombinedStylePreferences() {
         JSON.stringify({ clothingType }));
       
       // Redirect to recommended products
-      router.push('/onboarding/recommended-product');
-    } catch (err) {
-      console.error('Failed to save preferences:', err);
+      // Let the loading state handle the transition
+      setTimeout(() => {
+        router.push('/onboarding/recommended-product');
+      }, 500);
+    } catch (error) {
+      console.error('Error saving preferences:', error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -91,9 +100,6 @@ export default function CombinedStylePreferences() {
             <h2 className="text-xl font-bold text-[#0B1F63]">Style Preferences</h2>
             <p className="text-sm text-gray-500">Choose your style</p>
           </div>
-          <span className="inline-block px-3 py-1 text-xs bg-[#0B1F63] text-white rounded-full">
-            Step 3/4
-          </span>
         </div>
 
         {/* Clothing Type Selection */}
@@ -168,7 +174,7 @@ export default function CombinedStylePreferences() {
         {/* Submit Button */}
         <button
           onClick={handleSubmit}
-          disabled={!clothingType || !fashionType}
+          disabled={!clothingType || isSubmitting || !fashionType}
           className={`w-full py-3 px-4 rounded-lg font-medium transition-all ${
             clothingType && fashionType
               ? 'bg-[#0B1F63] text-white hover:bg-[#0a1b56]'

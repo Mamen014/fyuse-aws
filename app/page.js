@@ -153,7 +153,7 @@ export default function HomePage() {
   //     const userEmail = user.profile.email;
   //     const step = localStorage.getItem(`onboarding_step:${userEmail}`);
   //     if (step !== "appearance") {
-  //       window.location.href = "/onboarding-ai/register";
+  //       window.location.href = "/discover-your-style/register";
   //     }
   //   }
   // }, [referralHandled, user]);
@@ -455,7 +455,7 @@ if (profileItems.length === 0) {
 onClick={() => {
   handleTrack("Click For You Style Button");
   if (!user) {
-    localStorage.setItem("postLoginRedirect", "/onboarding-ai/register");
+    localStorage.setItem("postLoginRedirect", "/discover-your-style/register");
     toast.error("Please sign in to use this feature.");
     setTimeout(() => signinRedirect(), 1500);
   } else {
@@ -471,7 +471,7 @@ style={{ backgroundImage: `linear-gradient(135deg, ${BRAND_BLUE} 0%, #1e40af 100
  For You Style
  </button>
 <button
-  onClick={() => (window.location.href = "/tryon")}
+  onClick={() => (window.location.href = "/digital-fitting-room")}
   className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-5 rounded-3xl font-bold text-lg flex items-center justify-center text-center shadow-lg shadow-blue-200/50 mb-2"
   style={{ backgroundImage: `linear-gradient(135deg, ${BRAND_BLUE} 0%, #1e40af 100%)` }}
 >
@@ -785,7 +785,7 @@ setShowForYouModal(false)
 className="flex-1 py-4 rounded-2xl font-semibold border-2 border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors"
 onClick={() => {
 setShowForYouModal(false)
- window.location.href = "/onboarding-ai/upload-photo"
+ window.location.href = "/discover-your-style/upload-photo"
  }}
 >
  Edit Profile

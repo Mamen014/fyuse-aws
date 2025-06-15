@@ -7,18 +7,24 @@ export default function LandingCTA() {
   const router = useRouter();
   const { user, signinRedirect } = useAuth();
 
-  const handleClick = (e) => {
+  const handleClick = async (e) => {
     e.preventDefault();
     
-    // Store the intended destination
-    localStorage.setItem('postLoginRedirect', '/style-choice');
-    
-    if (!user) {
-      // If not logged in, redirect to login
-      signinRedirect();
-    } else {
-      // If logged in, go to style-choice
-      router.push('/style-choice');
+    try {
+      // Store the intended destination
+      localStorage.setItem('postLoginRedirect', '/style-discovery');
+      
+      if (!user) {
+        // If not logged in, redirect to login
+        await signinRedirect();
+      } else {
+        // If logged in, go to style-discovery
+        router.push('/style-discovery');
+      }
+    } catch (error) {
+      console.error('Authentication error:', error);
+      // Fallback in case of error
+      router.push('/style-discovery');
     }
   };
 

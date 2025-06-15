@@ -26,6 +26,25 @@ export default function RecommendedProductPage() {
 
   const hasFetchedRef = useRef(false);
 
+  // Track user events
+  const handleTrack = async (action, metadata = {}) => {
+    if (!userEmail) return;
+    
+    const payload = {
+      userEmail,
+      action,
+      timestamp: new Date().toISOString(),
+      page: "RecommendedProductPage",
+      ...metadata,
+    };
+
+    try {
+      await axios.post(`${API_BASE_URL}/trackevent`, payload);
+    } catch (err) {
+      console.error("Failed to track event:", err);
+    }
+  };
+
   // ========== Utility Functions ==========
 
   const refreshTryOnCount = async () => {
@@ -66,7 +85,7 @@ export default function RecommendedProductPage() {
           duration: 3000,
         });
         setTimeout(() => {
-          router.push('/onboarding-ai/style-preferences');
+          router.push('/discover-your-style/style-preferences');
         }, 3200);
       }
     } catch (err) {
@@ -226,14 +245,19 @@ export default function RecommendedProductPage() {
             <div className="text-center">
               <h2 className="font-semibold text-primary-100">{product.productName}</h2>
               <p className="text-sm text-primary-300">{product.brand}</p>
-              <a
-                href={product.productLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-cta underline"
-              >
-                View Product
-              </a>
+                <a
+                  href={product.productLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-cta underline"
+                  onClick={() => handleTrack("Click Product Link", { 
+                    productId: product.productId,
+                    productName: product.productName,
+                    brand: product.brand
+                  })}
+                >
+                  View Product
+                </a>
             </div>
 
             {error && <p className="text-sm text-red-500">{error}</p>}
@@ -253,6 +277,13 @@ export default function RecommendedProductPage() {
                   }
                   const result = await handleSubmit();
                   if (result === 'limit' || result === 'error') return;
+                  // Save product data for the try-on result page
+                  localStorage.setItem('tryonProduct', JSON.stringify({
+                    imageS3Url: product.imageS3Url,
+                    productName: product.productName,
+                    brand: product.brand,
+                    productLink: product.productLink
+                  }));
                   router.push('/onboarding/virtual-tryon-result');
                 }}
                 disabled={isSubmitting}

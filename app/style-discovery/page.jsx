@@ -4,6 +4,7 @@ import React from 'react';
 import { useRouter } from 'next/navigation';
 import { Shirt, Sparkles, ArrowRight, Zap, Target } from 'lucide-react';
 import { useAuth } from "react-oidc-context";
+import Image from 'next/image';
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
@@ -23,19 +24,19 @@ export default function StyleChoice() {
 
   const options = [
     {
-      icon: <Sparkles className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 xl:w-16 xl:h-16 text-[#0B1F63]" />,
-      title: "Find Your Style",
-      subtitle: "Get recommended product for You",
-      description: "Answer a few simple questions to get outfit ideas, then try them on with your photo.",
-      path: "/onboarding-ai?skipRegister=true",
+      icon: "/images/icon/step-3.png",
+      title: "Discover Your Style",
+      subtitle: "Looks tailored for you",
+      description: "Discover outfit recommendations tailored to your body shape, skin tone, and styling preference",
+      path: "/discover-your-style",
       gradient: "from-blue-50 to-indigo-50"
     },
     {
-      icon: <Shirt className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 xl:w-16 xl:h-16 text-[#0B1F63]" />,
+      icon: "/images/icon/step-4.png",
       title: "Try On Now",
       subtitle: "Upload and Preview",
-      description: "Just upload your photo and a product image and see how it looks on you right away.",
-      path: "/tryon",
+      description: "Try on clothes virtually before buying. See how they look on your actual body",
+      path: "/digital-fitting-room",
       gradient: "from-blue-50 to-indigo-50"
     }
   ];
@@ -57,10 +58,10 @@ export default function StyleChoice() {
           <div className="max-w-6xl mx-auto px-3 sm:px-4 lg:px-6">
             <div className="text-center max-w-4xl mx-auto mb-8 sm:mb-12 lg:mb-16">
               <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-[#0B1F63] mb-3 sm:mb-4 lg:mb-6 leading-tight tracking-tight px-2">
-                Choose Your Style Experience
+                Style Discovery Path
               </h1>
               <p className="text-sm sm:text-base lg:text-lg xl:text-xl text-[#0B1F63]/70 max-w-3xl mx-auto leading-relaxed px-2">
-                Pick the perfect way to discover your ideal style and fit
+                Choose the perfect way to discover your ideal style and fit
               </p>
             </div>
 
@@ -82,8 +83,14 @@ export default function StyleChoice() {
                   <div className="p-4 sm:p-6 lg:p-8 xl:p-10 h-full flex flex-col">
                     {/* Icon and Title */}
                     <div className="flex flex-col sm:flex-row items-center sm:items-start gap-3 sm:gap-4 mb-4 sm:mb-6">
-                      <div className="p-2 sm:p-3 lg:p-4 bg-white/80 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-sm flex-shrink-0">
-                        {option.icon}
+                      <div className="p-2 sm:p-3 lg:p-4 bg-white/80 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-sm flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center">
+                        <Image 
+                          src={option.icon} 
+                          alt={option.title}
+                          width={48}
+                          height={48}
+                          className="w-10 h-10 sm:w-12 sm:h-12 object-contain"
+                        />
                       </div>
                       <div className="flex-1 min-w-0 text-center sm:text-left">
                         <h2 className="text-base sm:text-xl lg:text-2xl xl:text-3xl font-bold text-[#0B1F63] mb-2 leading-tight">

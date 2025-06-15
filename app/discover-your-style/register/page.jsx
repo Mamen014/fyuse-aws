@@ -39,6 +39,9 @@ export default function RegisterAI() {
   const [agreeToPrivacy, setAgreeToPrivacy] = useState(false);
   const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
   const [isClient, setIsClient] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     setIsClient(true);
@@ -101,6 +104,11 @@ export default function RegisterAI() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isLoading || isSubmitting) return;
+    
+    setIsLoading(true);
+    setIsSubmitting(true);
+    setError('');
     const fullPhoneNumber = `${countryCode}${formData.phoneNumber}`;
     const updatedFormData = { ...formData, phoneNumber: fullPhoneNumber };
     
@@ -122,9 +130,15 @@ export default function RegisterAI() {
       
       localStorage.setItem('onboarding_register', JSON.stringify(updatedFormData));
       localStorage.setItem('onboarding_version', 'ai-flow');
-      router.push('/onboarding-ai/upload-photo');
+      // Let the loading state handle the transition
+      setTimeout(() => {
+        router.push('/discover-your-style/upload-photo');
+      }, 500);
     } catch (err) {
       console.error('Failed to save registration data:', err);
+    } finally {
+      setIsSubmitting(false);
+      setIsLoading(false);
     }
   };
 
@@ -149,9 +163,6 @@ export default function RegisterAI() {
       <div className="w-full max-w-md bg-white rounded-3xl border border-gray-200 shadow-sm p-6 md:p-8">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-bold text-[#0B1F63]">Register</h2>
-          <span className="inline-block px-3 py-1 text-xs bg-[#0B1F63] text-white rounded-full">
-            Step 1/4
-          </span>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
@@ -277,7 +288,7 @@ export default function RegisterAI() {
 
           <button
             type="submit"
-            disabled={!isFormValid}
+            disabled={isLoading || !isFormValid || isSubmitting}
             className={`w-full py-3 px-4 rounded-lg transition-colors ${
               isFormValid
                 ? 'bg-[#0B1F63] text-white hover:bg-[#0a1b56]'
