@@ -121,7 +121,7 @@ export default function LandingPage() {
     },
     {
       question: "Can I try on my own clothing items?",
-      answer: 'Yes, you can! Simply select the "Direct Fitting" option after clicking the "Free Styling" button. This allows you to upload animage of your own clothing item and see how it looks on you'
+      answer: 'Yes, you can! Simply select the "Direct Fitting" option after clicking the "Free Styling" button. This allows you to upload an image of your own clothing item and see how it looks on you'
     },
     {
       question: "What makes FYUSE different from other fashion platforms?",
@@ -148,9 +148,9 @@ export default function LandingPage() {
       <main className="flex-grow font-sans">
         {/* Hero Section - Mobile Optimized with Fade Transition */}
         <section className="relative overflow-hidden pt-20 sm:pt-28 pb-8 sm:pb-13 bg-white">
-          <h1 className="font-sans text-center max-w-4xl mx-auto text-2xl sm:text-4xl md:text-5xl pt-3 lg:text-6xl text-[#0B1F63] mb-4 sm:mb-8 font-semibold leading-tight tracking-tight px-4">
-            Personalized styling recommendation <br className="hidden sm:block"/>with digital fitting room
-          </h1>
+          <p className="text-center max-w-4xl mx-auto text-xl sm:text-base pt-3 lg:text-6xl text-[#0B1F63] mb-4 sm:mb-8 leading-tight tracking-tight px-4">
+            Personalized styling recommendation <br></br> with digital fitting room
+          </p>
           <div className="max-w-6xl mx-auto px-4 sm:px-6">
             {/* Single Centered Image Container with Fade Effect - Mobile Responsive */}
             <div className="relative overflow-hidden pb-3 flex justify-center">
