@@ -24,7 +24,7 @@ export default function PricingPlans() {
     const payload = {
       userEmail,
       action,
-      planName,
+      selection: planName,
       timestamp: new Date().toISOString(),
       page: "PricingPage",
     };
