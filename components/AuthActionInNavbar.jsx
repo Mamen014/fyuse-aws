@@ -1,10 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import Link from "next/link";
 import { useAuth } from "react-oidc-context";
-import Image from "next/image";
-import { ArrowRightEndOnRectangleIcon } from "@heroicons/react/24/outline";
 
 export default function AuthActionsInNavbar({ isInMobileMenu = false }) {
   const auth = useAuth();

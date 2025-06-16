@@ -459,27 +459,26 @@ export default function VirtualTryOn() {
                     ? 'bg-cta hover:bg-blue-600'
                     : 'bg-gray-500 cursor-not-allowed'
                 }`}
-            >
-                {isSubmitting ? 'Styling...' : 'Style Me'}
+            > Fitting
             </button>
             </div>
 
             {/* Navigation Buttons */}
             <div className="bottom-0 left-0 right-0 bg-background py-8 px-2 flex justify-between items-center">
-              <Link href="/" passHref>
+              <Link href="/dashboard" passHref>
                 <button
                   className="text-foreground text-xl hover:text-cta transition-colors"
-                  aria-label="Back to Home"
+                  aria-label="Back"
                 >
-                  ← Back to Home
+                  ← Dashboard
                 </button>
               </Link>
-              <Link href="/profile" passHref>
+              <Link href="/tryOnHistory" passHref>
                 <button
                   className="text-foreground text-xl hover:text-cta transition-colors"
                   aria-label="View Profile Page"
                 >
-                  Digital Wardrobe →
+                  Fitting Results →
                 </button>
               </Link>
             </div>

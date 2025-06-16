@@ -3,28 +3,30 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from 'react-oidc-context';
+import LoadingModalSpinner from '@/components/LoadingModal';
 
 export default function CombinedStylePreferences() {
   const router = useRouter();
   const [clothingType, setClothingType] = useState('');
   const [fashionType, setFashionType] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  // Removed isNavigating state as we'll use Next.js loading state
+  const [loading, setloading] = useState(false);
   const { user } = useAuth();
   const userEmail = user?.profile?.email;
   const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
 
   const fashionTypes = {
-    'Casual': 'Comfortable and relaxed clothing worn virtually, perfect for everyday activities. Think jeans, t-shirts, sneakers, and casual attire.',
-    'Formal': 'Elegant and sophisticated attire suitable for professional environments and formal occasions. Includes suits, dresses, and refined pieces.',
-    'Sporty': 'Athletic wear styled smartly, often used to create comfortable, functional looks perfect for active lifestyles and casual outings.',
-    'Bohemian': 'Free-spirited, eclectic fashion borrowing elements from various cultures and eras. Features flowy fabrics, prints, and natural materials.',
-    'Streetwear': 'Urban-inspired casual clothing rooted in skate and hip-hop culture. Features graphic tees, hoodies, sneakers, and statement accessories.'
+    'Casual': 'Jeans, t-shirts, sneakers, and casual attire.',
+    'Formal': 'Suits, dresses, and refined pieces.',
+    'Sporty': 'Athletic wear.',
+    'Bohemian': 'Flowy fabrics, prints, and natural materials.',
+    'Streetwear': 'Graphic tees and hoodies.'
   };
 
   const handleSubmit = async () => {
     if (isSubmitting) return;
     setIsSubmitting(true);
+    setloading(true);
     
     try {
       // Store in localStorage immediately for instant feedback
@@ -86,8 +88,14 @@ export default function CombinedStylePreferences() {
     } catch (error) {
       console.error('Error in form submission:', error);
       setIsSubmitting(false);
+      setloading(false);
     }
   };
+  if (loading) {
+    return (
+    <LoadingModalSpinner />
+    );
+  }
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-white p-4 relative">
@@ -95,17 +103,20 @@ export default function CombinedStylePreferences() {
       <div className="w-full max-w-md bg-white rounded-3xl border border-gray-200 shadow-sm p-6 md:p-8">
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h2 className="text-xl font-bold text-[#0B1F63]">Style Preferences</h2>
-            <p className="text-sm text-gray-500">Choose your style</p>
+            <p className="text-[24px] font-bold text-[#0B1F63]">Style Preferences</p>
+            <p className="text-[18px] text-gray-500">Choose your style</p>
           </div>
         </div>
 
         {/* Clothing Type Selection */}
         <div className="mb-8">
-          <label className="block text-sm font-medium text-[#0B1F63] mb-3">
+          <p className="text-[18px] font-semibold text-[#0B1F63]">
             Preferred Clothing Type
-          </label>
-          <div className="flex gap-3">
+          </p>
+          <p className="text-[14px] font-regular text-gray-500">
+            Pick One
+          </p>          
+          <div className="flex gap-3 mt-6">
             <button
               type="button"
               onClick={() => setClothingType('Top')}
@@ -133,7 +144,7 @@ export default function CombinedStylePreferences() {
 
         {/* Fashion Type Selection */}
         <div className="mb-8">
-          <label className="block text-sm font-medium text-[#0B1F63] mb-3">
+          <label className="block text-[18px] font-semibold text-[#0B1F63] mb-3">
             Fashion Style
           </label>
           <div className="space-y-3">

@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect, useId, Suspense } from 'react';
+import { useState, useEffect, useId } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from 'react-oidc-context';
 import { Country, City } from 'country-state-city';
 import dynamic from 'next/dynamic';
+import LoadingModalSpinner from '@/components/LoadingModal';
 
 // Dynamically import Select with no SSR
 const DynamicSelect = dynamic(() => import('react-select'), {
@@ -42,6 +43,21 @@ export default function RegisterAI() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [isCheckingRedirect, setIsCheckingRedirect] = useState(true);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const alreadyRegistered = localStorage.getItem("hasRegistered") === "true";
+
+    if (user && alreadyRegistered) {
+      router.replace("/discover-your-style/upload-photo");
+      return;
+    }
+
+    setIsCheckingRedirect(false); 
+  }, [user]);
+
 
   useEffect(() => {
     setIsClient(true);
@@ -106,7 +122,8 @@ export default function RegisterAI() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (isLoading || isSubmitting) return;
-    
+    localStorage.setItem('hasRegistered', 'true');
+    setIsCheckingRedirect(true);
     setIsLoading(true);
     setIsSubmitting(true);
     setError('');
@@ -117,7 +134,6 @@ export default function RegisterAI() {
     try {
       // Save data to localStorage immediately
       localStorage.setItem('onboarding_register', JSON.stringify(updatedFormData));
-      localStorage.setItem('onboarding_version', 'ai-flow');
       
       // Start API call in the background but don't wait for it
       const savePromise = fetch(`${API_BASE_URL}/userPref`, {
@@ -147,21 +163,9 @@ export default function RegisterAI() {
     }
   };
 
-  const customSelectStyles = {
-    control: (provided) => ({
-      ...provided,
-      border: '1px solid #e2e8f0',
-      borderRadius: '0.375rem',
-      boxShadow: 'none',
-      '&:hover': {
-        border: '1px solid #cbd5e0',
-      },
-    }),
-    placeholder: (provided) => ({
-      ...provided,
-      color: '#a0aec0',
-    }),
-  };
+  if (isCheckingRedirect) {
+    return <LoadingModalSpinner />;
+  }
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-white p-4">
@@ -201,28 +205,6 @@ export default function RegisterAI() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Phone number
-            </label>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={countryCode}
-                className="w-16 px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
-                disabled
-              />
-              <input
-                type="tel"
-                name="phoneNumber"
-                value={formData.phoneNumber}
-                onChange={handleChange}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
-                required
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
               Country
             </label>
             {isClient ? (
@@ -258,6 +240,28 @@ export default function RegisterAI() {
             ) : (
               <div className="w-full h-10 bg-gray-100 rounded-lg animate-pulse"></div>
             )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Phone number
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={countryCode}
+                className="w-16 px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
+                disabled
+              />
+              <input
+                type="tel"
+                name="phoneNumber"
+                value={formData.phoneNumber}
+                onChange={handleChange}
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+                required
+              />
+            </div>
           </div>
 
           <div>

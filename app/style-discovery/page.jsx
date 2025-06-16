@@ -6,7 +6,7 @@ import { ArrowRight } from 'lucide-react';
 import { useAuth } from "react-oidc-context";
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
-
+import LoadingModalSpinner from '@/components/LoadingModal';
 // Dynamically import the ReferralModal to avoid SSR issues
 const ReferralModal = dynamic(
   () => import('@/components/ReferralModal'),
@@ -15,7 +15,8 @@ const ReferralModal = dynamic(
 
 export default function StyleChoice() {
   const router = useRouter();
-  const { user, isLoading, signinRedirect } = useAuth();
+  const { user, signinRedirect } = useAuth();
+  const [loading, setloading] = useState(false);
   const [showReferralModal, setShowReferralModal] = useState(false);
   const [referralHandled, setReferralHandled] = useState(false);
 
@@ -39,7 +40,7 @@ export default function StyleChoice() {
 
   // Redirect to login if not authenticated
   useEffect(() => {
-    if (isLoading) return;
+    if (loading) return;
     
     if (!user) {
       localStorage.setItem('postLoginRedirect', '/style-discovery');
@@ -51,14 +52,14 @@ export default function StyleChoice() {
     if (user && !hasSeenReferral() && !referralHandled) {
       setShowReferralModal(true);
     }
-  }, [user, isLoading, signinRedirect, referralHandled]);
+  }, [user, signinRedirect, referralHandled]);
 
   const options = [
     {
       icon: "/images/step-3.png",
       title: "Discover Your Style",
       subtitle: "Looks tailored for you",
-      description: "Discover outfit recommendations tailored to your body shape, skin tone, and styling preference",
+      description: "Discover outfit recommendations tailored to your body and styling preferences",
       path: "/discover-your-style",
       gradient: "from-blue-50 to-indigo-50"
     },
@@ -66,19 +67,15 @@ export default function StyleChoice() {
       icon: "/images/step-4.png",
       title: "Try On Now",
       subtitle: "Upload and Preview",
-      description: "Try on clothes virtually before buying. See how they look on your actual body",
+      description: "This path lets you try on your own clothing item virtually to see how it fits your actual body",
       path: "/digital-fitting-room",
       gradient: "from-blue-50 to-indigo-50"
     }
   ];
 
-
-
-  if (isLoading) {
+  if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-white">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#0B1F63]"></div>
-      </div>
+    <LoadingModalSpinner />
     );
   }
 
@@ -123,7 +120,9 @@ export default function StyleChoice() {
                     flex-1 min-h-[400px] sm:min-h-[450px] lg:min-h-[500px]
                     active:scale-[0.98] active:shadow-lg
                   `}
-                  onClick={() => router.push(option.path)}
+                  onClick={() => {
+                    setloading(true);
+                    router.push(option.path)}}
                 >
                   <div className="p-4 sm:p-6 lg:p-8 xl:p-10 h-full flex flex-col">
                     {/* Icon and Title */}

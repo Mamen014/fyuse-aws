@@ -1,20 +1,29 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { useAuth } from 'react-oidc-context';
 import LandingCTA from '@/components/LandingCTA';
 import { ChevronDown } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import LoadingModalSpinner from '@/components/LoadingModal';
 
 export default function LandingPage() {
   const router = useRouter();
-  const { user, isLoading } = useAuth();
   const [openFAQ, setOpenFAQ] = useState(null);
+  const [isRedirecting, setIsRedirecting] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
   
+  useEffect(() => {
+    const hasRegistered = localStorage.getItem("hasRegistered") === "true";
+
+    if (hasRegistered) {
+      router.replace("/dashboard");
+    } else {
+      setIsRedirecting(false); // Now allow page to render
+    }
+  }, [router]);
 
   // Hero carousel images - placeholder person images
   const heroImages = [
@@ -44,28 +53,6 @@ export default function LandingPage() {
     return () => clearInterval(interval);
   }, [heroImages.length]);
 
-
-  // Handle authentication state
-  React.useEffect(() => {
-    // Only redirect if we're not in the middle of an auth flow
-    if (!isLoading && user && !window.location.pathname.includes('cognito')) {
-      const postLoginRedirect = localStorage.getItem('postLoginRedirect');
-      if (postLoginRedirect) {
-        router.replace(postLoginRedirect);
-      } else {
-        router.replace('/style-discovery');
-      }
-    }
-  }, [user, isLoading, router]);
-
-  // Show loading state while checking auth
-  if (isLoading || (user && !window.location.pathname.includes('cognito'))) {
-    return (
-      <div className="fixed inset-0 flex items-center justify-center bg-white z-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#0B1F63]"></div>
-      </div>
-    );
-  }
 
   const howItWorks = [
     {
@@ -102,15 +89,11 @@ export default function LandingPage() {
       description: "Discover outfit recommendations tailored to your body shape, skin tone, and styling preference"
     },
     {
-      icon: "/images/Digital-fitting-room.png",
+      icon: "/images/digital-fitting-room.png",
       title: "Digital Fitting Room",
       description: "Try on clothes virtually before buying. See how they look on your actual body"
     },
-    // {
-    //   icon: <Clock className="w-8 h-8 text-white" />,
-    //   title: "Save Time & Money",
-    //   description: "Reduce returns by 90% and find perfect fits in minutes, not hours of shopping"
-    // }
+
   ];
 
   // Social proof stats
@@ -145,12 +128,8 @@ export default function LandingPage() {
     setOpenFAQ(openFAQ === index ? null : index);
   };
 
-  const scrollToSection = (sectionId) => {
-    document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  if (isLoading || user) {
-    return null;
+  if (isRedirecting) {
+    return <LoadingModalSpinner />;
   }
 
   return (
@@ -161,7 +140,7 @@ export default function LandingPage() {
         {/* Hero Section - Mobile Optimized with Fade Transition */}
         <section className="relative overflow-hidden pt-20 sm:pt-28 pb-8 sm:pb-13 bg-white">
           <p className="text-center max-w-4xl mx-auto text-xl sm:text-base pt-3 lg:text-6xl text-[#0B1F63] mb-4 sm:mb-8 leading-tight tracking-tight px-4">
-            Personalized styling recommendation <br></br> with digital fitting room
+            Personalized styling recommendation <br></br> with a digital fitting room
           </p>
           <div className="max-w-6xl mx-auto px-4 sm:px-6">
             {/* Single Centered Image Container with Fade Effect - Mobile Responsive */}

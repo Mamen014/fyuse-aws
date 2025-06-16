@@ -1,40 +1,49 @@
-"use client";
+'use client';
 
 import React from 'react';
-import AuthInitializer from './AuthInitializer'; // Ensure the correct path to AuthInitializer
-import { AuthProvider } from 'react-oidc-context'; // Ensure you import the correct AuthProvider
+import { AuthProvider, useAuth } from 'react-oidc-context';
+import AuthInitializer from './AuthInitializer';
+import LoadingModalSpinner from './LoadingModal';
 
 const getOidcConfig = () => {
   const origin =
-    typeof window !== "undefined"
-      ? window.location.origin
-      : "http://localhost:3000";
+    typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
 
   return {
     authority: process.env.NEXT_PUBLIC_OIDCAUTH,
     client_id: process.env.NEXT_PUBLIC_CLIENTID,
-    redirect_uri: `${origin}/`,
+    redirect_uri: `${origin}/auth-callback`,
     post_logout_redirect_uri: `${origin}/`,
-    response_type: "code",
-    scope: "openid profile email",
+    response_type: 'code',
+    scope: 'openid profile email',
     loadUserInfo: true,
-    response_mode: "query",
-    onSigninCallback: () => {
-      // Handle the redirect in the app instead of automatic redirect
-      window.history.replaceState({}, document.title, window.location.pathname);
-    },
+    response_mode: 'query',
   };
 };
 
-function OidcAuthProvider({ children }) {
+function AuthReadyWrapper({ children }) {
+  const auth = useAuth();
+
+  if (auth.isLoading) {
+    return (
+      <LoadingModalSpinner/>
+    );
+  }
+
+  return (
+    <>
+      <AuthInitializer />
+      {children}
+    </>
+  );
+}
+
+export default function OidcAuthProvider({ children }) {
   const oidcConfig = getOidcConfig();
 
   return (
     <AuthProvider {...oidcConfig}>
-      <AuthInitializer />
-      {children}
+      <AuthReadyWrapper>{children}</AuthReadyWrapper>
     </AuthProvider>
   );
 }
-
-export default OidcAuthProvider;

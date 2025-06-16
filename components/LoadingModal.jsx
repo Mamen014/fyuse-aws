@@ -2,7 +2,10 @@
 
 import React from 'react';
 
-export default function LoadingModalSpinner({ message = 'Loading, please wait...' }) {
+export default function LoadingModalSpinner({
+  message = "Loading...",
+  subMessage="Please wait"
+}) {
   return (
     <div style={{
       position: 'fixed',
@@ -26,8 +29,21 @@ export default function LoadingModalSpinner({ message = 'Loading, please wait...
         marginTop: '16px',
         color: '#0B1F63',
         fontSize: '16px',
-        fontWeight: '500'
-      }}>{message}</p>
+        fontWeight: '500',
+        textAlign: 'center'
+      }}>
+        {message}
+      </p>
+      {subMessage && (
+        <p style={{
+          marginTop: '8px',
+          color: '#6B7280',
+          fontSize: '14px',
+          textAlign: 'center'
+        }}>
+          {subMessage}
+        </p>
+      )}
       <style jsx>{`
         @keyframes spin {
           0% { transform: rotate(0deg); }

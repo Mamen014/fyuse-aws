@@ -6,12 +6,15 @@ import { useAuth } from 'react-oidc-context';
 import { ToastContainer, toast } from 'react-toastify';
 import Image from 'next/image';
 import 'react-toastify/dist/ReactToastify.css';
+import LoadingModalSpinner from '@/components/LoadingModal';
+
 
 export default function AIPhotoUpload() {
   const router = useRouter();
   const [photoPreview, setPhotoPreview] = useState('');
   const [isUserPhotoGuidanceOpen, setIsUserPhotoGuidanceOpen] = useState(false);
   const [fileToUpload, setFileToUpload] = useState(null);
+  const [isloading, setisLoading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isValidUserImage, setIsValidUserImage] = useState(false);
@@ -196,6 +199,7 @@ export default function AIPhotoUpload() {
   const handleAcceptAnalysis = async () => {
     if (isSubmitting) return;
     setIsSubmitting(true);
+    setisLoading(true);
     
     try {
       // Save to local storage that user has accepted the analysis
@@ -212,8 +216,18 @@ export default function AIPhotoUpload() {
     } catch (error) {
       console.error('Error accepting analysis:', error);
       setIsSubmitting(false);
+      setisLoading(false);
     }
   };
+
+  if (isloading) {
+    return (
+    <LoadingModalSpinner 
+      message="Uploading..." 
+      subMessage="Please wait" 
+    />
+    );
+  }
 
   const handleCustomize = async () => {
     if (isSubmitting) return;
@@ -239,12 +253,17 @@ export default function AIPhotoUpload() {
 
       {/* Header */}
       <div className="relative">
-        <h1 className="text-[22px] font-bold leading-tight text-[#0B1F63]">
-          Please Upload<br />Your Photo
+        <h1 className="text-3xl font-bold leading-tight text-[#0B1F63]">
+          Upload Your Photo
         </h1>
         <div className="absolute top-0 right-0">
         </div>
       </div>
+      <p className="text-2xl text-primary-700 text-justify mt-10 mb-6 px-2 leading-relaxed">
+        So we can help you try on outfits and suggest styles that fit you best. 
+        A clear upper body photo is enough — no need for a full body if you're not looking for bottoms.
+      </p>
+
 
       {/* Upload box */}
       <div className="flex flex-col items-center justify-center flex-1 mt-8 mb-10">

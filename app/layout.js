@@ -1,7 +1,6 @@
 // app/layout.js
 import "./globals.css";
 import OidcAuthProvider from "../components/OidcAuthProvider";
-import AuthLoader from "../components/AuthLoader";
 import { Inter } from 'next/font/google';
 
 const inter = Inter({
@@ -19,14 +18,9 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${inter.variable}`}>
-      <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-      </head>
-      <body className="min-h-screen bg-background font-sans antialiased">
+      <body className="min-h-screen bg-white font-sans antialiased">
         <OidcAuthProvider>
-          <AuthLoader>
-            {children}
-          </AuthLoader>
+          {children}
         </OidcAuthProvider>
       </body>
     </html>

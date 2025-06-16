@@ -8,7 +8,6 @@ import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer } from "react-toastify";
 import LoadingModalSpinner from '@/components/LoadingModal';
-import Image from 'next/image';
 
 export default function VirtualTryOnResultPage() {
   const { user } = useAuth();
@@ -56,7 +55,7 @@ export default function VirtualTryOnResultPage() {
   const handleHomeClick = () => {
     localStorage.setItem(`onboarding_step:${userEmail}`, "appearance");
     setIsLoading(true);
-    router.push('/');
+    router.push('/dashboard');
   };
 
   useEffect(() => {
@@ -116,8 +115,14 @@ export default function VirtualTryOnResultPage() {
   }, [taskId]);
 
   if (loading) {
-    return <LoadingModalSpinner message="Styling..." />;
+    return (
+    <LoadingModalSpinner 
+      message="Styling..." 
+      subMessage="This process may take up to 3 minutes" 
+    />
+    );
   }
+
 
   if (error) {
     return (
@@ -152,7 +157,6 @@ export default function VirtualTryOnResultPage() {
         <div className="flex flex-col md:flex-row gap-8 justify-center items-start mb-12">
           {/* Try-On Result */}
           <div className="w-full md:w-1/2">
-            <h2 className="text-xl font-semibold text-[#0B1F63] mb-4 text-center">Your Virtual Try-On</h2>
             <div className="relative overflow-hidden rounded-2xl shadow-2xl">
               <div className="absolute inset-0 bg-gradient-to-t from-[#0B1F63]/20 to-transparent z-10"></div>
               {resultImageUrl ? (
@@ -196,10 +200,7 @@ export default function VirtualTryOnResultPage() {
                       rel="noopener noreferrer"
                       className="inline-block mt-2 text-sm text-white bg-[#0B1F63] hover:bg-[#0a1a57] px-4 py-2 rounded-full transition-colors"
                       onClick={() => handleTrack("Click Product Link", { 
-                        productId: product.productId || 'unknown',
-                        productName: product.productName || 'unknown',
-                        brand: product.brand || 'unknown',
-                        fromPage: 'TryOnResult'
+                        selection: product.productLink || 'unknown'
                       })}
                     >
                       View Product

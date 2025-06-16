@@ -3,9 +3,11 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import LoadingModalSpinner from "@/components/LoadingModal";
 
 export default function PricingPlans({ isOpen, onClose, sourcePage = "Unknown" }) {
   const router = useRouter();
+  const [isRedirecting, setIsRedirecting] = useState(false);
   const [selectedPremiumPlan, setSelectedPremiumPlan] = useState(null);
   const [showThankYou, setShowThankYou] = useState(false);
 
@@ -73,8 +75,9 @@ export default function PricingPlans({ isOpen, onClose, sourcePage = "Unknown" }
     }
 
     if (planName === "Basic") {
+      setIsRedirecting(true);
       onClose();
-      router.push("/");
+      router.push("/dashboard");
     } else {
       setSelectedPremiumPlan(planName);
       setShowThankYou(true);
@@ -82,13 +85,18 @@ export default function PricingPlans({ isOpen, onClose, sourcePage = "Unknown" }
   };
 
   const handleThankYouClose = () => {
+    setIsRedirecting(true);
     setShowThankYou(false);
     onClose();
-    router.push("/");
+    router.push("/dashboard");
   };
 
   return (
     <>
+    {isRedirecting && (
+      <LoadingModalSpinner/>
+    )}
+
       {/* Pricing Modal */}
       {!showThankYou && (
         <div className="fixed inset-0 z-50 bg-black bg-opacity-70 flex justify-center items-center overflow-y-auto">
