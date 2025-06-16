@@ -45,12 +45,27 @@ export default function LandingPage() {
   }, [heroImages.length]);
 
 
-  // If user is already logged in, redirect to home
+  // Handle authentication state
   React.useEffect(() => {
-    if (!isLoading && user) {
-      router.push('/');
+    // Only redirect if we're not in the middle of an auth flow
+    if (!isLoading && user && !window.location.pathname.includes('cognito')) {
+      const postLoginRedirect = localStorage.getItem('postLoginRedirect');
+      if (postLoginRedirect) {
+        router.replace(postLoginRedirect);
+      } else {
+        router.replace('/style-discovery');
+      }
     }
   }, [user, isLoading, router]);
+
+  // Show loading state while checking auth
+  if (isLoading || (user && !window.location.pathname.includes('cognito'))) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-white z-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#0B1F63]"></div>
+      </div>
+    );
+  }
 
   const howItWorks = [
     {
