@@ -3,72 +3,33 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from 'react-oidc-context';
+import LoadingModalSpinner from '@/components/LoadingModal';
 
 export default function CombinedStylePreferences() {
   const router = useRouter();
   const [clothingType, setClothingType] = useState('');
   const [fashionType, setFashionType] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loading, setloading] = useState(false);
   const { user } = useAuth();
   const userEmail = user?.profile?.email;
   const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
 
   const fashionTypes = {
-    'Casual': 'Comfortable and relaxed clothing worn virtually, perfect for everyday activities. Think jeans, t-shirts, sneakers, and casual attire.',
-    'Formal': 'Elegant and sophisticated attire suitable for professional environments and formal occasions. Includes suits, dresses, and refined pieces.',
-    'Sporty': 'Athletic wear styled smartly, often used to create comfortable, functional looks perfect for active lifestyles and casual outings.',
-    'Bohemian': 'Free-spirited, eclectic fashion borrowing elements from various cultures and eras. Features flowy fabrics, prints, and natural materials.',
-    'Streetwear': 'Urban-inspired casual clothing rooted in skate and hip-hop culture. Features graphic tees, hoodies, sneakers, and statement accessories.'
+    'Casual': 'Jeans, t-shirts, sneakers, and casual attire.',
+    'Formal': 'Suits, dresses, and refined pieces.',
+    'Sporty': 'Athletic wear.',
+    'Bohemian': 'Flowy fabrics, prints, and natural materials.',
+    'Streetwear': 'Graphic tees and hoodies.'
   };
 
   const handleSubmit = async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    setloading(true);
+    
     try {
-      // First call - StylePref1 (fashion type)
-      await fetch(`${API_BASE_URL}/userPref`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userEmail,
-          section: 'StylePref1',
-          data: {
-            selectedType: fashionType
-          }
-        }),
-      });
-
-      // Second call - StylePref2 (brands and colors)
-      await fetch(`${API_BASE_URL}/userPref`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userEmail,
-          section: 'StylePref2',
-          data: {
-            brands: [],  // Default empty since AI flow doesn't collect these
-            colors: []   // Default empty since AI flow doesn't collect these
-          }
-        }),
-      });
-
-      // Third call - StylePref3 (clothing type)
-      await fetch(`${API_BASE_URL}/userPref`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userEmail,
-          section: 'StylePref3',
-          data: {
-            clothingType
-          }
-        }),
-      });
-
-      // Store in localStorage to match regular onboarding
+      // Store in localStorage immediately for instant feedback
       localStorage.setItem('onboarding_style_preferences_1', 
         JSON.stringify({ selectedType: fashionType }));
       localStorage.setItem('onboarding_style_preferences_2', 
@@ -76,32 +37,86 @@ export default function CombinedStylePreferences() {
       localStorage.setItem('onboarding_style_preferences_3', 
         JSON.stringify({ clothingType }));
       
-      // Redirect to recommended products
+      // Start API calls in the background
+      const savePreferences = async () => {
+        try {
+          await Promise.all([
+            // StylePref1 (fashion type)
+            fetch(`${API_BASE_URL}/userPref`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                userEmail,
+                section: 'StylePref1',
+                data: { selectedType: fashionType }
+              }),
+            }),
+            
+            // StylePref2 (brands and colors)
+            fetch(`${API_BASE_URL}/userPref`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                userEmail,
+                section: 'StylePref2',
+                data: { brands: [], colors: [] }
+              }),
+            }),
+            
+            // StylePref3 (clothing type)
+            fetch(`${API_BASE_URL}/userPref`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                userEmail,
+                section: 'StylePref3',
+                data: { clothingType }
+              }),
+            })
+          ]);
+        } catch (error) {
+          console.error('Error saving preferences:', error);
+        }
+      };
+      
+      // Start API calls in background
+      savePreferences();
+      
+      // Navigate to next page - Next.js will handle the loading state
       router.push('/onboarding/recommended-product');
-    } catch (err) {
-      console.error('Failed to save preferences:', err);
+      
+    } catch (error) {
+      console.error('Error in form submission:', error);
+      setIsSubmitting(false);
+      setloading(false);
     }
   };
+  if (loading) {
+    return (
+    <LoadingModalSpinner />
+    );
+  }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-white p-4">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-white p-4 relative">
+      {/* Next.js loading state will handle the loading overlay */}
       <div className="w-full max-w-md bg-white rounded-3xl border border-gray-200 shadow-sm p-6 md:p-8">
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h2 className="text-xl font-bold text-[#0B1F63]">Style Preferences</h2>
-            <p className="text-sm text-gray-500">Choose your style</p>
+            <p className="text-[24px] font-bold text-[#0B1F63]">Style Preferences</p>
+            <p className="text-[18px] text-gray-500">Choose your style</p>
           </div>
-          <span className="inline-block px-3 py-1 text-xs bg-[#0B1F63] text-white rounded-full">
-            Step 3/4
-          </span>
         </div>
 
         {/* Clothing Type Selection */}
         <div className="mb-8">
-          <label className="block text-sm font-medium text-[#0B1F63] mb-3">
+          <p className="text-[18px] font-semibold text-[#0B1F63]">
             Preferred Clothing Type
-          </label>
-          <div className="flex gap-3">
+          </p>
+          <p className="text-[14px] font-regular text-gray-500">
+            Pick One
+          </p>          
+          <div className="flex gap-3 mt-6">
             <button
               type="button"
               onClick={() => setClothingType('Top')}
@@ -129,7 +144,7 @@ export default function CombinedStylePreferences() {
 
         {/* Fashion Type Selection */}
         <div className="mb-8">
-          <label className="block text-sm font-medium text-[#0B1F63] mb-3">
+          <label className="block text-[18px] font-semibold text-[#0B1F63] mb-3">
             Fashion Style
           </label>
           <div className="space-y-3">
@@ -168,14 +183,22 @@ export default function CombinedStylePreferences() {
         {/* Submit Button */}
         <button
           onClick={handleSubmit}
-          disabled={!clothingType || !fashionType}
-          className={`w-full py-3 px-4 rounded-lg font-medium transition-all ${
+          disabled={!clothingType || isSubmitting || !fashionType}
+          className={`w-full py-3 px-4 rounded-lg font-medium transition-all flex items-center justify-center ${
             clothingType && fashionType
               ? 'bg-[#0B1F63] text-white hover:bg-[#0a1b56]'
               : 'bg-gray-200 text-gray-500 cursor-not-allowed'
           }`}
         >
-          Continue
+          {isSubmitting ? (
+            <>
+              <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Processing...
+            </>
+          ) : 'Continue'}
         </button>
       </div>
     </div>

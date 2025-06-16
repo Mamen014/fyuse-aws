@@ -2,9 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from 'react-oidc-context';
+import LoadingModalSpinner from '@/components/LoadingModal';
 
 export default function PhysicalAttributesStep3() {
   const [bodyShape, setBodyShape] = useState('');
+  const [loading, setloading] = useState(false);
   const [gender, setGender] = useState('');
   const { user } = useAuth();
   const userEmail = user?.profile?.email;
@@ -27,7 +29,7 @@ export default function PhysicalAttributesStep3() {
       'onboarding_physical_attributes_3',
       JSON.stringify({ bodyShape })
     );
-    window.location.href = '/onboarding-ai/style-preferences';
+    window.location.href = '/discover-your-style/style-preferences';
   };
 
   const maleBodyTypeImages = {
@@ -39,11 +41,11 @@ export default function PhysicalAttributesStep3() {
   };
 
   const maleBodyTypeDescriptions = {
-    'Trapezoid': 'Characterized by balanced proportions with a well-defined waist, similar to an hourglass but less pronounced.',
-    'Triangle': 'Characterized by a wider lower body (hips, thighs, and buttocks) compared to the upper body (shoulders and bust).',
-    'Inverted triangle': 'Characterized by broader shoulders and bust compared to the hips and waist.',
-    'Rectangle': 'Characterized by a straight silhouette with minimal waist definition, similar measurements for bust, waist, and hips.',
-    'Round': 'Characterized by a rounded silhouette with a less defined waist and a fuller midsection.'
+    'Trapezoid': 'Balanced proportions with a well-defined waist.',
+    'Triangle': 'Wider lower body compared to the upper body.',
+    'Inverted triangle': 'Broader shoulders and bust compared to the hips and waist.',
+    'Rectangle': 'Straight silhouette with minimal waist definition.',
+    'Round': 'Rounded silhouette with a less defined waist and a fuller midsection.'
   };
 
   const femaleBodyTypeImages = {
@@ -55,11 +57,11 @@ export default function PhysicalAttributesStep3() {
   };
 
   const femaleBodyTypeDescriptions = {
-    'Rectangle': 'A straight, linear silhouette with similar bust, waist, and hip measurements and not much waist definition.',
-    'Hourglass': 'Bust and hips are similarly equal in size with a narrow waist and shoulders are slightly rounded.',
-    'Apple': 'A wider midsection and fuller bust, with proportionally slimmer legs and less defined waist.',
-    'Pear': 'Wider hips and thighs (concentrated weight) compared to the bust and shoulders, with a defined waist.',
-    'Inverted triangle': 'Broader upper body with a slimmer lower body. Have narrow hips, rather slender legs and a less pronounced waist.'
+    'Rectangle': 'A straight, linear silhouette with similar bust, waist, and hip.',
+    'Hourglass': 'Bust and hips are similarly equal in size with a narrow waist.',
+    'Apple': 'A wider midsection and fuller bust, with proportionally slimmer legs.',
+    'Pear': 'Wider hips and thighs compared to the bust and shoulders.',
+    'Inverted triangle': 'Broader upper body with a slimmer lower body with narrow hips.'
   };
 
   const bodyTypeImages = gender === 'Female' ? femaleBodyTypeImages : maleBodyTypeImages;
@@ -94,15 +96,16 @@ export default function PhysicalAttributesStep3() {
     }
   };
 
+  if (loading) {
+    return <LoadingModalSpinner />;
+  }
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
       <div className="w-full max-w-md rounded-3xl bg-white shadow-md overflow-hidden">
         <div className="p-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold" style={{ color: '#0B1F63' }}>Physical attribute</h2>
-            <div className="text-white text-sm font-semibold px-3 py-1 rounded-full" style={{ backgroundColor: '#0B1F63' }}>
-              Step 4/7
-            </div>
           </div>
           <p className="mb-6" style={{ color: '#0B1F63' }}>Body shape</p>
 
@@ -148,14 +151,12 @@ export default function PhysicalAttributesStep3() {
           </div>
 
           <button
-            onClick={physic2}
-            className="mt-6 w-full py-3 text-white font-semibold rounded-lg shadow-md hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-opacity-50"
-            style={{
-              backgroundColor: '#0B1F63',
-              opacity: !bodyShape ? 0.5 : 1,
-              cursor: !bodyShape ? 'not-allowed' : 'pointer',
+            onClick={async () => {
+              setloading(true);
+              await physic2();
             }}
-            disabled={!bodyShape}
+            disabled={!gender}
+            className="w-full bg-[#0B1F63] text-white py-3 px-4 rounded-lg hover:bg-[#0a1b56] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0B1F63] disabled:opacity-50 disabled:cursor-not-allowed mt-4"
           >
             Next
           </button>

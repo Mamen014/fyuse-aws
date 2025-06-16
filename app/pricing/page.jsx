@@ -6,11 +6,13 @@ import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useRouter } from "next/navigation";
+import LoadingModalSpinner from "@/components/LoadingModal";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
 
 export default function PricingPlans() {
   const router = useRouter();
+  const [loading, setloading] = useState(false);
   const { user } = useAuth();
   const userEmail = user?.profile?.email;
 
@@ -22,7 +24,7 @@ export default function PricingPlans() {
     const payload = {
       userEmail,
       action,
-      planName,
+      selection: planName,
       timestamp: new Date().toISOString(),
       page: "PricingPage",
     };
@@ -86,7 +88,8 @@ export default function PricingPlans() {
     await handleTrack("purchase_plan", planName);
 
     if (planName === "Basic") {
-      router.push("/");
+      setloading(true);
+      router.push("/dashboard");
     } else {
       setSelectedPlan(planName);
       setShowThankYou(true);
@@ -94,12 +97,17 @@ export default function PricingPlans() {
   };
 
   const closeThankYouModal = () => {
+    setloading(true);
     setShowThankYou(false);
-    router.push("/");
+    router.push("/dashboard");
   };
 
   return (
     <>
+    {loading && (
+      <LoadingModalSpinner/>
+    )}
+
       <Navbar />
       <div className="bg-background text-foreground mt-20 min-h-screen p-8">
         <h2 className="text-3xl md:text-4xl font-bold text-center mb-8 text-primary">

@@ -6,9 +6,13 @@ import Image from "next/image";
 import { Menu, X, Home, Info, Phone, CreditCard, Sparkles, ChevronRight } from "lucide-react";
 import AuthActionsInNavbar from "./AuthActionInNavbar.jsx";
 import { useAuth } from "react-oidc-context";
+import { useRouter } from "next/navigation";
+import LoadingModalSpinner from "./LoadingModal.jsx";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [Loading, setLoading] = useState(false);
+  const router = useRouter();
   const auth = useAuth();
   const userEmail = auth?.user?.profile?.email;
   const userName = auth?.user?.profile?.name || userEmail?.split('@')[0] || 'Guest';
@@ -16,32 +20,39 @@ export default function Navbar() {
   return (
     <nav className="fixed top-0 left-0 w-full bg-white z-50 shadow-sm">
       {/* Main Navbar */}
+      {Loading && (
+        <LoadingModalSpinner
+          message="Redirecting..."
+          subMessage="Please wait a moment"
+        />
+      )}
+
       <div className="h-16 px-4 flex items-center justify-between max-w-7xl mx-auto">
         {/* Left - Hamburger */}
         <button
           type="button"
           onClick={() => setIsMenuOpen(!isMenuOpen)}
-          className="w-12 h-12 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors"
+          className="w-16 h-16 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors"
           aria-expanded={isMenuOpen}
           aria-label="Toggle menu"
         >
           {isMenuOpen ? (
-            <X className="w-8 h-8 text-gray-700" />
+            <X className="w-10 h-10 text-gray-700" />
           ) : (
-            <Menu className="w-8 h-8 text-gray-700" />
+            <Menu className="w-10 h-10 text-gray-700" />
           )}
         </button>
 
         {/* Center - Logo */}
         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-          <Link href="/" className="block">
+          <Link href="/dashboard" className="block">
             <Image
               src="/logo.PNG"
               alt="FYUSE Logo"
-              width={96}
-              height={26}
+              width={144}
+              height={39}
               priority
-              className="w-24 h-auto"
+              className="w-36 h-auto"
             />
           </Link>
         </div>
@@ -95,56 +106,73 @@ export default function Navbar() {
               Menu
             </p>
           </div>
-          
+
           <div className="px-4 space-y-1">
-            <Link
-              href="/"
-              className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-              onClick={() => setIsMenuOpen(false)}
+            <button
+              onClick={() => {
+                setIsMenuOpen(false);
+                setLoading(true);
+                router.push("/dashboard");
+              }}
+              className="flex items-center gap-3 w-full text-left px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
             >
               <Home className="w-5 h-5 text-gray-500" />
-              <span>Home</span>
+              <span>Dashboard</span>
               <ChevronRight className="w-4 h-4 text-gray-400 ml-auto" />
-            </Link>
-            <Link
-              href="/features"
-              className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-              onClick={() => setIsMenuOpen(false)}
+            </button>
+
+            <button
+              onClick={() => {
+                setIsMenuOpen(false);
+                setLoading(true);
+                router.push("/features");
+              }}
+              className="flex items-center gap-3 w-full text-left px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
             >
               <Sparkles className="w-5 h-5 text-gray-500" />
               <span>Features</span>
               <ChevronRight className="w-4 h-4 text-gray-400 ml-auto" />
-            </Link>
-            <Link
-              href="/about"
-              className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-              onClick={() => setIsMenuOpen(false)}
+            </button>
+
+            <button
+              onClick={() => {
+                setIsMenuOpen(false);
+                setLoading(true);
+                router.push("/about");
+              }}
+              className="flex items-center gap-3 w-full text-left px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
             >
               <Info className="w-5 h-5 text-gray-500" />
               <span>About</span>
               <ChevronRight className="w-4 h-4 text-gray-400 ml-auto" />
-            </Link>
-            <Link
-              href="/pricing"
-              className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-              onClick={() => setIsMenuOpen(false)}
+            </button>
+
+            <button
+              onClick={() => {
+                setIsMenuOpen(false);
+                setLoading(true);
+                router.push("/pricing");
+              }}
+              className="flex items-center gap-3 w-full text-left px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
             >
               <CreditCard className="w-5 h-5 text-gray-500" />
               <span>Pricing</span>
               <ChevronRight className="w-4 h-4 text-gray-400 ml-auto" />
-            </Link>
-            <Link
-              href="/contact"
-              className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-              onClick={() => setIsMenuOpen(false)}
+            </button>
+
+            <button
+              onClick={() => {
+                setIsMenuOpen(false);
+                setLoading(true);
+                router.push("/contact");
+              }}
+              className="flex items-center gap-3 w-full text-left px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
             >
               <Phone className="w-5 h-5 text-gray-500" />
               <span>Contact</span>
               <ChevronRight className="w-4 h-4 text-gray-400 ml-auto" />
-            </Link>
+            </button>
           </div>
-          
-          
         </div>
       </div>
     </nav>

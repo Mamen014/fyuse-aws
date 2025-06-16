@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect, useId, Suspense } from 'react';
+import { useState, useEffect, useId } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from 'react-oidc-context';
-import Select from 'react-select';
 import { Country, City } from 'country-state-city';
 import dynamic from 'next/dynamic';
+import LoadingModalSpinner from '@/components/LoadingModal';
 
 // Dynamically import Select with no SSR
 const DynamicSelect = dynamic(() => import('react-select'), {
@@ -24,6 +24,7 @@ export default function RegisterAI() {
   const citySelectId = useId();
 
   const [formData, setFormData] = useState({
+    nickname: '',
     birthdate: '',
     phoneNumber: '',
     country: '',
@@ -39,6 +40,24 @@ export default function RegisterAI() {
   const [agreeToPrivacy, setAgreeToPrivacy] = useState(false);
   const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
   const [isClient, setIsClient] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
+  const [isCheckingRedirect, setIsCheckingRedirect] = useState(true);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const alreadyRegistered = localStorage.getItem("hasRegistered") === "true";
+
+    if (user && alreadyRegistered) {
+      router.replace("/discover-your-style/upload-photo");
+      return;
+    }
+
+    setIsCheckingRedirect(false); 
+  }, [user]);
+
 
   useEffect(() => {
     setIsClient(true);
@@ -64,7 +83,8 @@ export default function RegisterAI() {
     }
   }, [isClient, userEmail]);
 
-  const isFormValid = formData.birthdate && 
+  const isFormValid = formData.nickname &&
+                     formData.birthdate && 
                      formData.phoneNumber && 
                      selectedCountry && 
                      selectedCity && 
@@ -101,11 +121,22 @@ export default function RegisterAI() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isLoading || isSubmitting) return;
+    localStorage.setItem('hasRegistered', 'true');
+    setIsCheckingRedirect(true);
+    setIsLoading(true);
+    setIsSubmitting(true);
+    setError('');
+    
     const fullPhoneNumber = `${countryCode}${formData.phoneNumber}`;
     const updatedFormData = { ...formData, phoneNumber: fullPhoneNumber };
     
     try {
-      const res = await fetch(`${API_BASE_URL}/userPref`, {
+      // Save data to localStorage immediately
+      localStorage.setItem('onboarding_register', JSON.stringify(updatedFormData));
+      
+      // Start API call in the background but don't wait for it
+      const savePromise = fetch(`${API_BASE_URL}/userPref`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -116,45 +147,48 @@ export default function RegisterAI() {
           data: updatedFormData,
         }),
       });
-
-      const result = await res.json();
-      console.log('Registration data saved:', result);
       
-      localStorage.setItem('onboarding_register', JSON.stringify(updatedFormData));
-      localStorage.setItem('onboarding_version', 'ai-flow');
-      router.push('/onboarding-ai/upload-photo');
+      // Handle API response in the background
+      savePromise
+        .then(res => res.json())
+        .then(result => console.log('Registration data saved:', result))
+        .catch(err => console.error('Failed to save registration data:', err));
+      
+      // Just trigger the navigation - Next.js will handle the loading state
+      router.push('/discover-your-style/upload-photo');
     } catch (err) {
       console.error('Failed to save registration data:', err);
+      setIsSubmitting(false);
+      setIsLoading(false);
     }
   };
 
-  const customSelectStyles = {
-    control: (provided) => ({
-      ...provided,
-      border: '1px solid #e2e8f0',
-      borderRadius: '0.375rem',
-      boxShadow: 'none',
-      '&:hover': {
-        border: '1px solid #cbd5e0',
-      },
-    }),
-    placeholder: (provided) => ({
-      ...provided,
-      color: '#a0aec0',
-    }),
-  };
+  if (isCheckingRedirect) {
+    return <LoadingModalSpinner />;
+  }
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-white p-4">
       <div className="w-full max-w-md bg-white rounded-3xl border border-gray-200 shadow-sm p-6 md:p-8">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-bold text-[#0B1F63]">Register</h2>
-          <span className="inline-block px-3 py-1 text-xs bg-[#0B1F63] text-white rounded-full">
-            Step 1/4
-          </span>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Nickname
+            </label>
+            <input
+              type="text"
+              name="nickname"
+              value={formData.nickname}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+              placeholder="Enter your nickname"
+              required
+            />
+          </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Birthdate
@@ -167,28 +201,6 @@ export default function RegisterAI() {
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
               required
             />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Phone number
-            </label>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={countryCode}
-                className="w-16 px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
-                disabled
-              />
-              <input
-                type="tel"
-                name="phoneNumber"
-                value={formData.phoneNumber}
-                onChange={handleChange}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
-                required
-              />
-            </div>
           </div>
 
           <div>
@@ -228,6 +240,28 @@ export default function RegisterAI() {
             ) : (
               <div className="w-full h-10 bg-gray-100 rounded-lg animate-pulse"></div>
             )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Phone number
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={countryCode}
+                className="w-16 px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
+                disabled
+              />
+              <input
+                type="tel"
+                name="phoneNumber"
+                value={formData.phoneNumber}
+                onChange={handleChange}
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+                required
+              />
+            </div>
           </div>
 
           <div>
@@ -277,7 +311,7 @@ export default function RegisterAI() {
 
           <button
             type="submit"
-            disabled={!isFormValid}
+            disabled={isLoading || !isFormValid || isSubmitting}
             className={`w-full py-3 px-4 rounded-lg transition-colors ${
               isFormValid
                 ? 'bg-[#0B1F63] text-white hover:bg-[#0a1b56]'
@@ -288,6 +322,12 @@ export default function RegisterAI() {
           </button>
         </form>
       </div>
+            {isPrivacyModalOpen && (
+              <PrivacyPolicyModal
+                isOpen={isPrivacyModalOpen}
+                onClose={() => setIsPrivacyModalOpen(false)}
+              />
+            )}
     </div>
   );
 } 

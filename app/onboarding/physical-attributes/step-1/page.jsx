@@ -3,11 +3,13 @@
 import { useRouter } from 'next/navigation';
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from "react-oidc-context";
+import LoadingModalSpinner from '@/components/LoadingModal';
 
 export default function PhysicalAttributesStep1() {
   const router = useRouter();
   const [gender, setGender] = useState('');
   const [skinTone, setSkinTone] = useState('');
+  const [loading, setloading] = useState(false);
   const [sliderPosition, setSliderPosition] = useState(0);
   const sliderRef = useRef(null);
   const sliderContainerRef = useRef(null);
@@ -85,14 +87,15 @@ export default function PhysicalAttributesStep1() {
     }
   };
 
+  if (loading) {
+    return <LoadingModalSpinner />;
+  }
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-white p-4">
       <div className="w-full max-w-md bg-white rounded-3xl border border-gray-200 shadow-sm p-6 md:p-8">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-bold text-[#0B1F63]">Physical attribute</h2>
-          <span className="inline-block px-3 py-1 text-xs bg-[#0B1F63] text-white rounded-full" style={{ height: '24px' }}>
-            Step 2/7
-          </span>
         </div>
 
         <form onSubmit={(e) => e.preventDefault()} className="space-y-8">
@@ -179,6 +182,7 @@ export default function PhysicalAttributesStep1() {
           {/* Next Button */}
           <button
             onClick={async () => {
+              setloading(true);
               await physic1();
             }}
             disabled={!gender || !skinTone}

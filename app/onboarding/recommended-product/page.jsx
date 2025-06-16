@@ -6,6 +6,7 @@ import { useAuth } from 'react-oidc-context';
 import axios from 'axios';
 import toast, { Toaster } from 'react-hot-toast';
 import PricingPlans from '@/components/PricingPlanCard';
+import LoadingModalSpinner from '@/components/LoadingModal';
 
 export default function RecommendedProductPage() {
   const router = useRouter();
@@ -25,6 +26,25 @@ export default function RecommendedProductPage() {
   const [submitStatus, setSubmitStatus] = useState(null);
 
   const hasFetchedRef = useRef(false);
+
+  // Track user events
+  const handleTrack = async (action, metadata = {}) => {
+    if (!userEmail) return;
+    
+    const payload = {
+      userEmail,
+      action,
+      timestamp: new Date().toISOString(),
+      page: "RecommendedProductPage",
+      ...metadata,
+    };
+
+    try {
+      await axios.post(`${API_BASE_URL}/trackevent`, payload);
+    } catch (err) {
+      console.error("Failed to track event:", err);
+    }
+  };
 
   // ========== Utility Functions ==========
 
@@ -66,7 +86,7 @@ export default function RecommendedProductPage() {
           duration: 3000,
         });
         setTimeout(() => {
-          router.push('/onboarding-ai/style-preferences');
+          router.push('/discover-your-style/style-preferences');
         }, 3200);
       }
     } catch (err) {
@@ -210,35 +230,55 @@ export default function RecommendedProductPage() {
         )}
 
         {!showPricingPlans && product && (
-          <div className="flex flex-col items-center space-y-4">
-            <img
-              src={product.imageS3Url}
-              alt={product.productName}
-              className="w-48 rounded-md object-cover"
-            />
-            {product.modelRef?.length > 0 && (
-              <img
-                src={product.modelRef}
-                alt="Model Preview"
-                className="w-48 rounded-md object-cover"
-              />
-            )}
-            <div className="text-center">
-              <h2 className="font-semibold text-primary-100">{product.productName}</h2>
-              <p className="text-sm text-primary-300">{product.brand}</p>
-              <a
-                href={product.productLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-cta underline"
-              >
-                View Product
-              </a>
+          <div className="w-full max-w-4xl mx-auto">
+            <div className="bg-white rounded-2xl p-6 shadow-2xl mb-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* Product Image */}
+                <div className="relative w-full h-96 rounded-xl overflow-hidden">
+                  <img
+                    src={product.imageS3Url}
+                    alt={product.productName}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute bottom-4 right-4 bg-white/90 text-[#0B1F63] px-3 py-1 rounded-full text-sm font-medium z-20">
+                    Recommended For You
+                  </div>
+                </div>
+
+                {/* Product Info */}
+                <div className="flex flex-col justify-between">
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-2">{product.productName}</h2>
+                    {product.brand && (
+                      <p className="text-lg text-gray-600 mb-6">{product.brand}</p>
+                    )}
+                    {product.description && (
+                      <p className="text-gray-600 mb-6">{product.description}</p>
+                    )}
+                  </div>
+                  
+                  <div className="space-y-4">
+                    {product.productLink && (
+                      <a
+                        href={product.productLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-block w-full text-center text-white bg-[#0B1F63] hover:bg-[#0a1a57] px-6 py-3 rounded-full transition-colors font-medium"
+                        onClick={() => handleTrack("Click Product Link", { 
+                          selection: product.productLink || 'unknown'
+                        })}
+                      >
+                        View Product
+                      </a>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
 
-            {error && <p className="text-sm text-red-500">{error}</p>}
+            {error && <p className="text-sm text-red-500 text-center mb-4">{error}</p>}
 
-            <div className="flex flex-col gap-4 w-full md:w-1/2">
+            <div className="flex flex-col md:flex-row gap-4 w-full max-w-md mx-auto">
               <button
                 onClick={async () => {
                   try {
@@ -253,27 +293,35 @@ export default function RecommendedProductPage() {
                   }
                   const result = await handleSubmit();
                   if (result === 'limit' || result === 'error') return;
+                  // Save product data for the try-on result page
+                  localStorage.setItem('tryonProduct', JSON.stringify({
+                    imageS3Url: product.imageS3Url,
+                    productName: product.productName,
+                    brand: product.brand,
+                    productLink: product.productLink
+                  }));
                   router.push('/onboarding/virtual-tryon-result');
                 }}
                 disabled={isSubmitting}
-                className={`py-2 px-4 rounded-lg ${
-                  isSubmitting ? 'bg-primary/70 cursor-not-allowed' : 'bg-primary'
-                } text-white`}
-              >
-                {isSubmitting ? 'Styling...' : 'Style Me'}
+                className={`py-3 px-6 rounded-full font-medium text-white transition-all ${
+                  isSubmitting 
+                    ? 'bg-[#0B1F63]/70 cursor-not-allowed' 
+                    : 'bg-[#0B1F63] hover:bg-[#0a1a57] shadow-lg hover:shadow-xl hover:-translate-y-0.5'
+                }`}
+              > Fitting
               </button>
               <button
                 onClick={() => window.location.reload()}
-                className="bg-white text-primary-100 border border-primary-100 py-2 px-4 rounded-lg"
+                className="py-3 px-6 rounded-full font-medium text-[#0B1F63] border-2 border-[#0B1F63] hover:bg-[#0B1F63]/5 transition-colors"
               >
-                Retry
+                Try Another Style
               </button>
             </div>
           </div>
         )}
 
         {loading && (
-          <p className="text-center text-primary-100">Loading recommendation...</p>
+          <LoadingModalSpinner />
         )}
       </main>
     </div>
