@@ -312,7 +312,13 @@ src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GOOG
  <div className="flex items-center justify-between mb-6">
  <div>
  <h1 className="text-3xl font-bold mb-1" style={{ color: BRAND_BLUE }}>
- Hi there!
+ {(() => {
+   if (typeof window !== 'undefined') {
+     const registerData = JSON.parse(localStorage.getItem('onboarding_register') || '{}');
+     return registerData.nickname ? `Hi ${registerData.nickname}!` : 'Hi there!';
+   }
+   return 'Hi there!';
+ })()}
  </h1>
  <p className="text-gray-600">Ready to style your day?</p>
  </div>
