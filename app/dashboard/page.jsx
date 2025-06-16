@@ -36,8 +36,8 @@ export default function HomePage() {
 
   // Redirect to landing page if not authenticated
   useEffect(() => {
-    if (!isLoading && !user) {
-      router.push('/landing');
+    if (!user) {
+      signinRedirect();
       return;
     }
   }, [isLoading, user, router]);

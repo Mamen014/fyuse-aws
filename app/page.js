@@ -6,8 +6,7 @@ import LoadingModalSpinner from '@/components/LoadingModal';
 
 export default function LandingPage() {
   const router = useRouter();
-  const [checking, setChecking] = useState(true); // Prevent flicker
-
+  const [checking, setChecking] = useState(true); 
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
@@ -24,7 +23,7 @@ export default function LandingPage() {
   }, [router]);
 
   if (checking) {
-    return <LoadingModalSpinner message="Redirecting..." />;
+    return <LoadingModalSpinner />;
   }
 
   return null; // Show nothing after redirect

@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation'; // useRouter from 'next/router' is outdated in App Router
+import { useRouter } from 'next/navigation';
 import { useAuth as useOidcAuth } from 'react-oidc-context';
 
 // Wrapper around react-oidc-context
@@ -10,7 +10,7 @@ export function useAuth() {
   const oidc = useOidcAuth();
   const router = useRouter();
 
-  const publicPaths = ['/landing', '/style-choice'];
+  const publicPaths = ['/landing-page', '/style-choice'];
   const isPublicPath = typeof window !== 'undefined' && publicPaths.includes(window.location.pathname);
 
   return {

@@ -322,6 +322,12 @@ export default function RegisterAI() {
           </button>
         </form>
       </div>
+            {isPrivacyModalOpen && (
+              <PrivacyPolicyModal
+                isOpen={isPrivacyModalOpen}
+                onClose={() => setIsPrivacyModalOpen(false)}
+              />
+            )}
     </div>
   );
 } 

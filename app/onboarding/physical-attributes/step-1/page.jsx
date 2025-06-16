@@ -3,11 +3,13 @@
 import { useRouter } from 'next/navigation';
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from "react-oidc-context";
+import LoadingModalSpinner from '@/components/LoadingModal';
 
 export default function PhysicalAttributesStep1() {
   const router = useRouter();
   const [gender, setGender] = useState('');
   const [skinTone, setSkinTone] = useState('');
+  const [loading, setloading] = useState(false);
   const [sliderPosition, setSliderPosition] = useState(0);
   const sliderRef = useRef(null);
   const sliderContainerRef = useRef(null);
@@ -84,6 +86,10 @@ export default function PhysicalAttributesStep1() {
       console.error("Failed to input data:", err);
     }
   };
+
+  if (loading) {
+    return <LoadingModalSpinner />;
+  }
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-white p-4">
@@ -176,6 +182,7 @@ export default function PhysicalAttributesStep1() {
           {/* Next Button */}
           <button
             onClick={async () => {
+              setloading(true);
               await physic1();
             }}
             disabled={!gender || !skinTone}
