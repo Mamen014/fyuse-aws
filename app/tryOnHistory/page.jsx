@@ -99,19 +99,6 @@ export default function TryOnHistoryPage() {
                 
                 <div className="p-4">
                   <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-medium text-gray-900">Try-on #{index + 1}</h3>
-                    <div className="flex items-center">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <Star
-                          key={star}
-                          className={`w-4 h-4 ${
-                            star <= (item.rating || 0)
-                              ? 'text-yellow-400 fill-current'
-                              : 'text-gray-300'
-                          }`}
-                        />
-                      ))}
-                    </div>
                   </div>
                   
                   {item.timestamp && (

@@ -6,25 +6,23 @@ import LoadingModalSpinner from '@/components/LoadingModal';
 
 export default function LandingPage() {
   const router = useRouter();
-  const [checking, setChecking] = useState(true); 
+  const [hydrated, setHydrated] = useState(false);
+
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
+    // Wait for hydration before accessing localStorage
+    setHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (!hydrated) return;
+
     const hasRegistered = localStorage.getItem('hasRegistered') === 'true';
+    const target = hasRegistered ? '/dashboard' : '/landing-page';
 
-    if (hasRegistered) {
-      router.replace('/dashboard');
-    } else {
-      router.replace('/landing-page');
-    }
+    router.replace(target);
+  }, [hydrated, router]);
 
-    // Optional: if you want to delay unmount
-    setTimeout(() => setChecking(false), 500);
-  }, [router]);
-
-  if (checking) {
-    return <LoadingModalSpinner />;
-  }
-
-  return null; // Show nothing after redirect
+  return <LoadingModalSpinner />;
 }
