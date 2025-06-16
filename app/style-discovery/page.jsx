@@ -56,7 +56,7 @@ export default function StyleChoice() {
 
   const options = [
     {
-      icon: "/images/icon/step-3.png",
+      icon: "/images/step-3.png",
       title: "Discover Your Style",
       subtitle: "Looks tailored for you",
       description: "Discover outfit recommendations tailored to your body shape, skin tone, and styling preference",
@@ -64,7 +64,7 @@ export default function StyleChoice() {
       gradient: "from-blue-50 to-indigo-50"
     },
     {
-      icon: "/images/icon/step-4.png",
+      icon: "/images/step-4.png",
       title: "Try On Now",
       subtitle: "Upload and Preview",
       description: "Try on clothes virtually before buying. See how they look on your actual body",
