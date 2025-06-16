@@ -13,7 +13,7 @@ export default function AIPhotoUpload() {
   const [isUserPhotoGuidanceOpen, setIsUserPhotoGuidanceOpen] = useState(false);
   const [fileToUpload, setFileToUpload] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [isNavigating, setIsNavigating] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isValidUserImage, setIsValidUserImage] = useState(false);
   const [showAIModal, setShowAIModal] = useState(false);
   const [aiAnalysis, setAiAnalysis] = useState(null);
@@ -193,70 +193,47 @@ export default function AIPhotoUpload() {
     }
   };
 
-  const handleAcceptAnalysis = () => {
-    if (isNavigating) return;
+  const handleAcceptAnalysis = async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     
-    setIsNavigating(true);
-    
-    // Save to local storage that user has accepted the analysis
-    const userEmail = user?.profile?.email;
-    if (userEmail) {
-      localStorage.setItem(
-        `onboarding_photo_analysis_accepted:${userEmail}`,
-        'true'
-      );
-    }
-    
-    // Navigate immediately
-    router.push('/discover-your-style/style-preferences');
-    
-    // Fallback in case navigation doesn't complete
-    const navigationTimeout = setTimeout(() => {
-      if (isNavigating) {
-        window.location.href = '/discover-your-style/style-preferences';
+    try {
+      // Save to local storage that user has accepted the analysis
+      const userEmail = user?.profile?.email;
+      if (userEmail) {
+        localStorage.setItem(
+          `onboarding_photo_analysis_accepted:${userEmail}`,
+          'true'
+        );
       }
-    }, 5000);
-    
-    return () => clearTimeout(navigationTimeout);
+      
+      // Navigate to the next page - Next.js will handle the loading state
+      router.push('/discover-your-style/style-preferences');
+    } catch (error) {
+      console.error('Error accepting analysis:', error);
+      setIsSubmitting(false);
+    }
   };
 
-  const handleCustomize = () => {
-    if (isNavigating) return;
-    setIsNavigating(true);
+  const handleCustomize = async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     
     try {
       // Update the onboarding version to indicate manual customization
       localStorage.setItem('onboarding_version', 'ai-to-manual');
       
-      // Redirect to the first step of manual physical attributes
+      // Navigate to the first step of manual physical attributes
       router.push('/onboarding/physical-attributes/step-1');
-      
-      // Fallback in case navigation doesn't complete
-      const navigationTimeout = setTimeout(() => {
-        if (isNavigating) {
-          window.location.href = '/onboarding/physical-attributes/step-1';
-        }
-      }, 5000);
-      
-      return () => clearTimeout(navigationTimeout);
-      
     } catch (error) {
-      console.error('Error in handleCustomize:', error);
-      setIsNavigating(false);
+      console.error('Error during customization:', error);
+      setIsSubmitting(false);
     }
   };
 
   return (
     <div className="min-h-screen bg-white p-4 md:p-8 relative">
-      {isNavigating && (
-        <div className="fixed inset-0 bg-white/90 backdrop-blur-sm z-50 flex items-center justify-center">
-          <div className="flex flex-col items-center">
-            <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#0B1F63]/20 border-t-[#0B1F63] border-b-[#0B1F63] mb-4"></div>
-            <p className="text-[#0B1F63] font-medium text-lg">Preparing your experience...</p>
-            <p className="text-gray-500 text-sm">Just a moment please</p>
-          </div>
-        </div>
-      )}
+      {/* Next.js loading state will handle the loading overlay */}
       <div className="flex flex-col justify-between min-h-screen bg-white px-5 py-8" style={{ maxWidth: "375px", margin: "0 auto" }}>
       <ToastContainer position="top-center" autoClose={3000} hideProgressBar />
 
@@ -403,15 +380,33 @@ export default function AIPhotoUpload() {
                 <div className="space-y-3">
                   <button
                     onClick={handleAcceptAnalysis}
-                    className="w-full py-3 bg-[#0B1F63] text-white rounded-lg font-medium hover:bg-[#0a1b56] transition-colors"
+                    disabled={isSubmitting}
+                    className={`w-full py-3 bg-[#0B1F63] text-white rounded-lg font-medium hover:bg-[#0a1b56] transition-colors flex items-center justify-center ${isSubmitting ? 'opacity-75' : ''}`}
                   >
-                    Accept Analysis
+                    {isSubmitting ? (
+                      <>
+                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Processing...
+                      </>
+                    ) : 'Accept Analysis'}
                   </button>
                   <button
                     onClick={handleCustomize}
-                    className="w-full py-3 border border-[#0B1F63] text-[#0B1F63] rounded-lg font-medium hover:bg-gray-50 transition-colors"
+                    disabled={isSubmitting}
+                    className={`w-full py-3 border border-[#0B1F63] text-[#0B1F63] rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center justify-center ${isSubmitting ? 'opacity-50' : ''}`}
                   >
-                    Customize Manually
+                    {isSubmitting ? (
+                      <>
+                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-[#0B1F63]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Processing...
+                      </>
+                    ) : 'Customize Manually'}
                   </button>
                 </div>
               </>

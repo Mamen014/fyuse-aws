@@ -3,7 +3,6 @@
 import { useState, useEffect, useId, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from 'react-oidc-context';
-import Select from 'react-select';
 import { Country, City } from 'country-state-city';
 import dynamic from 'next/dynamic';
 
@@ -42,7 +41,6 @@ export default function RegisterAI() {
   const [isClient, setIsClient] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isNavigating, setIsNavigating] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -108,14 +106,21 @@ export default function RegisterAI() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (isLoading || isSubmitting) return;
+    
     setIsLoading(true);
     setIsSubmitting(true);
     setError('');
+    
     const fullPhoneNumber = `${countryCode}${formData.phoneNumber}`;
     const updatedFormData = { ...formData, phoneNumber: fullPhoneNumber };
     
     try {
-      const res = await fetch(`${API_BASE_URL}/userPref`, {
+      // Save data to localStorage immediately
+      localStorage.setItem('onboarding_register', JSON.stringify(updatedFormData));
+      localStorage.setItem('onboarding_version', 'ai-flow');
+      
+      // Start API call in the background but don't wait for it
+      const savePromise = fetch(`${API_BASE_URL}/userPref`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -126,27 +131,17 @@ export default function RegisterAI() {
           data: updatedFormData,
         }),
       });
-
-      const result = await res.json();
-      console.log('Registration data saved:', result);
       
-      localStorage.setItem('onboarding_register', JSON.stringify(updatedFormData));
-      localStorage.setItem('onboarding_version', 'ai-flow');
-      // Show loading state and navigate
-      setIsNavigating(true);
+      // Handle API response in the background
+      savePromise
+        .then(res => res.json())
+        .then(result => console.log('Registration data saved:', result))
+        .catch(err => console.error('Failed to save registration data:', err));
+      
+      // Just trigger the navigation - Next.js will handle the loading state
       router.push('/discover-your-style/upload-photo');
-      
-      // Fallback in case navigation doesn't complete
-      const navigationTimeout = setTimeout(() => {
-        if (isNavigating) {
-          window.location.href = '/discover-your-style/upload-photo';
-        }
-      }, 5000);
-      
-      return () => clearTimeout(navigationTimeout);
     } catch (err) {
       console.error('Failed to save registration data:', err);
-    } finally {
       setIsSubmitting(false);
       setIsLoading(false);
     }
@@ -170,15 +165,6 @@ export default function RegisterAI() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-white p-4">
-      {isNavigating && (
-        <div className="fixed inset-0 bg-white/90 backdrop-blur-sm z-50 flex items-center justify-center">
-          <div className="flex flex-col items-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#0B1F63]/20 border-t-[#0B1F63] border-b-[#0B1F63] mb-4"></div>
-            <p className="text-[#0B1F63] font-medium text-lg">Preparing your experience...</p>
-            <p className="text-gray-500 text-sm">Just a moment please</p>
-          </div>
-        </div>
-      )}
       <div className="w-full max-w-md bg-white rounded-3xl border border-gray-200 shadow-sm p-6 md:p-8">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-bold text-[#0B1F63]">Register</h2>

@@ -2,11 +2,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Shirt, Sparkles, ArrowRight, Zap, Target } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { useAuth } from "react-oidc-context";
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
-import Navbar from "@/components/Navbar";
 
 // Dynamically import the ReferralModal to avoid SSR issues
 const ReferralModal = dynamic(

@@ -9,7 +9,7 @@ export default function CombinedStylePreferences() {
   const [clothingType, setClothingType] = useState('');
   const [fashionType, setFashionType] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isNavigating, setIsNavigating] = useState(false);
+  // Removed isNavigating state as we'll use Next.js loading state
   const { user } = useAuth();
   const userEmail = user?.profile?.email;
   const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
@@ -22,92 +22,76 @@ export default function CombinedStylePreferences() {
     'Streetwear': 'Urban-inspired casual clothing rooted in skate and hip-hop culture. Features graphic tees, hoodies, sneakers, and statement accessories.'
   };
 
-  const handleSubmit = () => {
-    if (isSubmitting || isNavigating) return;
+  const handleSubmit = async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     
-    // Show loading state immediately
-    setIsNavigating(true);
-    
-    // Don't await the API calls, let them run in the background
-    const savePreferences = async () => {
-      try {
-        // Make all API calls in parallel
-        await Promise.all([
-          // StylePref1 (fashion type)
-          fetch(`${API_BASE_URL}/userPref`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              userEmail,
-              section: 'StylePref1',
-              data: { selectedType: fashionType }
+    try {
+      // Store in localStorage immediately for instant feedback
+      localStorage.setItem('onboarding_style_preferences_1', 
+        JSON.stringify({ selectedType: fashionType }));
+      localStorage.setItem('onboarding_style_preferences_2', 
+        JSON.stringify({ brands: [], colors: [] }));
+      localStorage.setItem('onboarding_style_preferences_3', 
+        JSON.stringify({ clothingType }));
+      
+      // Start API calls in the background
+      const savePreferences = async () => {
+        try {
+          await Promise.all([
+            // StylePref1 (fashion type)
+            fetch(`${API_BASE_URL}/userPref`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                userEmail,
+                section: 'StylePref1',
+                data: { selectedType: fashionType }
+              }),
             }),
-          }),
-          
-          // StylePref2 (brands and colors)
-          fetch(`${API_BASE_URL}/userPref`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              userEmail,
-              section: 'StylePref2',
-              data: { brands: [], colors: [] }
+            
+            // StylePref2 (brands and colors)
+            fetch(`${API_BASE_URL}/userPref`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                userEmail,
+                section: 'StylePref2',
+                data: { brands: [], colors: [] }
+              }),
             }),
-          }),
-          
-          // StylePref3 (clothing type)
-          fetch(`${API_BASE_URL}/userPref`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              userEmail,
-              section: 'StylePref3',
-              data: { clothingType }
-            }),
-          })
-        ]);
-        
-        // Store in localStorage to match regular onboarding
-        localStorage.setItem('onboarding_style_preferences_1', 
-          JSON.stringify({ selectedType: fashionType }));
-        localStorage.setItem('onboarding_style_preferences_2', 
-          JSON.stringify({ brands: [], colors: [] }));
-        localStorage.setItem('onboarding_style_preferences_3', 
-          JSON.stringify({ clothingType }));
-          
-      } catch (error) {
-        console.error('Error saving preferences:', error);
-        // Continue with navigation even if there's an error
-      }
-    };
-    
-    // Start the API calls but don't wait for them
-    savePreferences();
-    
-    // Navigate immediately
-    router.push('/onboarding/recommended-product');
-    
-    // Fallback in case navigation doesn't complete
-    const navigationTimeout = setTimeout(() => {
-      if (isNavigating) {
-        window.location.href = '/onboarding/recommended-product';
-      }
-    }, 5000);
-    
-    return () => clearTimeout(navigationTimeout);
+            
+            // StylePref3 (clothing type)
+            fetch(`${API_BASE_URL}/userPref`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                userEmail,
+                section: 'StylePref3',
+                data: { clothingType }
+              }),
+            })
+          ]);
+        } catch (error) {
+          console.error('Error saving preferences:', error);
+        }
+      };
+      
+      // Start API calls in background
+      savePreferences();
+      
+      // Navigate to next page - Next.js will handle the loading state
+      router.push('/onboarding/recommended-product');
+      
+    } catch (error) {
+      console.error('Error in form submission:', error);
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-white p-4 relative">
-      {isNavigating && (
-        <div className="fixed inset-0 bg-white/90 backdrop-blur-sm z-50 flex items-center justify-center">
-          <div className="flex flex-col items-center">
-            <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#0B1F63]/20 border-t-[#0B1F63] border-b-[#0B1F63] mb-4"></div>
-            <p className="text-[#0B1F63] font-medium text-lg">Preparing your recommendations...</p>
-            <p className="text-gray-500 text-sm">Just a moment please</p>
-          </div>
-        </div>
-      )}
+      {/* Next.js loading state will handle the loading overlay */}
       <div className="w-full max-w-md bg-white rounded-3xl border border-gray-200 shadow-sm p-6 md:p-8">
         <div className="flex justify-between items-center mb-6">
           <div>
@@ -189,13 +173,21 @@ export default function CombinedStylePreferences() {
         <button
           onClick={handleSubmit}
           disabled={!clothingType || isSubmitting || !fashionType}
-          className={`w-full py-3 px-4 rounded-lg font-medium transition-all ${
+          className={`w-full py-3 px-4 rounded-lg font-medium transition-all flex items-center justify-center ${
             clothingType && fashionType
               ? 'bg-[#0B1F63] text-white hover:bg-[#0a1b56]'
               : 'bg-gray-200 text-gray-500 cursor-not-allowed'
           }`}
         >
-          Continue
+          {isSubmitting ? (
+            <>
+              <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Processing...
+            </>
+          ) : 'Continue'}
         </button>
       </div>
     </div>

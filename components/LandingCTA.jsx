@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useAuth } from 'react-oidc-context';
 
-export default function LandingCTA() {
+export default function LandingCTA({ className = '' }) {
   const router = useRouter();
   const { user, signinRedirect } = useAuth();
 
@@ -31,7 +31,7 @@ export default function LandingCTA() {
   return (
     <button
       onClick={handleClick}
-      className="inline-block bg-[#0B1F63] text-white px-6 sm:px-10 py-3 sm:py-4 rounded-full text-lg sm:text-xl font-semibold hover:bg-[#0B1F63]/90 transition-all duration-300 shadow-xl mb-4 sm:mb-6 cursor-pointer w-full sm:w-auto"
+      className={`inline-block px-6 sm:px-10 py-3 sm:py-4 rounded-full text-lg sm:text-xl font-semibold transition-all duration-300 shadow-xl mb-4 sm:mb-6 cursor-pointer w-full sm:w-auto ${className || 'bg-[#0B1F63] text-white hover:bg-[#0B1F63]/90'}`}
     >
       Start Free Styling
     </button>

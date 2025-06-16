@@ -90,9 +90,6 @@ export default function PhysicalAttributesStep1() {
       <div className="w-full max-w-md bg-white rounded-3xl border border-gray-200 shadow-sm p-6 md:p-8">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-bold text-[#0B1F63]">Physical attribute</h2>
-          <span className="inline-block px-3 py-1 text-xs bg-[#0B1F63] text-white rounded-full" style={{ height: '24px' }}>
-            Step 2/7
-          </span>
         </div>
 
         <form onSubmit={(e) => e.preventDefault()} className="space-y-8">

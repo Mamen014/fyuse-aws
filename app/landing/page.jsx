@@ -1,20 +1,17 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import Head from 'next/head';
 import Image from 'next/image';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from 'react-oidc-context';
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import LandingCTA from '@/components/LandingCTA';
-import { Camera, Sparkles, Shirt, ChevronDown, Star, Users, Clock, Shield, Zap, Target } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
 
 export default function LandingPage() {
   const router = useRouter();
   const { user, isLoading } = useAuth();
-  const [currentSlide, setCurrentSlide] = useState(0);
   const [openFAQ, setOpenFAQ] = useState(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   
@@ -338,12 +335,7 @@ export default function LandingPage() {
             who seek more. Be among the first to explore it.
             </p>
             <div className="space-y-4 sm:space-y-0 sm:space-x-4 sm:flex sm:justify-center sm:items-center">
-              <a
-                href="/style-choice"
-                className="block sm:inline-block bg-white text-[#0B1F63] px-8 sm:px-10 py-3 sm:py-4 rounded-full text-lg sm:text-xl font-semibold hover:bg-gray-100 transition-all duration-300 transform hover:scale-105 shadow-xl"
-              >
-                Start Free Styling
-              </a>
+              <LandingCTA className="bg-white text-[#0B1F63]" />
             </div>
           </div>
         </section>
