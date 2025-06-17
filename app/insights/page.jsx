@@ -83,7 +83,13 @@ export default function UserFashionInsight() {
         <div className="flex justify-between items-center mb-6">
           <div>
             <h1 className="text-2xl font-semibold" style={{ color: BRAND_BLUE }}>
-              👋 {auth?.user ? `Hi, ${auth.user.profile?.given_name || 'there'}!` : 'Hi, there!'}
+               {(() => {
+                  if (typeof window !== 'undefined') {
+                    const registerData = JSON.parse(localStorage.getItem('onboarding_register') || '{}');
+                    return registerData.nickname ? `Hi ${registerData.nickname}!` : 'Hi there!';
+                  }
+                  return 'Hi there!';
+                })()}
             </h1>
             <p className="text-gray-600 text-sm">
               Your personal fashion analysis

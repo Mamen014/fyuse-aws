@@ -18,7 +18,7 @@ export default function PrivacyPolicyModal({ isOpen, onClose }) {
           FYUSE – Terms and Conditions of Use
         </h1>
         <div className="prose prose-lg max-w-none space-y-4">
-          <div className="text-lg">Last Updated: [April 09, 2025]</div>
+          <div className="text-lg">Last Updated: [June 17, 2025]</div>
           <ol className="space-y-4">
             <li>
               <strong className="text-xl text-primary">
@@ -131,14 +131,7 @@ export default function PrivacyPolicyModal({ isOpen, onClose }) {
                 Subject to the laws of the Republic of Indonesia.
               </div>
             </li>
-            <li>
-              <strong className="text-xl text-primary">Contact Information</strong>
-              <div className="text-lg text-foreground">
-                Contact: Ryan Iaska, Founder of FYUSE
-              </div>
-              <div className="text-lg text-foreground">Email: ryaniaska14@gmail.com</div>
-              <div className="text-lg text-foreground">WhatsApp: +62 813 8448 1108</div>
-            </li>
+
             <li>
               <strong className="text-xl text-primary">Terms Updates</strong>
               <div className="text-lg text-foreground">

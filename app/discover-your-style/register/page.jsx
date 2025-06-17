@@ -6,6 +6,7 @@ import { useAuth } from 'react-oidc-context';
 import { Country, City } from 'country-state-city';
 import dynamic from 'next/dynamic';
 import LoadingModalSpinner from '@/components/LoadingModal';
+import PrivacyPolicyModal from '@/components/PrivacyPolicyModal';
 
 // Dynamically import Select with no SSR
 const DynamicSelect = dynamic(() => import('react-select'), {

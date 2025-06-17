@@ -178,6 +178,17 @@ export default function StyleChoice() {
               </p>
             </div>
           </div>
+          <div className="text-center mt-8">
+            <button
+              onClick={() => {
+                setloading(true);
+                router.push('/dashboard');
+              }}
+              className="inline-block px-6 py-3 rounded-full bg-background text-primary border border-primary hover:bg-background/90 transition-colors duration-300 shadow-md text-sm sm:text-base"
+            >
+              <span>Go to Dashboard</span>
+            </button>
+          </div>          
         </section>
       </main>
     </div>

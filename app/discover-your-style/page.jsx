@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
 import { useAuth } from 'react-oidc-context';
 
 function OnboardingAIRedirectContent() {

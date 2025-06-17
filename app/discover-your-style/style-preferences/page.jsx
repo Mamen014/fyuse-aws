@@ -104,7 +104,7 @@ export default function CombinedStylePreferences() {
         <div className="flex justify-between items-center mb-6">
           <div>
             <p className="text-[24px] font-bold text-[#0B1F63]">Style Preferences</p>
-            <p className="text-[18px] text-gray-500">Choose your style</p>
+            <p className="text-[18px] text-primary">Helps us pick outfits that feel right for you — in both fit and fashion</p>
           </div>
         </div>
 
