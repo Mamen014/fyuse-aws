@@ -45,12 +45,12 @@ export default function VirtualTryOnResultPage() {
   };
   
   // Load product data from localStorage
-  useEffect(() => {
-    const savedProduct = localStorage.getItem('tryonProduct');
-    if (savedProduct) {
-      setProduct(JSON.parse(savedProduct));
-    }
-  }, []);
+//   useEffect(() => {
+//     const savedProduct = localStorage.getItem('tryonProduct');
+//     if (savedProduct) {
+//       setProduct(JSON.parse(savedProduct));
+//     }
+//   }, []);
 
   const handleHomeClick = () => {
     localStorage.setItem(`onboarding_step:${userEmail}`, "appearance");
@@ -177,39 +177,20 @@ export default function VirtualTryOnResultPage() {
           </div>
 
           {/* Original Product */}
-          {product && (
+          {/* {product && (
             <div className="w-full md:w-1/2">
               <h2 className="text-xl font-semibold text-[#0B1F63] mb-4 text-center">Original Product</h2>
               <div className="bg-white rounded-2xl p-6 shadow-2xl h-full">
                 <div className="relative w-full h-64 mb-4 rounded-xl overflow-hidden">
                   <img
-                    src={product.imageS3Url}
+                    src={localStorage.getItem("manual_apparel")}
                     alt={product.productName || 'Product image'}
                     className="w-full h-full object-cover"
                   />
                 </div>
-                <div className="text-center">
-                  <h3 className="text-lg font-semibold text-gray-900">{product.productName}</h3>
-                  {product.brand && (
-                    <p className="text-gray-600 mb-4">{product.brand}</p>
-                  )}
-                  {product.productLink && (
-                    <a
-                      href={product.productLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-block mt-2 text-sm text-white bg-[#0B1F63] hover:bg-[#0a1a57] px-4 py-2 rounded-full transition-colors"
-                      onClick={() => handleTrack("Click Product Link", { 
-                        selection: product.productLink || 'unknown'
-                      })}
-                    >
-                      View Product
-                    </a>
-                  )}
-                </div>
               </div>
             </div>
-          )}
+          )} */}
         </div>
 
         {/* Buttons Container */}
@@ -267,10 +248,10 @@ export default function VirtualTryOnResultPage() {
           )}         
           {/* Try Another Style */}
           <button
-            onClick={() => router.push('/onboarding/recommended-product')}
+            onClick={() => router.push('/digital-fitting-room')}
             className="w-full py-4 px-4 bg-foreground border border-primary text-background font-medium rounded-full"
           >
-            Try Another Product
+            Try Another Item
           </button>
           {/* Continue to Wardrobe */}
           <button

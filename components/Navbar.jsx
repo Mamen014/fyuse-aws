@@ -4,7 +4,7 @@ import { lazy, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Menu, X, Home, Info, Phone, CreditCard, Sparkles, ChevronRight } from "lucide-react";
-import AuthActionsInNavbar from "./AuthActionInNavbar.jsx";
+import AuthActionsInNavbar from "./signOut.jsx";
 import { useAuth } from "react-oidc-context";
 import { useRouter } from "next/navigation";
 import LoadingModalSpinner from "./LoadingModal.jsx";

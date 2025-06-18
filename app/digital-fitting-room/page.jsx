@@ -229,6 +229,8 @@ export default function VirtualTryOn() {
         userEmail,
       });
 
+      localStorage.setItem('manual_apparel', apparelImage)
+
       if (response?.data?.taskId) {
         const taskId = response.data.taskId;
         setTaskId(taskId);
@@ -445,7 +447,7 @@ export default function VirtualTryOn() {
                 onClick={async () => {
                 const result = await handleSubmit();
                 if (result === 'limit' || result === 'error') return;
-                router.push('/onboarding/virtual-tryon-result');
+                router.push('/Direct-Fitting');
                 }}
                 disabled={
                 loading ||

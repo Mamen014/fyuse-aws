@@ -47,12 +47,12 @@ export default function PricingPlans({ isOpen, onClose, sourcePage = "Unknown" }
     },
   ];
 
-  const handlePlanSelect = async (planName) => {
+  const handlePlanSelect = (planName) => {
     try {
       const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
       const email = loggedInUser?.profile?.email || loggedInUser?.email;
       if (email) {
-        await fetch(`${process.env.NEXT_PUBLIC_FYUSEAPI}/trackevent`, {
+        fetch(`${process.env.NEXT_PUBLIC_FYUSEAPI}/trackevent`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

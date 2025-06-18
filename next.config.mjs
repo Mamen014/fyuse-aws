@@ -13,6 +13,11 @@ const nextConfig = {
         hostname: 'cdn.klingai.com',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 's21-kling.klingai.com',
+        pathname: '/**',
+      },
       // Add other image hostnames here if you are using images from other domains
     ],
   },

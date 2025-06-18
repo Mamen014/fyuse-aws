@@ -84,8 +84,8 @@ export default function PricingPlans() {
     },
   ];
 
-  const handlePlanSelect = async (planName) => {
-    await handleTrack("purchase_plan", planName);
+  const handlePlanSelect = (planName) => {
+    handleTrack("purchase_plan", planName);
 
     if (planName === "Basic") {
       setloading(true);
