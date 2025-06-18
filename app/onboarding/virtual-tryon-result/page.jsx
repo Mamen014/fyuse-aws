@@ -118,7 +118,7 @@ export default function VirtualTryOnResultPage() {
     return (
     <LoadingModalSpinner 
       message="Styling..." 
-      subMessage="This process may take up to 3 minutes" 
+      subMessage="This process only take 1 minute" 
     />
     );
   }
