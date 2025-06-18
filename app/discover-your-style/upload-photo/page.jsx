@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { ToastContainer, toast } from 'react-toastify';
 import Image from 'next/image';
