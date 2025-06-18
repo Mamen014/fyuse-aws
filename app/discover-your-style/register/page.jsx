@@ -174,6 +174,9 @@ export default function RegisterAI() {
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-bold text-[#0B1F63]">Register</h2>
         </div>
+        <div className="mb-6 p-4 bg-blue-50 border border-blue-200 text-sm text-blue-900 rounded-lg">
+          <strong>One-time setup:</strong> Tell us a bit about yourself so we can recommend outfits that truly fit you.
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
@@ -319,7 +322,7 @@ export default function RegisterAI() {
                 : 'bg-gray-300 text-gray-500 cursor-not-allowed'
             }`}
           >
-            Next
+            Save & Continue
           </button>
         </form>
       </div>
