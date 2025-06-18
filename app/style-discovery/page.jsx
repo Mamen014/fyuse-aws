@@ -20,19 +20,44 @@ export default function StyleChoice() {
   const [showReferralModal, setShowReferralModal] = useState(false);
   const [referralHandled, setReferralHandled] = useState(false);
 
+  const userEmail = user?.profile?.email;
+  const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;  
+  
   // Check if user has seen the referral modal before
   const hasSeenReferral = () => {
     if (typeof window === 'undefined') return true;
     return localStorage.getItem('hasSeenReferral') === 'true';
   };
 
-  const handleTrack = (event, data) => {
-    // Implement your tracking logic here
-    console.log('Track event:', event, data);
+  const handleTrack = async (action, metadata = {}) => {
+    console.log(`Tracked event: ${action}`, metadata);
+    const payload = {
+      userEmail,
+      action,
+      timestamp: new Date().toISOString(),
+      page: "style-discovery",
+      ...metadata,
+    };
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/trackevent`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const result = await res.json();
+      console.log("Tracking result:", result);
+    } catch (err) {
+      console.error("Failed to track user event:", err);
+    }
   };
 
   const handleReferralSelect = (source) => {
-    handleTrack("Referral Source Selected", { source });
+    console.log("User selected referral:", source);
+    handleTrack("Referral Source Selected", { selection: source });
     setShowReferralModal(false);
     setReferralHandled(true);
     localStorage.setItem('hasSeenReferral', 'true');
@@ -65,7 +90,7 @@ export default function StyleChoice() {
     },
     {
       icon: "/images/step-4.png",
-      title: "Try On Now",
+      title: "Direct Fitting",
       subtitle: "Upload and Preview",
       description: "This path lets you try on your own clothing item virtually to see how it fits your actual body",
       path: "/digital-fitting-room",
@@ -121,8 +146,12 @@ export default function StyleChoice() {
                     active:scale-[0.98] active:shadow-lg
                   `}
                   onClick={() => {
+                    handleTrack("Selected Style Discovery Path", {
+                      selection: option.title
+                    });
                     setloading(true);
-                    router.push(option.path)}}
+                    router.push(option.path);
+                  }}
                 >
                   <div className="p-4 sm:p-6 lg:p-8 xl:p-10 h-full flex flex-col">
                     {/* Icon and Title */}
@@ -181,6 +210,9 @@ export default function StyleChoice() {
           <div className="text-center mt-8">
             <button
               onClick={() => {
+                handleTrack("Selected Style Discovery Path", {
+                  selection: "Go to Dashboard"
+                });
                 setloading(true);
                 router.push('/dashboard');
               }}

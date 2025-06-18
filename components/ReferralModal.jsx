@@ -12,9 +12,9 @@ const ReferralModal = ({ isOpen, handleTrack, onClose }) => {
     "Other",
   ];
 
-  const handleSelect = (option) => {
-    handleTrack("Referral Source Selected", { selection: option });
-    onClose(); // close after selection
+  const handleSelect = (selectedOption) => {
+    handleTrack(selectedOption);
+    onClose();
   };
 
   return (
