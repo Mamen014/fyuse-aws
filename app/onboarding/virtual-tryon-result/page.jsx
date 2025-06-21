@@ -24,7 +24,20 @@ export default function VirtualTryOnResultPage() {
 
   const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
   const taskId = typeof window !== "undefined" ? localStorage.getItem("taskId") : null;
-  
+
+  const trackPersonalizeEvent = async ({ userId, itemId, eventType, liked }) => {
+    const sessionId = `session-${Date.now()}`;
+    try {
+      await fetch(`${API_BASE_URL}/stylingRecTrack`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, sessionId, itemId, eventType, liked }),
+      });
+    } catch (err) {
+      console.error('Failed to track personalize event:', err);
+    }
+  };
+
   // Track user events
   const handleTrack = async (action, metadata = {}) => {
     if (!userEmail) return;
@@ -55,6 +68,7 @@ export default function VirtualTryOnResultPage() {
   const handleHomeClick = () => {
     localStorage.setItem(`onboarding_step:${userEmail}`, "appearance");
     setIsLoading(true);
+    handleTrack("back to dashboard");
     router.push('/dashboard');
   };
 
@@ -218,6 +232,7 @@ export default function VirtualTryOnResultPage() {
           {resultImageUrl && (
           <button
             onClick={async () => {
+              handleTrack("download", { selection: resultImageUrl });
               setIsDownloading(true);
               try {
                 const res = await fetch(resultImageUrl, { mode: 'cors' });
@@ -267,7 +282,10 @@ export default function VirtualTryOnResultPage() {
           )}         
           {/* Try Another Style */}
           <button
-            onClick={() => router.push('/onboarding/recommended-product')}
+            onClick={() => {
+              handleTrack("re-styling");
+              router.push('/onboarding/recommended-product')}}
+              
             className="w-full py-4 px-4 bg-foreground border border-primary text-background font-medium rounded-full"
           >
             Try Another Product

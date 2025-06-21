@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "react-oidc-context";
 import Link from "next/link";
+import LoadingModalSpinner from "@/components/LoadingModal";
 import { Home, User, Shirt, ChevronRight, X } from "lucide-react";
 
 // Define brand colors - matching homepage
@@ -46,9 +47,7 @@ export default function UserFashionInsight() {
 
   if (loading)
     return (
-      <div className="bg-white max-w-md mx-auto h-screen flex flex-col items-center justify-center">
-        <h2 className="text-xl font-semibold" style={{ color: BRAND_BLUE }}>Loading your fashion insights...</h2>
-      </div>
+      <LoadingModalSpinner/>
     );
 
   if (error)

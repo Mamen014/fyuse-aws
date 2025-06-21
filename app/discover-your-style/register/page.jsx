@@ -152,7 +152,6 @@ export default function RegisterAI() {
       // Handle API response in the background
       savePromise
         .then(res => res.json())
-        .then(result => console.log('Registration data saved:', result))
         .catch(err => console.error('Failed to save registration data:', err));
       
       // Just trigger the navigation - Next.js will handle the loading state

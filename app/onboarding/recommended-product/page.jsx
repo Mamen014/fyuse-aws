@@ -14,7 +14,14 @@ export default function RecommendedProductPage() {
   const userEmail = auth?.user?.profile?.email;
 
   const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
+  const PLAN_LIMITS = {
+  Basic: { tryOn: 10, tips: 20 },
+  Elegant: { tryOn: 20, tips: 40 },
+  Pro: { tryOn: 40, tips: 60 },
+  };
 
+  const [subscriptionPlan, setSubscriptionPlan] = useState(null);
+  const [subsDate, setSubsDate] = useState(null);
   const [product, setProduct] = useState(null);
   const [taskId, setTaskId] = useState(null);
   const [error, setError] = useState(null);
@@ -26,6 +33,28 @@ export default function RecommendedProductPage() {
   const [submitStatus, setSubmitStatus] = useState(null);
 
   const hasFetchedRef = useRef(false);
+
+  useEffect(() => {
+    const fetchUserPlan = async () => {
+      try {
+        const res = await axios.get(`${API_BASE_URL}/userPlan?userEmail=${userEmail}`);
+        const planupdate = res.data.plan;
+        const startsubs = res.data.subsDate;
+        const updatedCount = res.data.tryOnCount || 0;
+        const count = res.data.tipsCount || 0;
+        setTipsCount(count);
+        setTryOnCount(updatedCount);
+        setSubscriptionPlan(planupdate);
+        setSubsDate(startsubs);
+      } catch (err) {
+        console.error("Failed to fetch subscription plan:", err);
+      }
+    };
+
+    if (userEmail && !hasFetchedRef.current) {
+      fetchUserPlan();
+    }
+  }, [userEmail]);
 
   // Track user events
   const handleTrack = async (action, metadata = {}) => {
@@ -48,16 +77,19 @@ export default function RecommendedProductPage() {
 
   // ========== Utility Functions ==========
 
-  const refreshTryOnCount = async () => {
-    try {
-      const res = await axios.get(`${API_BASE_URL}/getrack?userEmail=${userEmail}`);
-      const updatedCount = res.data.tryOnCount || 0;
-      console.log('count:', updatedCount);
-      setTryOnCount(updatedCount);
-      sessionStorage.setItem('tryOnCount', updatedCount);
-    } catch (err) {
-      console.error('Error updating try-on count:', err);
+  const getActivePlan = () => {
+    if (!subscriptionPlan || subscriptionPlan === "Basic" || !subsDate) {
+      return "Basic";
     }
+
+    const subscribedDate = new Date(subsDate);
+    const now = new Date();
+    const diffInDays = Math.floor((now - subscribedDate) / (1000 * 60 * 60 * 24));
+    if (diffInDays > 30) {
+      return "Basic";
+    }
+
+    return subscriptionPlan;
   };
 
   const updateTipsCount = async () => {
@@ -68,10 +100,10 @@ export default function RecommendedProductPage() {
     } catch (err) {
       console.error("Failed to update tips count", err);
     }
-  };  
+  }; 
   const fetchProduct = async (email) => {
     try {
-      const res = await fetch(`${API_BASE_URL}/stylingRecommendation`, {
+      const res = await fetch(`${API_BASE_URL}/StyleRec`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userEmail: email }),
@@ -102,10 +134,11 @@ export default function RecommendedProductPage() {
       const res = await axios.get(`${API_BASE_URL}/getTipsTrack?userEmail=${email}`);
       const count = res.data.tipsCount || 0;
       setTipsCount(count);
-      sessionStorage.setItem('tipsCount', count);
 
-      if (count >= 20) {
+      const activePlan = getActivePlan();
+      if (count >= PLAN_LIMITS[activePlan]?.tips) {
         setShowPricingPlans(true);
+        setLoading(false);
         toast("You've reached monthly limit, please upgrade your plan", {
           icon: "⚠️",
           duration: 4000,
@@ -127,7 +160,7 @@ export default function RecommendedProductPage() {
   const trackPersonalizeEvent = async ({ userId, itemId, eventType, liked }) => {
     const sessionId = `session-${Date.now()}`;
     try {
-      await fetch(`${API_BASE_URL}/trackRec`, {
+      await fetch(`${API_BASE_URL}/stylingRecTrack`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, sessionId, itemId, eventType, liked }),
@@ -139,8 +172,11 @@ export default function RecommendedProductPage() {
 
   const handleSubmit = async () => {
     if (isSubmitting) return;
-    if (tryOnCount >= 10) {
+
+    const activePlan = getActivePlan();
+    if (tryOnCount >= PLAN_LIMITS[activePlan]?.tryOn) {
       setShowPricingPlans(true);
+      setLoading(false);
       setSubmitStatus('limit');
       toast("You've reached monthly limit, please upgrade your plan", {
         icon: "⚠️",
@@ -184,7 +220,6 @@ export default function RecommendedProductPage() {
       return 'error';
     }
 
-    await refreshTryOnCount();
     setIsSubmitting(false);
     return 'success';
   };
@@ -192,23 +227,16 @@ export default function RecommendedProductPage() {
   // ========== Effect Hook ==========
 
   useEffect(() => {
-    if (auth.isLoading || hasFetchedRef.current || !userEmail) return;
+    const init = async () => {
+      if (!userEmail || !subscriptionPlan || hasFetchedRef.current) return;
+      hasFetchedRef.current = true;
 
-    hasFetchedRef.current = true;
+      await fetchTipsCountAndMaybeProduct(userEmail);
+    };
 
-    refreshTryOnCount();
-    fetchTipsCountAndMaybeProduct(userEmail);
-    const storedTipsCount = sessionStorage.getItem('tipsCount');
-    if (storedTipsCount !== null) {
-      const count = parseInt(storedTipsCount);
-      setTipsCount(count);
-      if (count >= 20) {
-        setShowPricingPlans(true);
-        setLoading(false);
-        return;
-      }
-    }
-  }, [userEmail]);
+    init();
+  }, [userEmail, subscriptionPlan]);
+
 
   // ========== JSX ==========
 
@@ -252,9 +280,6 @@ export default function RecommendedProductPage() {
                     {product.brand && (
                       <p className="text-lg text-gray-600 mb-6">{product.brand}</p>
                     )}
-                    {product.description && (
-                      <p className="text-gray-600 mb-6">{product.description}</p>
-                    )}
                   </div>
                   
                   <div className="space-y-4">
@@ -281,6 +306,9 @@ export default function RecommendedProductPage() {
             <div className="flex flex-col md:flex-row gap-4 w-full max-w-md mx-auto">
               <button
                 onClick={async () => {
+                  if (isSubmitting) return;
+                  setIsSubmitting(true);
+
                   try {
                     await trackPersonalizeEvent({
                       userId: userEmail,
@@ -311,7 +339,21 @@ export default function RecommendedProductPage() {
               > Fitting
               </button>
               <button
-                onClick={() => window.location.reload()}
+                onClick=
+                {async () => {
+
+                  try {
+                    await trackPersonalizeEvent({
+                      userId: userEmail,
+                      itemId: product.productId,
+                      eventType: 'retry',
+                      liked: false,
+                    });
+                  } catch (err) {
+                    console.error('Error tracking personalize event:', err);
+                  }
+                  window.location.reload();
+                }}
                 className="py-3 px-6 rounded-full font-medium text-[#0B1F63] border-2 border-[#0B1F63] hover:bg-[#0B1F63]/5 transition-colors"
               >
                 Try Another Style

@@ -33,7 +33,7 @@ export default function VirtualTryOnResultPage() {
       userEmail,
       action,
       timestamp: new Date().toISOString(),
-      page: "VirtualTryOnResultPage",
+      page: "DirectFittingPage",
       ...metadata,
     };
 
@@ -44,17 +44,11 @@ export default function VirtualTryOnResultPage() {
     }
   };
   
-  // Load product data from localStorage
-//   useEffect(() => {
-//     const savedProduct = localStorage.getItem('tryonProduct');
-//     if (savedProduct) {
-//       setProduct(JSON.parse(savedProduct));
-//     }
-//   }, []);
 
   const handleHomeClick = () => {
     localStorage.setItem(`onboarding_step:${userEmail}`, "appearance");
     setIsLoading(true);
+    handleTrack("back to dashboard");
     router.push('/dashboard');
   };
 
@@ -118,7 +112,7 @@ export default function VirtualTryOnResultPage() {
     return (
     <LoadingModalSpinner 
       message="Styling..." 
-      subMessage="This process may take up to 3 minutes" 
+      subMessage="This process only take 1 minute" 
     />
     );
   }
@@ -199,6 +193,7 @@ export default function VirtualTryOnResultPage() {
           {resultImageUrl && (
           <button
             onClick={async () => {
+              handleTrack("download", { selection: resultImageUrl });
               setIsDownloading(true);
               try {
                 const res = await fetch(resultImageUrl, { mode: 'cors' });
@@ -248,7 +243,9 @@ export default function VirtualTryOnResultPage() {
           )}         
           {/* Try Another Style */}
           <button
-            onClick={() => router.push('/digital-fitting-room')}
+            onClick={() => {
+              handleTrack("re-tryon");
+              router.push('/digital-fitting-room')}}
             className="w-full py-4 px-4 bg-foreground border border-primary text-background font-medium rounded-full"
           >
             Try Another Item
@@ -268,7 +265,7 @@ export default function VirtualTryOnResultPage() {
                 Loading...
               </span>
             ) : (
-              "Back to Home"
+              "Back to Dashboard"
             )}
           </button>           
         </div>

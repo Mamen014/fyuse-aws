@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { ToastContainer, toast } from "react-toastify";
+import LoadingModalSpinner from "@/components/LoadingModal";
 import "react-toastify/dist/ReactToastify.css";
 import { Home, Shirt, User, ChevronRight } from "lucide-react";
 
@@ -16,7 +17,6 @@ export default function ProfilePage() {
   const router = useRouter();
   const [likedRecommendations, setLikedRecommendations] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [actionLoading, setActionLoading] = useState(null);
   const [lastUpdated, setLastUpdated] = useState("");
 
   const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
@@ -29,7 +29,6 @@ export default function ProfilePage() {
     if (typeof window !== "undefined") {
       const storedUser = localStorage.getItem("loggedInUser");
       if (storedUser) {
-        console.log("🪵 Stored local user:", JSON.parse(storedUser));
       }
     }
   }, []);
@@ -38,7 +37,7 @@ export default function ProfilePage() {
     if (!auth?.user?.profile?.email) return;
 
     try {
-      const endpoint = `${API_BASE_URL}/historyHandler`;
+      const endpoint = `${API_BASE_URL}/userHistory`;
 
       const res = await fetch(
         `${endpoint}?email=${encodeURIComponent(auth.user.profile.email)}`,
@@ -164,9 +163,7 @@ export default function ProfilePage() {
           
           <div className="p-4">
             {loading ? (
-              <div className="text-center py-6">
-                <p className="text-gray-400">Loading your liked items...</p>
-              </div>
+              <LoadingModalSpinner/>
             ) : likedRecommendations.length === 0 ? (
               <div className="text-center py-6">
                 <div className="w-12 h-12 mx-auto mb-3 rounded-full text-white flex items-center justify-center text-xl" style={{ backgroundColor: BRAND_BLUE }}>

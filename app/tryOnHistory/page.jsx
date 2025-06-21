@@ -6,6 +6,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { ChevronLeft, Star, Shirt, Home, User} from 'lucide-react';
 import Navbar from '@/components/Navbar';
+import LoadingModalSpinner from '@/components/LoadingModal';
 
 export default function TryOnHistoryPage() {
   const { user } = useAuth();
@@ -69,9 +70,7 @@ export default function TryOnHistoryPage() {
         </div>
 
         {loading ? (
-          <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-          </div>
+          <LoadingModalSpinner/>
         ) : tryonHistory.length === 0 ? (
           <div className="text-center py-16">
             <Shirt className="w-16 h-16 text-gray-400 mx-auto mb-4" />
@@ -80,7 +79,7 @@ export default function TryOnHistoryPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {tryonHistory.map((item, index) => (
+            {tryonHistory.slice(0, 15).map((item, index) => (
               <div key={index} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                 <div className="aspect-[3/4] relative">
                   {item.generatedImageUrl ? (

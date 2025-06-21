@@ -30,7 +30,6 @@ export default function StyleChoice() {
   };
 
   const handleTrack = async (action, metadata = {}) => {
-    console.log(`Tracked event: ${action}`, metadata);
     const payload = {
       userEmail,
       action,
@@ -49,14 +48,12 @@ export default function StyleChoice() {
       });
 
       const result = await res.json();
-      console.log("Tracking result:", result);
     } catch (err) {
       console.error("Failed to track user event:", err);
     }
   };
 
   const handleReferralSelect = (source) => {
-    console.log("User selected referral:", source);
     handleTrack("Referral Source Selected", { selection: source });
     setShowReferralModal(false);
     setReferralHandled(true);

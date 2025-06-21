@@ -35,8 +35,16 @@ export default function VirtualTryOn() {
   const [apparelImageError, setApparelImageError] = useState(null);
   const [isUserPhotoGuidanceOpen, setIsUserPhotoGuidanceOpen] = useState(false);
   const [isApparelPhotoGuidanceOpen, setIsApparelPhotoGuidanceOpen] = useState(false);
+  const [subscriptionPlan, setSubscriptionPlan] = useState(null);
+  const [subsDate, setSubsDate] = useState(null);
 
   const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
+
+  const PLAN_LIMITS = {
+  Basic: { tryOn: 10, tips: 20 },
+  Elegant: { tryOn: 20, tips: 40 },
+  Pro: { tryOn: 40, tips: 60 },
+  };
 
   const allowedTypes = ["image/jpeg", "image/jpg"];
   const maxSizeMB = 10;
@@ -53,7 +61,6 @@ export default function VirtualTryOn() {
 
   // Track Event Function
   const handleTrack = async (action, metadata = {}) => {
-    console.log(`Tracked event: ${action}`, metadata);
     const payload = {
       userEmail,
       action,
@@ -71,12 +78,28 @@ export default function VirtualTryOn() {
         body: JSON.stringify(payload),
       });
 
-      const result = await res.json();
-      console.log("Tracking result:", result);
     } catch (err) {
       console.error("Failed to track user event:", err);
     }
   };
+  useEffect(() => {
+    const fetchUserPlan = async () => {
+      try {
+        const res = await axios.get(`${API_BASE_URL}/userPlan?userEmail=${userEmail}`);
+        const planupdate = res.data.plan;
+        const subsDate = res.data.subsDate;
+        setSubscriptionPlan(planupdate);
+        setSubsDate(subsDate);
+        getActivePlan();
+      } catch (err) {
+        console.error("Failed to fetch subscription plan:", err);
+      }
+    };
+
+    if (userEmail) {
+      fetchUserPlan();
+    }
+  }, [userEmail]);
 
   useEffect(() => {
     if (!userEmail) return;
@@ -182,6 +205,21 @@ export default function VirtualTryOn() {
     }
   };
 
+  const getActivePlan = () => {
+    if (!subscriptionPlan || subscriptionPlan === "Basic" || !subsDate) {
+      return "Basic";
+    }
+
+    const subscribedDate = new Date(subsDate);
+    const now = new Date();
+    const diffInDays = Math.floor((now - subscribedDate) / (1000 * 60 * 60 * 24));
+    if (diffInDays > 30) {
+      return "Basic";
+    }
+
+    return subscriptionPlan;
+  };
+
   // Try-On Button Click + Track
   const handleSubmit = async () => {
     if (!userImage || !apparelImage) {
@@ -189,7 +227,16 @@ export default function VirtualTryOn() {
       return;
     }
 
-    if (tryOnCount >= 10) return setShowPricingPlans(true);
+    const activePlan = getActivePlan();
+    if (tryOnCount >= PLAN_LIMITS[activePlan]?.tryOn) {
+      setShowPricingPlans(true);
+      setLoading(false);
+      toast("You've reached monthly limit, please upgrade your plan", {
+        icon: "⚠️",
+        duration: 4000,
+      });
+      return 'limit';
+    }
 
     if (
       !userImage ||
@@ -205,7 +252,7 @@ export default function VirtualTryOn() {
 
     try {
       setLoading(true);
-      toast.info("Processing started. This may take up to 3 minutes.", {
+      toast.info("Processing started.", {
         position: "top-right",
         autoClose: 5000,
         hideProgressBar: false,
@@ -228,8 +275,6 @@ export default function VirtualTryOn() {
         garment_image_url: apparelImageUrl,
         userEmail,
       });
-
-      localStorage.setItem('manual_apparel', apparelImage)
 
       if (response?.data?.taskId) {
         const taskId = response.data.taskId;
