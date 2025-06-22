@@ -11,10 +11,10 @@ function AuthInitializer() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    // ⏳ Wait until auth finishes loading
+    //Wait until auth finishes loading
     if (auth.isLoading) return;
 
-    // ✅ Once loaded and authenticated
+    //Once loaded and authenticated
     if (auth?.user?.profile?.email) {
       const userData = {
         email: auth.user.profile.email,
@@ -25,13 +25,13 @@ function AuthInitializer() {
         profile: auth.user.profile,
       };
 
+      //Store authenticated user at the local storage
       const existing = localStorage.getItem('loggedInUser');
       if (!existing || JSON.stringify(userData) !== existing) {
         localStorage.setItem('loggedInUser', JSON.stringify(userData));
-        console.log('✅ Auth user session stored in localStorage:', userData);
       }
 
-      // ⛳ Handle post-login redirect if exists
+      //Redirect user based on the 'PostLoginRedirect' value stored at the local storage
       const redirectPath = localStorage.getItem('postLoginRedirect');
       if (redirectPath) {
         localStorage.removeItem('postLoginRedirect');

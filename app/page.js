@@ -11,7 +11,6 @@ export default function LandingPage() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    // Wait for hydration before accessing localStorage
     setHydrated(true);
   }, []);
 

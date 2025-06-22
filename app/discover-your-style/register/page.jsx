@@ -43,7 +43,6 @@ export default function RegisterAI() {
   const [isClient, setIsClient] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState('');
   const [isCheckingRedirect, setIsCheckingRedirect] = useState(true);
 
   useEffect(() => {
@@ -127,7 +126,6 @@ export default function RegisterAI() {
     setIsCheckingRedirect(true);
     setIsLoading(true);
     setIsSubmitting(true);
-    setError('');
     
     const fullPhoneNumber = `${countryCode}${formData.phoneNumber}`;
     const updatedFormData = { ...formData, phoneNumber: fullPhoneNumber };
