@@ -2,28 +2,29 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap');
 
 /* Base Styles */
 html,
 body {
-  @apply font-sans text-base text-foreground bg-background;
-  overflow-x: hidden; /* Prevent horizontal scrolling */
+  @apply text-base text-foreground bg-background;
+  font-family: 'Space Grotesk', sans-serif;
+  overflow-x: hidden;
   width: 100%;
-  min-height: 100vh; /* Ensure full viewport height */
-  margin: 0; /* Remove default margins */
-  padding: 0; /* Remove default padding */
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 * {
-  box-sizing: border-box; /* Ensure consistent sizing */
+  box-sizing: border-box;
 }
 
 /* Typography */
 h1, h2, h3, h4, h5, h6 {
-  @apply font-sans font-semibold leading-tight tracking-tight;
+  @apply font-heading font-semibold leading-tight tracking-tight text-foreground;
 }
 
 h1 { @apply text-4xl md:text-5xl lg:text-6xl; }
@@ -34,7 +35,7 @@ h5 { @apply text-lg md:text-xl; }
 h6 { @apply text-base md:text-lg; }
 
 p, span, div, a, button, input, textarea, select, label {
-  @apply font-sans text-base leading-relaxed;
+  @apply font-body text-base leading-relaxed;
 }
 
 /* Text Sizes are defined in tailwind.config.js */

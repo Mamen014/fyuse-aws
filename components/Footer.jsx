@@ -9,6 +9,7 @@ const Footer = () => {
         <Link href="/about">About</Link>
         <Link href="/contact">Contact Us</Link>
         <Link href="/features">Features</Link>
+        <Link href="/journal">Journal</Link>
       </div>
     </footer>
   );

@@ -9,8 +9,9 @@ export default {
   ],
   theme: {
     fontFamily: {
-      sans: ['Inter', 'Arial', 'sans-serif'],
-      mono: ['Menlo', 'Monaco', 'Courier New', 'monospace'],
+      heading: ['Space Grotesk', 'sans-serif'],
+      body: ['Space Grotesk', 'sans-serif'],
+      ui: ['Inter', 'sans-serif'],
     },
     fontSize: {
       xs: '0.75rem',    // 12px
