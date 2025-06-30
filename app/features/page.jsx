@@ -1,6 +1,5 @@
 "use client";
 import React from "react";
-import Link from "next/link";
 import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -70,7 +69,7 @@ export default function Features() {
 
   return (
     <div>
-      <section className="min-h-screen bg-background py-20 px-6 text-foreground font-sans">
+      <section className="min-h-screen bg-background py-20 px-6 text-foreground">
         <div className="max-w-7xl mx-auto">
           <Navbar />
           {/* Header */}
@@ -79,7 +78,7 @@ export default function Features() {
               initial={{ opacity: 0, y: -15 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
-              className="text-3xl md:text-4xl font-extrabold tracking-tight text-primary"
+              className="font-heading text-3xl md:text-4xl font-extrabold tracking-tight text-primary"
             >
               More Than Features — A Whole New Way to Dress
             </motion.h2>
@@ -90,7 +89,7 @@ export default function Features() {
           </div>
 
           {/* Feature Grid */}
-          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 px-4">
+          <div className="font-body grid gap-8 sm:grid-cols-2 lg:grid-cols-3 px-4">
             {sortedFeatures.map((feature, index) => (
               <FeatureCard
                 key={index}

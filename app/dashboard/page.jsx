@@ -192,6 +192,10 @@ export default function HomePage() {
     }
   }, [userEmail, tryOnCount, tipsCount, subscriptionPlan]);
 
+  // Filter recommendations by category
+  const tops = likedRecommendations.filter(item => item.category === "top");
+  const bottoms = likedRecommendations.filter(item => item.category === "bottom");
+
   return (
 <>
  
@@ -411,96 +415,96 @@ className="min-w-36 h-48 rounded-3xl overflow-hidden flex-shrink-0 bg-gradient-t
       })()}
     </div>
   </div>
-{/* Wardrobe Collection */}
- <div className="px-6 pb-8">
- <div className="flex justify-between items-center mb-6">
- <h2 className="text-xl font-bold text-gray-900">My Wardrobe</h2>
- <Link href="/profile" className="flex items-center text-sm font-medium" style={{ color: BRAND_BLUE }}>
- Organize <ChevronRight size={16} className="ml-1" />
- </Link>
- </div>
+  {/* Wardrobe Collection */}
+  <div className="px-6 pb-8">
+    <div className="flex justify-between items-center mb-6">
+      <h2 className="text-xl font-bold text-gray-900">My Wardrobe</h2>
+      <Link href="/wardrobe" className="flex items-center text-sm font-medium" style={{ color: BRAND_BLUE }}>
+      Organize <ChevronRight size={16} className="ml-1" />
+      </Link>
+    </div>
 
-{/* Wardrobe Grid */}
- <div className="space-y-6">
-{/* Tops Section */}
- <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
- <div className="flex items-center justify-between mb-4">
- <h3 className="text-lg font-bold text-gray-900">Tops</h3>
- <span className="text-sm text-gray-500">{likedRecommendations.length > 0 ? Math.min(2, likedRecommendations.length) : 0} items</span>
- </div>
- <div className="flex gap-3">
-{likedRecommendations.length > 0
-? likedRecommendations.slice(0, 2).map((recommendation, index) => (
-<Link
-key={recommendation.productId}
-href="/profile"
-className="flex-1 aspect-[3/4] rounded-2xl overflow-hidden bg-white shadow-sm border border-gray-100 relative group"
->
-{recommendation.imageUrl ? (
-<Image
-src={recommendation.imageUrl || "/placeholder.svg"}
-alt="Top Item"
-fill
-className="object-cover group-hover:scale-105 transition-transform duration-300"
-/>
- ) : (
-<div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
- <Shirt className="w-8 h-8 text-gray-400" />
- </div>
- )}
- </Link>
- ))
-: [1, 2].map((item) => (
-<div
-key={item}
-className="flex-1 aspect-[3/4] rounded-2xl overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center"
->
- <Shirt className="w-8 h-8 text-gray-400" />
- </div>
- ))}
- </div>
- </div>
+    {/* Wardrobe Grid */}
+    <div className="space-y-6">
+    {/* Tops Section */}
+    <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-bold text-gray-900">Tops</h3>
+        <span className="text-sm text-gray-500">{tops.length}</span>
+      </div>
+      <div className="flex gap-3">
+        {tops.length > 0
+          ? tops.slice(0, 2).map((recommendation) => (
+              <Link
+                key={recommendation.productId}
+                href="/wardrobe"
+                className="flex-1 aspect-[3/4] rounded-2xl overflow-hidden bg-white shadow-sm border border-gray-100 relative group"
+              >
+                {recommendation.imageUrl ? (
+                  <Image
+                    src={recommendation.imageUrl || "/placeholder.svg"}
+                    alt="Top Item"
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+                    <Shirt className="w-8 h-8 text-gray-400" />
+                  </div>
+                )}
+              </Link>
+            ))
+          : [1, 2].map((item) => (
+              <div
+                key={item}
+                className="flex-1 aspect-[3/4] rounded-2xl overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center"
+              >
+                <Shirt className="w-8 h-8 text-gray-400" />
+              </div>
+            ))}
+      </div>
+    </div>
 
-{/* Bottoms Section */}
- <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
- <div className="flex items-center justify-between mb-4">
- <h3 className="text-lg font-bold text-gray-900">Bottoms</h3>
- <span className="text-sm text-gray-500">{likedRecommendations.length > 2 ? Math.min(2, likedRecommendations.length - 2) : 0} items</span>
- </div>
- <div className="flex gap-3">
-{likedRecommendations.length > 2
-? likedRecommendations.slice(2, 4).map((recommendation, index) => (
-<Link
-key={recommendation.productId}
-href="/profile"
-className="flex-1 aspect-[3/4] rounded-2xl overflow-hidden bg-white shadow-sm border border-gray-100 relative group"
->
-{recommendation.imageUrl ? (
-<Image
-src={recommendation.imageUrl || "/placeholder.svg"}
-alt="Bottom Item"
-fill
-className="object-cover group-hover:scale-105 transition-transform duration-300"
-/>
- ) : (
-<div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
- <Shirt className="w-8 h-8 text-gray-400" />
- </div>
- )}
- </Link>
- ))
-: [1, 2].map((item) => (
-<div
-key={item}
-className="flex-1 aspect-[3/4] rounded-2xl overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center"
->
- <Shirt className="w-8 h-8 text-gray-400" />
- </div>
- ))}
- </div>
- </div>
- </div>
- </div>
+    {/* Bottoms Section */}
+    <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-bold text-gray-900">Bottoms</h3>
+        <span className="text-sm text-gray-500">{bottoms.length}</span>
+      </div>
+      <div className="flex gap-3">
+        {bottoms.length > 0
+          ? bottoms.slice(0, 2).map((recommendation) => (
+              <Link
+                key={recommendation.productId}
+                href="/wardrobe"
+                className="flex-1 aspect-[3/4] rounded-2xl overflow-hidden bg-white shadow-sm border border-gray-100 relative group"
+              >
+                {recommendation.imageUrl ? (
+                  <Image
+                    src={recommendation.imageUrl || "/placeholder.svg"}
+                    alt="Bottom Item"
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+                    <Shirt className="w-8 h-8 text-gray-400" />
+                  </div>
+                )}
+              </Link>
+            ))
+          : [1, 2].map((item) => (
+              <div
+                key={item}
+                className="flex-1 aspect-[3/4] rounded-2xl overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center"
+              >
+                <Shirt className="w-8 h-8 text-gray-400" />
+              </div>
+            ))}
+      </div>
+    </div>
+    </div>
+  </div>
  </div>
 
 {/* Bottom Navigation Bar - Unchanged */}
@@ -509,7 +513,7 @@ className="flex-1 aspect-[3/4] rounded-2xl overflow-hidden bg-gradient-to-br fro
  <Home size={20} />
  <span className="text-xs mt-1">Home</span>
  </Link>
- <Link href="/profile" className="flex flex-col items-center text-gray-400 hover:text-blue-900">
+ <Link href="/wardrobe" className="flex flex-col items-center text-gray-400 hover:text-blue-900">
  <Shirt className="w-5 h-5 mb-0.5" />
  <span className="text-xs mt-1">Wardrobe</span>
  </Link>

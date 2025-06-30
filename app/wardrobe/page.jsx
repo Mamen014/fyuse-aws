@@ -111,6 +111,18 @@ export default function ProfilePage() {
     );
   }
 
+  // Classify recommendations
+  const tops = likedRecommendations.filter(
+    (item) =>
+      item.category &&
+      item.category.toLowerCase().includes("top")
+  );
+  const bottoms = likedRecommendations.filter(
+    (item) =>
+      item.category &&
+      item.category.toLowerCase().includes("bottom")
+  );
+
   return (
     <div className="bg-white max-w-md mx-auto h-screen flex flex-col relative">
       <ToastContainer />
@@ -147,92 +159,122 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Liked Recommendations Section */}
-        <div className="mb-6 rounded-xl overflow-hidden shadow-sm" style={{ backgroundColor: `${BRAND_BLUE}0D` }}>
-          <div className="px-4 py-3 border-b" style={{ borderColor: `${BRAND_BLUE}1A` }}>
-            <div className="flex items-center">
-              <div className="w-6 h-6 rounded-full mr-2 flex items-center justify-center text-xs text-white" 
-                  style={{ backgroundColor: BRAND_BLUE }}>
-                L
-              </div>
-              <h3 className="font-semibold" style={{ color: BRAND_BLUE }}>
-                Liked Items
-              </h3>
-            </div>
-          </div>
-          
-          <div className="p-4">
-            {loading ? (
-              <LoadingModalSpinner/>
-            ) : likedRecommendations.length === 0 ? (
-              <div className="text-center py-6">
-                <div className="w-12 h-12 mx-auto mb-3 rounded-full text-white flex items-center justify-center text-xl" style={{ backgroundColor: BRAND_BLUE }}>
-                  👚
-                </div>
-                <p className="font-medium" style={{ color: BRAND_BLUE }}>No liked recommendations yet.</p>
-                <p className="text-xs text-gray-500 mt-2">Items you like will appear here</p>
-                <Link href="/onboarding/recommended-product">
-                  <button 
-                    className="mt-4 py-2 px-4 rounded-lg text-sm font-medium text-white"
-                    style={{ backgroundColor: BRAND_BLUE }}
-                  >
-                    Discover Items
-                  </button>
-                </Link>
-              </div>
-            ) : (
-              <div className="flex flex-col space-y-3">
-                {likedRecommendations.map((recommendation) => (
-                  <div
-                    key={recommendation.productId}
-                    className="bg-white rounded-lg p-3 shadow-sm overflow-hidden flex"
-                  >
-                    <div className="relative w-24 h-24 overflow-hidden rounded-lg flex-shrink-0">
-                      {recommendation.imageUrl ? (
-                        <Image
-                          src={recommendation.imageUrl}
-                          alt="Liked Recommendation"
-                          fill
-                          style={{ objectFit: 'cover' }}
-                          sizes="(max-width: 768px) 100px, 100px"
-                          priority
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-                          <span className="text-gray-400">No Image</span>
-                        </div>
-                      )}
-                    </div>
-                    <div className="ml-3 flex-1">
-                      <p className="font-medium" style={{ color: BRAND_BLUE }}>
-                        {recommendation.brand || "Unknown Brand"}
-                      </p>
-                      <p className="text-xs text-gray-600">
-                        {recommendation.clothingType || "Clothing"} ({recommendation.fashionType || "Style"})
-                      </p>
-                      <p className="text-xs text-gray-600">
-                        <span className="font-medium">Color:</span> {recommendation.color || "N/A"}
-                      </p>
-                      {recommendation.productLink && (
-                        <a
-                          href={recommendation.productLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="mt-2 text-xs flex items-center"
-                          style={{ color: BRAND_BLUE }}
-                        >
-                          View Product <ChevronRight size={14} />
-                        </a>
-                      )}
-                    </div>
+        {/* Tops Section */}
+        <div className="mb-6">
+          <h2 className="text-lg font-bold mb-2" style={{ color: BRAND_BLUE }}>
+            Tops ({tops.length})
+          </h2>
+          {tops.length === 0 ? (
+            <p className="text-sm text-gray-500">No tops found.</p>
+          ) : (
+            <div className="flex flex-col space-y-3">
+              {tops.map((recommendation) => (
+                <div
+                  key={recommendation.productId}
+                  className="bg-white rounded-lg p-3 shadow-sm overflow-hidden flex"
+                >
+                  <div className="relative w-24 h-24 overflow-hidden rounded-lg flex-shrink-0">
+                    {recommendation.imageUrl ? (
+                      <Image
+                        src={recommendation.imageUrl}
+                        alt="Top Item"
+                        fill
+                        style={{ objectFit: 'cover' }}
+                        sizes="(max-width: 768px) 100px, 100px"
+                        priority
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                        <span className="text-gray-400">No Image</span>
+                      </div>
+                    )}
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
+                  <div className="ml-3 flex-1">
+                    <p className="font-medium" style={{ color: BRAND_BLUE }}>
+                      {recommendation.brand || "Unknown Brand"}
+                    </p>
+                    <p className="text-xs text-gray-600">
+                      {recommendation.clothingType || "Clothing"} ({recommendation.fashionType || "Style"})
+                    </p>
+                    <p className="text-xs text-gray-600">
+                      <span className="font-medium">Color:</span> {recommendation.color || "N/A"}
+                    </p>
+                    {recommendation.productLink && (
+                      <a
+                        href={recommendation.productLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-2 text-xs flex items-center"
+                        style={{ color: BRAND_BLUE }}
+                      >
+                        View Product <ChevronRight size={14} />
+                      </a>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Bottoms Section */}
+        <div className="mb-6">
+          <h2 className="text-lg font-bold mb-2" style={{ color: BRAND_BLUE }}>
+            Bottoms ({bottoms.length})
+          </h2>
+          {bottoms.length === 0 ? (
+            <p className="text-sm text-gray-500">No bottoms found.</p>
+          ) : (
+            <div className="flex flex-col space-y-3">
+              {bottoms.map((recommendation) => (
+                <div
+                  key={recommendation.productId}
+                  className="bg-white rounded-lg p-3 shadow-sm overflow-hidden flex"
+                >
+                  <div className="relative w-24 h-24 overflow-hidden rounded-lg flex-shrink-0">
+                    {recommendation.imageUrl ? (
+                      <Image
+                        src={recommendation.imageUrl}
+                        alt="Bottom Item"
+                        fill
+                        style={{ objectFit: 'cover' }}
+                        sizes="(max-width: 768px) 100px, 100px"
+                        priority
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                        <span className="text-gray-400">No Image</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="ml-3 flex-1">
+                    <p className="font-medium" style={{ color: BRAND_BLUE }}>
+                      {recommendation.brand || "Unknown Brand"}
+                    </p>
+                    <p className="text-xs text-gray-600">
+                      {recommendation.clothingType || "Clothing"} ({recommendation.fashionType || "Style"})
+                    </p>
+                    <p className="text-xs text-gray-600">
+                      <span className="font-medium">Color:</span> {recommendation.color || "N/A"}
+                    </p>
+                    {recommendation.productLink && (
+                      <a
+                        href={recommendation.productLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-2 text-xs flex items-center"
+                        style={{ color: BRAND_BLUE }}
+                      >
+                        View Product <ChevronRight size={14} />
+                      </a>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
-
       {/* Bottom Navigation Bar */}
       <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white shadow-[0_-2px_10px_rgba(0,0,0,0.1)] flex justify-around items-center px-2 pt-2 pb-1 z-10">
         <Link href="/" className="flex flex-col items-center text-gray-400 hover:text-blue-900">

@@ -1,15 +1,7 @@
 import "./globals.css";
 import OidcAuthProvider from "../components/OidcAuthProvider";
-import { Inter } from 'next/font/google';
 import Script from "next/script";
 import PageViewTracker from "@/app/page-view-tracker";
-
-const inter = Inter({
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-inter',
-  weight: ['300', '400', '500', '600', '700'],
-});
 
 export const metadata = {
   title: "FYUSE",
@@ -18,8 +10,16 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={`${inter.variable}`}>
-      <head>      
+    <html lang="en">
+      <head>
+        <link
+          href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;...&family=Raleway:ital,wght@0,100..900;1,100..900&display=swap"
+          rel="stylesheet"
+        />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Raleway:ital,wght@0,100..900;1,100..900&display=swap"
+          rel="stylesheet"
+        />      
         <Script
           strategy="afterInteractive"
           src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GOOGLE_MEASUREMENT_ID}`}
@@ -35,7 +35,7 @@ export default function RootLayout({ children }) {
           `}
         </Script>
       </head>
-      <body className="min-h-screen bg-white font-sans antialiased">
+      <body className="min-h-screen bg-white font-body antialiased">
         <OidcAuthProvider>
           <PageViewTracker />
           {children}

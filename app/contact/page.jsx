@@ -1,111 +1,9 @@
-// "use client";
-
-// import React from "react";
-// import Link from "next/link";
-// import { motion } from "framer-motion";
-// import Footer from "@/components/Footer";
-// import Navbar from "@/components/Navbar";
-
-// export default function Contact() {
-//   return (
-//     <div>
-//       <div className="min-h-screen bg-background text-foreground">
-//         <Navbar />
-//         <main className="pt-24 pb-20 px-6 max-w-4xl mx-auto font-sans space-y-12">
-//           {/* Title */}
-//           <motion.div
-//             initial={{ opacity: 0, y: -30 }}
-//             animate={{ opacity: 1, y: 0 }}
-//             transition={{ duration: 0.6 }}
-//             className="text-center"
-//           >
-//             <h1 className="text-4xl md:text-5xl font-bold text-primary">
-//               Contact FYUSE
-//             </h1>
-//             <p className="mt-4 text-lg text-foreground max-w-2xl mx-auto">
-//               Have questions, feedback, or just want to say hi? We’d love to
-//               hear from you!
-//             </p>
-//           </motion.div>
-
-//           {/* Send Us an Email Button */}
-//           <div className="flex justify-center mb-8">
-//             <a
-//               href="mailto:ryaniaska14@gmail.com"
-//               className="bg-cta hover:bg-primary text-cta-foreground px-6 py-3 rounded-full shadow-lg hover:scale-105 transition-transform text-lg"
-//             >
-//               Send Us an Email 📩
-//             </a>
-//           </div>
-
-//           {/* Contact Info Card */}
-//           <motion.div
-//             initial={{ opacity: 0, y: 30 }}
-//             animate={{ opacity: 1, y: 0 }}
-//             transition={{ duration: 0.6, delay: 0.2 }}
-//             className="bg-background border border-cta rounded-2xl shadow-xl p-8 space-y-6"
-//           >
-//             <h2 className="text-2xl font-semibold text-primary">
-//               Get in Touch
-//             </h2>
-
-//             <div className="space-y-4 text-lg text-foreground">
-//               <p>
-//                 <span className="font-semibold text-primary">
-//                   Contact Person:
-//                 </span>{" "}
-//                 Ryan Iaska, Founder of FYUSE
-//               </p>
-//               <p>
-//                 <span className="font-semibold text-primary">Email:</span>{" "}
-//                 <a
-//                   href="mailto:ryaniaska14@gmail.com"
-//                   className="text-cta hover:underline"
-//                 >
-//                   ryaniaska14@gmail.com
-//                 </a>
-//               </p>
-//               <p>
-//                 <span className="font-semibold text-primary">WhatsApp:</span>{" "}
-//                 <a
-//                   href="https://wa.me/6281384481108"
-//                   target="_blank"
-//                   rel="noopener noreferrer"
-//                   className="text-cta hover:underline"
-//                 >
-//                   +62 813 8448 1108
-//                 </a>
-//               </p>
-//             </div>
-//           </motion.div>
-
-//           {/* Back to Home (Arrow Icon) */}
-//           {/* <Link href="/" passHref>
-//             <button
-//               type="button"
-//               className="text-foreground text-lg hover:text-cta transition-colors flex items-center gap-2"
-//               aria-label="Back to Home"
-//             >
-//               ← Back to Home
-//             </button>
-//           </Link> */}
-//         </main>
-//       </div>
-//       <Footer />
-//     </div>
-//   );
-// }
-
-
 "use client";
 
 import React, { useState } from "react";
-import Link from "next/link"; // Assuming you might use Link elsewhere
 import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-
-
 
 // --- Contact Form Component ---
 const ContactForm = () => {
@@ -138,24 +36,7 @@ const ContactForm = () => {
     e.preventDefault(); // Prevent default form submission
     setStatus({ loading: true, success: false, error: null }); // Set loading state
 
-    // --- !!! BACKEND INTEGRATION POINT !!! ---
-    // Replace this with your actual API call to your backend endpoint
-    // Your backend endpoint will handle saving the data to DynamoDB
     try {
-      // Example: Using fetch to POST data to your API endpoint
-      // const response = await fetch('/api/contact', { // Your API route
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   },
-      //   body: JSON.stringify(formData),
-      // });
-
-      // if (!response.ok) {
-      //   const errorData = await response.json();
-      //   throw new Error(errorData.message || 'Something went wrong');
-      // }
-
       const apiUrl = 'API_GATEWAY_INVOKE_URL/contact'; // <-- PASTE YOUR URL HERE
 
       const response = await fetch(apiUrl, {
@@ -173,10 +54,6 @@ const ContactForm = () => {
           throw new Error(result.message || `HTTP error! status: ${response.status}`);
       }
 
-      // --- MOCK DELAY (REMOVE THIS) ---
-      // await new Promise(resolve => setTimeout(resolve, 1500));
-      // --- END MOCK DELAY ---
-
       // If the API call is successful:
       console.log("Form submitted successfully via API:", result);
       setStatus({ loading: false, success: true, error: null });
@@ -184,14 +61,6 @@ const ContactForm = () => {
 
       // Optional: Hide success message after a few seconds
       setTimeout(() => setStatus(prev => ({ ...prev, success: false })), 5000);
-
-      // If the API call is successful:
-    //   console.log("Form submitted successfully:", formData);
-    //   setStatus({ loading: false, success: true, error: null });
-    //   setFormData({ name: "", email: "", message: "" }); // Clear form
-
-    //   // Optional: Hide success message after a few seconds
-    //   setTimeout(() => setStatus(prev => ({ ...prev, success: false })), 5000);
 
     } catch (error) {
       console.error("Form submission error:", error);
@@ -321,7 +190,7 @@ export default function Contact() {
             className="text-center"
           >
             <h1 className="text-4xl md:text-5xl font-bold text-primary">
-              Contact FYUSE
+              Contact Us
             </h1>
             <p className="mt-4 text-lg text-foreground max-w-2xl mx-auto">
               Have questions, feedback, or just want to say hi? We’d love to

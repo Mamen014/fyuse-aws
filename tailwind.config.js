@@ -9,9 +9,9 @@ export default {
   ],
   theme: {
     fontFamily: {
-      heading: ['Space Grotesk', 'sans-serif'],
-      body: ['Space Grotesk', 'sans-serif'],
-      ui: ['Inter', 'sans-serif'],
+      heading: ["Poppins", 'sans-serif'],
+      body: ["Poppins", 'sans-serif'],
+      ui: ['Raleway', 'sans-serif'],
     },
     fontSize: {
       xs: '0.75rem',    // 12px
@@ -86,6 +86,8 @@ export default {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
-  plugins: [addDynamicIconSelectors()],
+  plugins: [
+    require("tailwindcss-animate"),
+    addDynamicIconSelectors(),
+  ],
 };

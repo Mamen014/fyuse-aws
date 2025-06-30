@@ -1,9 +1,9 @@
 "use client";
 
-import { lazy, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Menu, X, Home, Info, Phone, CreditCard, Sparkles, BookOpenText, ChevronRight } from "lucide-react";
+import { Menu, X, Info, Phone, CreditCard, Sparkles, BookOpenText, ChevronRight, LayoutGrid } from "lucide-react";
 import AuthActionsInNavbar from "./signOut.jsx";
 import { useAuth } from "react-oidc-context";
 import { useRouter } from "next/navigation";
@@ -116,7 +116,7 @@ export default function Navbar() {
               }}
               className="flex items-center gap-3 w-full text-left px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
             >
-              <Home className="w-5 h-5 text-gray-500" />
+              <LayoutGrid className="w-5 h-5 text-gray-500" />
               <span>Dashboard</span>
               <ChevronRight className="w-4 h-4 text-gray-400 ml-auto" />
             </button>
@@ -183,7 +183,7 @@ export default function Navbar() {
               <BookOpenText className="w-5 h-5 text-gray-500" />
               <span>Journal</span>
               <ChevronRight className="w-4 h-4 text-gray-400 ml-auto" />
-            </button>            
+            </button>           
           </div>
         </div>
       </div>

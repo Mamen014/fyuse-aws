@@ -8,7 +8,7 @@ import LoadingModalSpinner from './LoadingModal';
 export default function LandingCTA({ className = '' }) {
   const router = useRouter();
   const { user, signinRedirect } = useAuth();
-  const [loading, setLoading] = useState(false); // ⬅️ Add loading state
+  const [loading, setLoading] = useState(false);
 
   const handleClick = async (e) => {
     e.preventDefault();

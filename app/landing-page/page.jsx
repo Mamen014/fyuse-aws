@@ -96,14 +96,6 @@ export default function LandingPage() {
 
   ];
 
-  // Social proof stats
-  const stats = [
-    { number: "50K+", label: "Happy Users" },
-    { number: "90%", label: "Return Rate Reduction" },
-    { number: "4.9", label: "App Rating" },
-    { number: "2M+", label: "Items Tried On" }
-  ];
-
   // FAQ Data
   const faqs = [
     {
@@ -133,14 +125,14 @@ export default function LandingPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-white text-[#0B1F63] overflow-x-hidden">
+    <div className="flex flex-col min-h-screen bg-background text-foreground overflow-x-hidden">
       <Navbar />
-      
-      <main className="flex-grow font-sans">
+
+      <main className="flex-grow font-body">
         {/* Hero Section - Mobile Optimized with Fade Transition */}
-        <section className="relative overflow-hidden pt-20 sm:pt-28 pb-8 sm:pb-13 bg-white">
-          <p className="text-center max-w-4xl mx-auto text-xl sm:text-base pt-3 lg:text-6xl text-[#0B1F63] mb-4 sm:mb-8 leading-tight tracking-tight px-4">
-            Personalized styling recommendation <br></br> with a digital fitting room
+        <section className="relative overflow-hidden pt-20 sm:pt-28 pb-8 sm:pb-13 bg-background">
+          <p className="font-heading text-center max-w-4xl mx-auto text-xl sm:text-base pt-3 lg:text-6xl text-primary mb-4 sm:mb-8 leading-tight tracking-tight px-4">
+            Personalized styling recommendation <br /> with a digital fitting room
           </p>
           <div className="max-w-6xl mx-auto px-4 sm:px-6">
             {/* Single Centered Image Container with Fade Effect - Mobile Responsive */}
@@ -167,20 +159,19 @@ export default function LandingPage() {
 
             {/* Content - Mobile Optimized */}
             <div className="text-center max-w-4xl mx-auto">
-              
-              <LandingCTA />
+              <LandingCTA className="bg-primary text-primary-foreground font-ui" />
             </div>
           </div>
         </section>
 
-        {/* Key Features Section - Mobile Optimized - NOW WITH BLUE BACKGROUND */}
-        <section className="py-12 sm:py-20 bg-[#0B1F63] text-white">
+        {/* Key Features Section - Mobile Optimized - NOW WITH PRIMARY BACKGROUND */}
+        <section className="py-12 sm:py-20 bg-primary text-primary-foreground">
           <div className="max-w-6xl mx-auto px-4 sm:px-6">
             <div className="text-center mb-8 sm:mb-16">
-              <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4 sm:mb-6 leading-tight">
+              <h2 className="font-heading text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-primary-foreground mb-4 sm:mb-6 leading-tight">
                 Two powerful features in one app
               </h2>
-              <p className="text-base sm:text-lg lg:text-xl text-white/70 max-w-3xl mx-auto">
+              <p className="font-body text-base sm:text-lg lg:text-xl text-primary-foreground/70 max-w-3xl mx-auto">
                 Combining personalized styling with virtual try-on technology
               </p>
             </div>
@@ -189,7 +180,7 @@ export default function LandingPage() {
               {keyFeatures.map((feature, index) => (
                 <div 
                   key={index}
-                  className="p-6 sm:p-8 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 hover:border-white/30 transition-all duration-300 hover:shadow-lg hover:scale-105"
+                  className="p-6 sm:p-8 bg-primary-foreground/10 backdrop-blur-sm rounded-2xl border border-primary-foreground/20 hover:border-primary-foreground/30 transition-all duration-300 hover:shadow-lg hover:scale-105"
                 >
                   <div className="flex flex-col items-center text-center">
                     <Image 
@@ -200,10 +191,10 @@ export default function LandingPage() {
                         className="w-16 h-16 sm:w-20 sm:h-20 object-contain"
                       />
                     <div>
-                      <h3 className="text-lg sm:text-xl font-bold text-white mb-2">
+                      <h3 className="font-heading text-lg sm:text-xl font-bold text-primary-foreground mb-2">
                         {feature.title}
                       </h3>
-                      <p className="text-sm sm:text-base text-white/80 leading-relaxed">
+                      <p className="font-body text-sm sm:text-base text-primary-foreground/80 leading-relaxed">
                         {feature.description}
                       </p>
                     </div>
@@ -214,14 +205,14 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* How It Works Section - Mobile Optimized - NOW WITH WHITE BACKGROUND */}
-        <section id="how-it-works" className="py-12 sm:py-24 bg-white text-[#0B1F63] relative">
+        {/* How It Works Section - Mobile Optimized - NOW WITH BACKGROUND COLOR */}
+        <section id="how-it-works" className="py-12 sm:py-24 bg-background text-primary relative">
           <div className="max-w-6xl mx-auto px-4 sm:px-6">
             <div className="text-center mb-12 sm:mb-20">
-              <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-8 leading-tight tracking-tight">
+              <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-8 leading-tight tracking-tight">
                 Here's how Fyuse works
               </h2>
-              <p className="text-base sm:text-lg lg:text-xl text-[#0B1F63]/70 max-w-3xl mx-auto leading-relaxed">
+              <p className="font-body text-base sm:text-lg lg:text-xl text-primary/70 max-w-3xl mx-auto leading-relaxed">
                 Four simple steps to discover your perfect style
               </p>
             </div>
@@ -231,16 +222,16 @@ export default function LandingPage() {
                 <div 
                   key={index}
                   className="
-                    relative text-center p-6 sm:p-10 bg-[#0B1F63]/5 backdrop-blur-sm rounded-2xl
-                    border border-[#0B1F63]/20 transition-all duration-300
-                    hover:bg-[#0B1F63]/10 hover:shadow-2xl hover:scale-105
+                    relative text-center p-6 sm:p-10 bg-primary/5 backdrop-blur-sm rounded-2xl
+                    border border-primary/20 transition-all duration-300
+                    hover:bg-primary/10 hover:shadow-2xl hover:scale-105
                     group
                   "
                 >
                   <div className="
                     absolute -top-4 sm:-top-6 left-1/2 transform -translate-x-1/2
-                    w-8 h-8 sm:w-12 sm:h-12 bg-[#0B1F63] text-white rounded-full
-                    flex items-center justify-center font-bold text-base sm:text-xl
+                    w-8 h-8 sm:w-12 sm:h-12 bg-primary text-primary-foreground rounded-full
+                    flex items-center justify-center font-heading font-bold text-base sm:text-xl
                     shadow-xl
                   ">
                     {step.number}
@@ -257,11 +248,11 @@ export default function LandingPage() {
                       />
                     </div>
                     
-                    <h3 className="text-lg sm:text-2xl font-bold text-[#0B1F63] mb-3 sm:mb-6 leading-tight">
+                    <h3 className="font-heading text-lg sm:text-2xl font-bold text-primary mb-3 sm:mb-6 leading-tight">
                       {step.title}
                     </h3>
                     
-                    <p className="text-[#0B1F63]/70 text-sm sm:text-lg leading-relaxed">
+                    <p className="font-body text-primary/70 text-sm sm:text-lg leading-relaxed">
                       {step.description}
                     </p>
                   </div>
@@ -272,13 +263,13 @@ export default function LandingPage() {
         </section>
         
         {/* FAQ Section - Mobile Optimized */}
-        <section className="py-12 sm:py-24 bg-white">
+        <section className="py-12 sm:py-24 bg-foreground">
           <div className="max-w-4xl mx-auto px-4 sm:px-6">
             <div className="text-center mb-12 sm:mb-16">
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#0B1F63] mb-4 sm:mb-6 leading-tight">
+              <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl font-bold text-primary-foreground mb-4 sm:mb-6 leading-tight">
                 Frequently Asked Questions
               </h2>
-              <p className="text-base sm:text-lg text-[#0B1F63]/70 max-w-2xl mx-auto">
+              <p className="font-body text-base sm:text-lg text-primary-foreground/70 max-w-2xl mx-auto">
                 Everything you need to know about Fyuse
               </p>
             </div>
@@ -287,18 +278,18 @@ export default function LandingPage() {
               {faqs.map((faq, index) => (
                 <div
                   key={index}
-                  className="border border-[#0B1F63]/10 rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-md transition-all duration-300"
+                  className="border border-primary/10 rounded-2xl overflow-hidden bg-background shadow-sm hover:shadow-md transition-all duration-300"
                 >
                   <button
-                    className="w-full text-left p-6 focus:outline-none focus:ring-2 focus:ring-[#0B1F63]/20 hover:bg-[#0B1F63]/5 transition-colors duration-200"
+                    className="w-full text-left p-6 focus:outline-none focus:ring-2 focus:ring-primary/20 hover:bg-primary/5 transition-colors duration-200 font-ui"
                     onClick={() => toggleFAQ(index)}
                   >
                     <div className="flex justify-between items-center">
-                      <h3 className="text-lg sm:text-xl font-semibold text-[#0B1F63] pr-4">
+                      <h3 className="font-heading text-lg sm:text-xl font-semibold text-primary pr-4">
                         {faq.question}
                       </h3>
                       <ChevronDown
-                        className={`w-5 h-5 text-[#0B1F63] transition-transform duration-200 flex-shrink-0 ${
+                        className={`w-5 h-5 text-primary transition-transform duration-200 flex-shrink-0 ${
                           openFAQ === index ? 'rotate-180' : ''
                         }`}
                       />
@@ -306,7 +297,7 @@ export default function LandingPage() {
                   </button>
                   {openFAQ === index && (
                     <div className="px-6 pb-6 pt-4">
-                      <p className="text-base sm:text-lg text-[#0B1F63]/70 leading-relaxed">
+                      <p className="font-body text-base sm:text-lg text-primary/70 leading-relaxed">
                         {faq.answer}
                       </p>
                     </div>
@@ -317,19 +308,18 @@ export default function LandingPage() {
           </div>
         </section>
 
-
         {/* Final CTA Section - Mobile Optimized */}
-        <section className="py-12 sm:py-24 bg-[#0B1F63]">
+        <section className="py-12 sm:py-24 bg-background">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
-            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 sm:mb-8 leading-tight tracking-tight">
+            <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-primary mb-4 sm:mb-8 leading-tight tracking-tight">
               Ready to find your style?
             </h2>
-            <p className="text-base sm:text-lg lg:text-xl text-white/80 mb-8 sm:mb-12 leading-relaxed max-w-2xl mx-auto">
-            A personalized fashion experience, crafted for the few
-            who seek more. Be among the first to explore it.
+            <p className="font-body text-base sm:text-lg lg:text-xl text-primary/80 mb-8 sm:mb-12 leading-relaxed max-w-2xl mx-auto">
+              A personalized fashion experience, crafted for the few
+              who seek more. Be among the first to explore it.
             </p>
             <div className="space-y-4 sm:space-y-0 sm:space-x-4 sm:flex sm:justify-center sm:items-center">
-              <LandingCTA className="bg-white text-[#0B1F63]" />
+              <LandingCTA className="bg-primary text-primary-foreground font-ui" />
             </div>
           </div>
         </section>
