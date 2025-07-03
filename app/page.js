@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import LoadingModalSpinner from '@/components/LoadingModal';
+import LoadingModalSpinner from '@/components/ui/LoadingState';
 
 export default function LandingPage() {
   const router = useRouter();

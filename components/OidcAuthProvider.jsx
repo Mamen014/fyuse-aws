@@ -2,8 +2,7 @@
 
 import React from 'react';
 import { AuthProvider, useAuth } from 'react-oidc-context';
-import AuthInitializer from './AuthInitializer';
-import LoadingModalSpinner from './LoadingModal';
+import LoadingModalSpinner from './ui/LoadingState';
 
 const getOidcConfig = () => {
   const origin =
@@ -21,29 +20,12 @@ const getOidcConfig = () => {
   };
 };
 
-function AuthReadyWrapper({ children }) {
-  const auth = useAuth();
-
-  if (auth.isLoading) {
-    return (
-      <LoadingModalSpinner/>
-    );
-  }
-
-  return (
-    <>
-      <AuthInitializer />
-      {children}
-    </>
-  );
-}
-
 export default function OidcAuthProvider({ children }) {
   const oidcConfig = getOidcConfig();
 
   return (
     <AuthProvider {...oidcConfig}>
-      <AuthReadyWrapper>{children}</AuthReadyWrapper>
+      {children}
     </AuthProvider>
   );
 }

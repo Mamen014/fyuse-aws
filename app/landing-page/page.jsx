@@ -3,44 +3,45 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import LandingCTA from '@/components/LandingCTA';
+import { useAuth } from 'react-oidc-context';
 import { ChevronDown } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import LoadingModalSpinner from '@/components/LoadingModal';
+import LoadingModalSpinner from '@/components/ui/LoadingState';
 
 export default function LandingPage() {
   const router = useRouter();
+  const { user, signinRedirect } = useAuth();
   const [openFAQ, setOpenFAQ] = useState(null);
-  const [isRedirecting, setIsRedirecting] = useState(true);
+  const [isRedirecting, setIsRedirecting] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   
-  useEffect(() => {
-    const hasRegistered = localStorage.getItem("hasRegistered") === "true";
-
-    if (hasRegistered) {
-      router.replace("/dashboard");
-    } else {
-      setIsRedirecting(false); // Now allow page to render
-    }
-  }, [router]);
-
   // Hero carousel images - placeholder person images
   const heroImages = [
     {
       id: 1,
-      src: "/images/hero-image/person1.png",
+      src: "/images/hero-image/p1.png",
       alt: "Person 1"
     },
     {
       id: 2, 
-      src: "/images/hero-image/person2.png",
+      src: "/images/hero-image/p2.png",
       alt: "Person 2"
     },
     {
       id: 3,
-      src: "/images/hero-image/person3.png",
+      src: "/images/hero-image/p3.png",
       alt: "Person 3"
+    },
+        {
+      id: 4,
+      src: "/images/hero-image/p4.png",
+      alt: "Person 4"
+    },
+        {
+      id: 5,
+      src: "/images/hero-image/p5.png",
+      alt: "Person 5"
     }
   ];
 
@@ -53,7 +54,12 @@ export default function LandingPage() {
     return () => clearInterval(interval);
   }, [heroImages.length]);
 
+  useEffect(() => {
+    localStorage.setItem('showRegister', 'true');
+    localStorage.setItem('hasSeenReferral', 'true');
+  });
 
+  // How it works steps
   const howItWorks = [
     {
       number: "1",
@@ -84,12 +90,12 @@ export default function LandingPage() {
   // Key features highlighting both main functionalities
   const keyFeatures = [
     {
-      icon: "/images/Discover-your-style.png",
+      icon: "/images/step-3.png",
       title: "Discover your style",
       description: "Discover outfit recommendations tailored to your body shape, skin tone, and styling preference"
     },
     {
-      icon: "/images/digital-fitting-room.png",
+      icon: "/images/step-4.png",
       title: "Digital Fitting Room",
       description: "Try on clothes virtually before buying. See how they look on your actual body"
     },
@@ -116,8 +122,29 @@ export default function LandingPage() {
     }
   ];
 
+  // Toggle FAQ visibility
   const toggleFAQ = (index) => {
     setOpenFAQ(openFAQ === index ? null : index);
+  };
+
+  // Authentication and redirection logic
+  const handleClick = async (e) => {
+    e.preventDefault();
+    try {
+      setIsRedirecting(true);
+      localStorage.setItem('hasRegistered', 'true');
+
+      if (!user) {
+        setTimeout(() => {
+          signinRedirect();
+        }, 100);
+      } else {
+        router.push('/style-discovery');
+      }
+    } catch (error) {
+      console.error('Authentication error:', error);
+      router.push('/style-discovery');
+    }
   };
 
   if (isRedirecting) {
@@ -129,11 +156,8 @@ export default function LandingPage() {
       <Navbar />
 
       <main className="flex-grow font-body">
-        {/* Hero Section - Mobile Optimized with Fade Transition */}
+        {/* Hero Section*/}
         <section className="relative overflow-hidden pt-20 sm:pt-28 pb-8 sm:pb-13 bg-background">
-          <p className="font-heading text-center max-w-4xl mx-auto text-xl sm:text-base pt-3 lg:text-6xl text-primary mb-4 sm:mb-8 leading-tight tracking-tight px-4">
-            Personalized styling recommendation <br /> with a digital fitting room
-          </p>
           <div className="max-w-6xl mx-auto px-4 sm:px-6">
             {/* Single Centered Image Container with Fade Effect - Mobile Responsive */}
             <div className="relative overflow-hidden pb-3 flex justify-center">
@@ -159,19 +183,24 @@ export default function LandingPage() {
 
             {/* Content - Mobile Optimized */}
             <div className="text-center max-w-4xl mx-auto">
-              <LandingCTA className="bg-primary text-primary-foreground font-ui" />
+              <button
+                onClick={handleClick}
+                className="inline-block px-6 sm:px-10 py-3 sm:py-4 rounded-full text-lg sm:text-xl font-semibold transition-all duration-300 shadow-xl mb-4 sm:mb-6 cursor-pointer bg-primary text-primary-foreground hover:bg-primary/90"
+              >
+                Start Free Styling
+              </button>
             </div>
           </div>
         </section>
 
-        {/* Key Features Section - Mobile Optimized - NOW WITH PRIMARY BACKGROUND */}
-        <section className="py-12 sm:py-20 bg-primary text-primary-foreground">
+        {/* Key Features Section*/}
+        <section className="py-12 sm:py-20 bg-backround text-primary">
           <div className="max-w-6xl mx-auto px-4 sm:px-6">
             <div className="text-center mb-8 sm:mb-16">
-              <h2 className="font-heading text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-primary-foreground mb-4 sm:mb-6 leading-tight">
-                Two powerful features in one app
+              <h2 className="font-heading text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-primary mb-4 sm:mb-6 leading-tight">
+                Our Features
               </h2>
-              <p className="font-body text-base sm:text-lg lg:text-xl text-primary-foreground/70 max-w-3xl mx-auto">
+              <p className="font-body text-base sm:text-lg lg:text-xl text-primary/70 max-w-3xl mx-auto">
                 Combining personalized styling with virtual try-on technology
               </p>
             </div>
@@ -180,7 +209,7 @@ export default function LandingPage() {
               {keyFeatures.map((feature, index) => (
                 <div 
                   key={index}
-                  className="p-6 sm:p-8 bg-primary-foreground/10 backdrop-blur-sm rounded-2xl border border-primary-foreground/20 hover:border-primary-foreground/30 transition-all duration-300 hover:shadow-lg hover:scale-105"
+                  className="p-6 sm:p-8 bg-primary/5 backdrop-blur-sm rounded-2xl border border-primary/20 hover:border-primary/30 transition-all duration-300 hover:shadow-lg hover:scale-105"
                 >
                   <div className="flex flex-col items-center text-center">
                     <Image 
@@ -188,13 +217,13 @@ export default function LandingPage() {
                         alt={feature.title} 
                         width={80} 
                         height={80} 
-                        className="w-16 h-16 sm:w-20 sm:h-20 object-contain"
+                        className="w-16 h-16 sm:w-20 sm:h-20 object-contain mb-4"
                       />
                     <div>
-                      <h3 className="font-heading text-lg sm:text-xl font-bold text-primary-foreground mb-2">
+                      <h3 className="font-heading text-lg sm:text-xl font-bold text-primary mb-2">
                         {feature.title}
                       </h3>
-                      <p className="font-body text-sm sm:text-base text-primary-foreground/80 leading-relaxed">
+                      <p className="font-body text-sm sm:text-base text-primary leading-relaxed">
                         {feature.description}
                       </p>
                     </div>
@@ -205,12 +234,12 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* How It Works Section - Mobile Optimized - NOW WITH BACKGROUND COLOR */}
+        {/* How It Works Section*/}
         <section id="how-it-works" className="py-12 sm:py-24 bg-background text-primary relative">
           <div className="max-w-6xl mx-auto px-4 sm:px-6">
             <div className="text-center mb-12 sm:mb-20">
               <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-8 leading-tight tracking-tight">
-                Here's how Fyuse works
+                How FYUSE Works
               </h2>
               <p className="font-body text-base sm:text-lg lg:text-xl text-primary/70 max-w-3xl mx-auto leading-relaxed">
                 Four simple steps to discover your perfect style
@@ -262,14 +291,14 @@ export default function LandingPage() {
           </div>
         </section>
         
-        {/* FAQ Section - Mobile Optimized */}
-        <section className="py-12 sm:py-24 bg-foreground">
+        {/* FAQ Section*/}
+        <section className="py-12 sm:py-24 bg-background">
           <div className="max-w-4xl mx-auto px-4 sm:px-6">
             <div className="text-center mb-12 sm:mb-16">
-              <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl font-bold text-primary-foreground mb-4 sm:mb-6 leading-tight">
-                Frequently Asked Questions
+              <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl font-bold text-primary mb-4 sm:mb-6 leading-tight">
+                FAQs
               </h2>
-              <p className="font-body text-base sm:text-lg text-primary-foreground/70 max-w-2xl mx-auto">
+              <p className="font-body text-base sm:text-lg text-primary/70 max-w-2xl mx-auto">
                 Everything you need to know about Fyuse
               </p>
             </div>
@@ -308,7 +337,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Final CTA Section - Mobile Optimized */}
+        {/* Final CTA Section*/}
         <section className="py-12 sm:py-24 bg-background">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
             <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-primary mb-4 sm:mb-8 leading-tight tracking-tight">
@@ -319,7 +348,12 @@ export default function LandingPage() {
               who seek more. Be among the first to explore it.
             </p>
             <div className="space-y-4 sm:space-y-0 sm:space-x-4 sm:flex sm:justify-center sm:items-center">
-              <LandingCTA className="bg-primary text-primary-foreground font-ui" />
+              <button
+                onClick={handleClick}
+                className="inline-block px-6 sm:px-10 py-3 sm:py-4 rounded-full text-lg sm:text-xl font-semibold transition-all duration-300 shadow-xl mb-4 sm:mb-0 cursor-pointer bg-primary text-primary-foreground hover:bg-primary/90"
+              >
+                Start Free Styling
+              </button>
             </div>
           </div>
         </section>

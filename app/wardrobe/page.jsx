@@ -5,9 +5,9 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { ToastContainer, toast } from "react-toastify";
-import LoadingModalSpinner from "@/components/LoadingModal";
+import LoadingModalSpinner from "@/components/ui/LoadingState";
 import "react-toastify/dist/ReactToastify.css";
-import { Home, Shirt, User, ChevronRight } from "lucide-react";
+import { Home, Shirt, User, LayoutGrid, ChevronRight } from "lucide-react";
 
 // Define brand colors to match home page
 const BRAND_BLUE = '#0B1F63';
@@ -123,6 +123,10 @@ export default function ProfilePage() {
       item.category.toLowerCase().includes("bottom")
   );
 
+  if (loading) {
+    return <LoadingModalSpinner />;
+  };
+
   return (
     <div className="bg-white max-w-md mx-auto h-screen flex flex-col relative">
       <ToastContainer />
@@ -159,10 +163,10 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Tops Section */}
+        {/* Top Section */}
         <div className="mb-6">
           <h2 className="text-lg font-bold mb-2" style={{ color: BRAND_BLUE }}>
-            Tops ({tops.length})
+            Top ({tops.length})
           </h2>
           {tops.length === 0 ? (
             <p className="text-sm text-gray-500">No tops found.</p>
@@ -217,10 +221,10 @@ export default function ProfilePage() {
           )}
         </div>
 
-        {/* Bottoms Section */}
+        {/* Bottoms Sectio */}
         <div className="mb-6">
           <h2 className="text-lg font-bold mb-2" style={{ color: BRAND_BLUE }}>
-            Bottoms ({bottoms.length})
+            Bottom ({bottoms.length})
           </h2>
           {bottoms.length === 0 ? (
             <p className="text-sm text-gray-500">No bottoms found.</p>
@@ -277,8 +281,8 @@ export default function ProfilePage() {
       </div>
       {/* Bottom Navigation Bar */}
       <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white shadow-[0_-2px_10px_rgba(0,0,0,0.1)] flex justify-around items-center px-2 pt-2 pb-1 z-10">
-        <Link href="/" className="flex flex-col items-center text-gray-400 hover:text-blue-900">
-          <Home size={20} />
+        <Link href="/dashboard" className="flex flex-col items-center text-gray-400 hover:text-blue-900">
+          <LayoutGrid size={20} />
           <span className="text-xs mt-1">Home</span>
         </Link>
         <Link href="/profile" className="flex flex-col items-center" style={{ color: BRAND_BLUE }}>

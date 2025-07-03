@@ -4,18 +4,48 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Menu, X, Info, Phone, CreditCard, Sparkles, BookOpenText, ChevronRight, LayoutGrid } from "lucide-react";
-import AuthActionsInNavbar from "./signOut.jsx";
 import { useAuth } from "react-oidc-context";
 import { useRouter } from "next/navigation";
-import LoadingModalSpinner from "./LoadingModal.jsx";
+import LoadingModalSpinner from "./ui/LoadingState.jsx";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [Loading, setLoading] = useState(false);
   const router = useRouter();
   const auth = useAuth();
+
+  const rawprofile = JSON.parse(localStorage.getItem("profile"));
   const userEmail = auth?.user?.profile?.email;
-  const userName = auth?.user?.profile?.name || userEmail?.split('@')[0] || 'Guest';
+  const userName = rawprofile?.nickname || userEmail?.split('@')[0] || 'Guest';
+  
+  const SignOutButton = ({ isInMobileMenu = false }) => {
+    const auth = useAuth();
+
+    const handleSignOut = () => {
+      sessionStorage.clear();
+      const origin =
+        typeof window !== "undefined"
+          ? window.location.origin
+          : "http://localhost:3000";
+      const logoutUrl = `https://ap-southeast-2imonu7fwb.auth.ap-southeast-2.amazoncognito.com/logout?client_id=4l7l5ebjj2io1vap6qohbl2i7l&logout_uri=${encodeURIComponent(
+        origin + "/"
+      )}`;
+      window.location.href = logoutUrl;
+    };
+
+    if (auth.isLoading || !auth.isAuthenticated) return null;
+
+    if (isInMobileMenu) {
+      return (
+        <span
+          onClick={handleSignOut}
+          className="block text-sm font-medium text-red-500 cursor-pointer"
+        >
+          Sign Out
+        </span>
+      );
+    }
+  };
 
   return (
     <nav className="fixed top-0 left-0 w-full bg-white z-50 shadow-sm">
@@ -47,19 +77,19 @@ export default function Navbar() {
         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
           <Link href="/dashboard" className="block">
             <Image
-              src="/logo.PNG"
+              src="/logo-tb.png"
               alt="FYUSE Logo"
-              width={144}
-              height={39}
+              width={1920}
+              height={800}
               priority
-              className="w-36 h-auto"
+              className="w-40 h-auto"
             />
           </Link>
         </div>
 
         {/* Right - Auth Actions */}
         <div className="flex items-center">
-          <AuthActionsInNavbar />
+          <SignOutButton />
         </div>
       </div>
 
@@ -92,7 +122,7 @@ export default function Navbar() {
               )}
             </div>
             <div className="px-4 text-red-600">
-            <AuthActionsInNavbar isInMobileMenu />
+            <SignOutButton isInMobileMenu />
           </div>
           </div>
         </div>

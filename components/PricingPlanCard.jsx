@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import LoadingModalSpinner from "@/components/LoadingModal";
+import LoadingModalSpinner from "@/components/ui/LoadingState";
 
 export default function PricingPlans({ isOpen, onClose, sourcePage = "Unknown" }) {
   const router = useRouter();

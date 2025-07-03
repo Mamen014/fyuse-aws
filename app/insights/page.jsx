@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "react-oidc-context";
 import Link from "next/link";
-import LoadingModalSpinner from "@/components/LoadingModal";
+import LoadingModalSpinner from "@/components/ui/LoadingState";
 import { Home, User, Shirt, ChevronRight, X } from "lucide-react";
 
 // Define brand colors - matching homepage

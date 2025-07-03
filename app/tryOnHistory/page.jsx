@@ -6,7 +6,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { ChevronLeft, Star, Shirt, Home, User} from 'lucide-react';
 import Navbar from '@/components/Navbar';
-import LoadingModalSpinner from '@/components/LoadingModal';
+import LoadingModalSpinner from '@/components/ui/LoadingState';
 
 export default function TryOnHistoryPage() {
   const { user } = useAuth();

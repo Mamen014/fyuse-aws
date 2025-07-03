@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useRouter } from "next/navigation";
-import LoadingModalSpinner from "@/components/LoadingModal";
+import LoadingModalSpinner from "@/components/ui/LoadingState";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
 
