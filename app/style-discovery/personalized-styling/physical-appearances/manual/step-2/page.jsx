@@ -1,18 +1,28 @@
 'use client'
 
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
 import { useAuth } from 'react-oidc-context';
 import LoadingModalSpinner from '@/components/ui/LoadingState';
 
 export default function PhysicalAttributesStep3() {
-  const searchParams = useSearchParams();
-  const gender = searchParams.get('gender');
+  const [gender, setGender] = useState('');
   const [bodyShape, setBodyShape] = useState('');
   const [loading, setloading] = useState(false);
   const { user } = useAuth();
   const userEmail = user?.profile?.email;
   const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedGender = localStorage.getItem('gender');
+      if (storedGender === 'male' || storedGender === 'female') {
+        setGender(storedGender);
+      } else {
+        console.warn("Gender not found or invalid in localStorage.");
+      }
+    }
+  }, []);
+
 
   function capitalizeWords(str) {
     if (!str) return '';
@@ -148,17 +158,18 @@ export default function PhysicalAttributesStep3() {
               </div>
             ))}
           </div>
-
-          <button
-            onClick={async () => {
-              setloading(true);
-              await physic2();
-            }}
-            disabled={!gender || !bodyShape}
-            className="w-full bg-primary text-white py-3 px-4 rounded-lg hover:bg-[#0a1b56] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed mt-4"
-          >
-            Next
-          </button>
+          {gender && (  
+            <button
+              onClick={async () => {
+                setloading(true);
+                await physic2();
+              }}
+              disabled={!gender || !bodyShape}
+              className="w-full bg-primary text-white py-3 px-4 rounded-lg hover:bg-[#0a1b56] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed mt-4"
+            >
+              Next
+            </button>
+          )}  
         </div>
       </div>
     </div>

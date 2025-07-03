@@ -63,7 +63,7 @@ export default function PhysicalAttributesStep1() {
   const handleSubmit = () => {
     localStorage.setItem('gender', gender);
     localStorage.setItem('skin-tone', skinTone);
-    router.push(`step-2?gender=${gender}`);
+    router.push(`step-2`);
   };
 
   const data = {
