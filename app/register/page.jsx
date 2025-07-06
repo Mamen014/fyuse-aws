@@ -144,7 +144,7 @@ export default function RegisterAI() {
         router.push('/dashboard');
         localStorage.removeItem("showRegister");
         localStorage.removeItem('registerFrom');
-      } else if (registerFrom === 'style-discovery') {
+      } else if (registerFrom === 'physical-appearances') {
         router.push('personalized-styling/physical-appearances');
         localStorage.removeItem("showRegister");
         localStorage.removeItem('registerFrom');

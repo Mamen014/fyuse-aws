@@ -39,7 +39,7 @@ export default function PhysicalAttributesStep3() {
 
   const handleSubmit = () => {
     localStorage.setItem('body-shape', bodyShape);
-    window.location.href = '/style-discovery/personalized-styling/style-preferences';
+    window.location.href = '/personalized-styling/style-preferences';
   };
 
   const maleBodyTypeImages = {
@@ -111,24 +111,32 @@ export default function PhysicalAttributesStep3() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-      <div className="w-full max-w-md rounded-3xl bg-white shadow-md overflow-hidden">
-        <div className="p-6">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-white px-4 lg:px-0 py-8">
+      {/* Progress Bar */}
+      <div className="w-full max-w-2xl mx-auto mb-6">
+        <div className="w-full h-2 rounded-full bg-gray-200 overflow-hidden">
+          <div
+            className="h-full bg-primary transition-all duration-300"
+            style={{ width: '55%' }}
+          ></div>
+        </div>
+      </div>
+
+      {/* Card Container */}
+      <div className="w-full max-w-2xl rounded-3xl bg-white shadow-md border border-gray-100 overflow-hidden">
+        <div className="p-6 sm:p-8">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-3xl font-bold text-primary">Body Shape</h1>
           </div>
 
+          {/* Body Shape Cards */}
           <div className="space-y-4">
             {Object.keys(bodyTypeImages).map((shape) => (
               <div
                 key={shape}
-                className={`flex items-center p-4 border rounded-3xl cursor-pointer ${
-                  bodyShape === shape ? 'bg-blue-50' : 'border-gray-300'
+                className={`flex items-center p-4 border rounded-2xl cursor-pointer transition-all duration-200 ${
+                  bodyShape === shape ? 'bg-blue-50 border-primary' : 'border-gray-300 bg-white'
                 }`}
-                style={{
-                  borderColor: bodyShape === shape ? '#0B1F63' : undefined,
-                  backgroundColor: bodyShape === shape ? '#e6eaf7' : undefined,
-                }}
                 onClick={() => handleBodyShapeChange(shape)}
               >
                 <div className="flex items-center flex-1">
@@ -136,19 +144,36 @@ export default function PhysicalAttributesStep3() {
                     <img 
                       src={bodyTypeImages[shape]} 
                       alt={`${shape} body type`} 
-                      className="h-20 object-contain"
+                      className="h-20 w-20 object-contain"
                     />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-semibold text-primary">{capitalizeWords(shape)}</h3>
-                    <p className="text-sm text-primary mt-2">{bodyTypeDescriptions[shape]}</p>
+                    <h3 className="font-semibold text-primary">
+                      {capitalizeWords(shape)}
+                    </h3>
+                    <p className="text-sm text-primary mt-2">
+                      {bodyTypeDescriptions[shape]}
+                    </p>
                   </div>
                 </div>
+
+                {/* Checkmark */}
                 <div className="ml-2">
                   {bodyShape === shape ? (
-                    <div className="h-6 w-6 rounded-full flex items-center justify-center" style={{ backgroundColor: '#0B1F63' }}>
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    <div className="h-6 w-6 rounded-full flex items-center justify-center bg-primary">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-4 w-4 text-white"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5 13l4 4L19 7"
+                        />
                       </svg>
                     </div>
                   ) : (
@@ -158,18 +183,20 @@ export default function PhysicalAttributesStep3() {
               </div>
             ))}
           </div>
-          {gender && (  
+
+          {/* Submit Button */}
+          {gender && (
             <button
               onClick={async () => {
                 setloading(true);
                 await physic2();
               }}
               disabled={!gender || !bodyShape}
-              className="w-full bg-primary text-white py-3 px-4 rounded-lg hover:bg-[#0a1b56] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed mt-4"
+              className="w-full bg-primary text-white py-3 px-4 rounded-lg hover:bg-[#0a1b56] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed mt-6"
             >
               Next
             </button>
-          )}  
+          )}
         </div>
       </div>
     </div>

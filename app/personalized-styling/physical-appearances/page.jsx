@@ -1,9 +1,10 @@
 'use client'
 
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
-import { Venus, Mars } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Venus, Mars, Wand2, Palette, User } from 'lucide-react';
 import { useAuth } from 'react-oidc-context';
+import { motion } from "framer-motion";
 import { ToastContainer, toast } from 'react-toastify';
 import Image from 'next/image';
 import 'react-toastify/dist/ReactToastify.css';
@@ -21,6 +22,7 @@ export default function AIPhotoUpload() {
   const [showAIModal, setShowAIModal] = useState(false);
   const [aiAnalysis, setAiAnalysis] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [showRegisterPrompt, setShowRegisterPrompt] = useState(false);
   const [error, setError] = useState(null);
   const { user } = useAuth();
   const userEmail = user?.profile?.email;
@@ -29,6 +31,34 @@ export default function AIPhotoUpload() {
   const allowedTypes = ["image/jpeg", "image/jpg"];
   const maxSizeMB = 4.5;
   const minResolution = 300;
+
+  // Onboarding steps data
+  const onboardingSteps = [
+    {
+      icon: <User className="text-blue-600 w-6 h-6" />,
+      title: "Upload Your Photo",
+      desc: "A clear photo helps us understand your body proportions and skin tone to start personalizing your style.",
+    },
+    {
+      icon: <Palette className="text-pink-500 w-6 h-6" />,
+      title: "We Analyze You",
+      desc: "FYUSE uses your features to suggest outfits that suit your shape and enhance your tone.",
+    },
+    {
+      icon: <Wand2 className="text-purple-500 w-6 h-6" />,
+      title: "Adjust If Needed",
+      desc: "You’ll have a chance to review and customize the results before styling begins.",
+    },
+  ];
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const showRegister = localStorage.getItem('showRegister');
+    if (showRegister === 'true') {
+      setShowRegisterPrompt(true);
+    };
+  });
 
   const genderIconMap = {
     male: <Mars className="w-24 h-24 text-primary inline-block ml-4" />,
@@ -268,57 +298,78 @@ export default function AIPhotoUpload() {
 
   return (
     <div className="min-h-screen bg-white p-4 md:p-8 relative">
-      {/* Next.js loading state will handle the loading overlay */}
-      <div className="flex flex-col justify-between min-h-screen bg-white px-5 py-8" style={{ maxWidth: "375px", margin: "0 auto" }}>
-      <ToastContainer position="top-center" autoClose={3000} hideProgressBar />
 
-      {/* Header */}
-      <div className="relative">
-        <h1 className="text-3xl font-bold leading-tight text-primary">
-          Upload Your Photo
-        </h1>
-        <div className="absolute top-0 right-0">
-        </div>
+      {/* Progress Bar */}
+      <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden mb-6">
+        <div className="h-full bg-primary" style={{ width: '33%' }}></div>
       </div>
-      <p className="text-2xl text-primary-700 text-justify mt-2 mb-2 px-2 leading-relaxed">
-        Let us help you with styles that suit you best!
-        <br /> 
-        <br />
-        A clear upper body photo is enough — if you're not looking for bottoms.
-      </p>
 
+      <ToastContainer position="top-center" autoClose={3000} />
+      {/* Next.js loading state will handle the loading overlay */}
+      
+      <main className="max-w-6xl mx-auto py-4 px-6 grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+        {/* Left: Onboarding Steps */}
+        <div className="space-y-6">
 
-      {/* Upload box */}
-      <div className="flex flex-col items-center justify-center mt-4 mb-6">
-        <div className="w-full border border-primary rounded-2xl" style={{ minHeight: "340px" }}>
-          <input
-            type="file"
-            accept=".jpg,.jpeg"
-            onChange={handleFileSelect}
-            id="photo-upload"
-            className="hidden"
-          />
-          <label
-            htmlFor="photo-upload"
-            className="flex flex-col items-center justify-center h-[340px] cursor-pointer text-center px-4"
-          >
-            {photoPreview ? (
-              <img
-                src={photoPreview}
-                alt="Uploaded"
-                className="max-w-full max-h-full object-contain"
-              />
-            ) : (
-              <div className="flex flex-col items-center justify-center h-48 text-primary-300">
-                Click to upload
-                <p className="text-[10px] text-gray-400 mt-2 text-center px-4">
-                  Accepted formats: JPG or JPEG. Max size: 4.5MB. Min resolution: 300×300px
-                </p>                
-              </div>              
-            )}
-          </label>
+          <div>
+            <h1 className="text-4xl font-bold text-primary mb-8">How This Works</h1>
+            <div className="space-y-4">
+              {onboardingSteps.map((step, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.3 }}
+                  className="flex items-start gap-4 bg-white rounded-xl shadow-sm p-4"
+                >
+                  <div>{step.icon}</div>
+                  <div>
+                    <h3 className="text-md font-semibold text-primary mb-2">{step.title}</h3>
+                    <p className="text-sm text-gray-600">{step.desc}</p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
         </div>
-          <p>
+
+        {/* Right: Upload Section */}
+        <div className="w-full flex flex-col gap-6 max-w-md mx-auto">
+          {/* Upload Box */}
+          <div className="w-full border border-primary rounded-2xl overflow-hidden" style={{ minHeight: '340px' }}>
+            <input
+              type="file"
+              accept=".jpg,.jpeg"
+              onChange={handleFileSelect}
+              id="photo-upload"
+              className="hidden"
+            />
+            <label
+              htmlFor="photo-upload"
+              className="flex items-center justify-center h-[340px] cursor-pointer text-center px-4"
+            >
+              {photoPreview ? (
+                <div className="w-full h-full flex items-center justify-center px-6 py-4">
+                  <img
+                    src={photoPreview}
+                    alt="Uploaded"
+                    className="max-h-full max-w-full object-contain rounded-xl"
+                    style={{ aspectRatio: '3/4' }}
+                  />
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center h-48 text-primary-300">
+                  Click to upload
+                  <p className="text-[10px] text-gray-400 mt-2 text-center px-4">
+                    Accepted formats: JPG or JPEG. Max size: 4.5MB. Min resolution: 300×300px
+                  </p>
+                </div>
+              )}
+            </label>
+          </div>
+
+          {/* Guidance Link */}
+          <p className="text-center">
             <button
               onClick={() => setIsUserPhotoGuidanceOpen(true)}
               className="underline text-[16px] text-blue-400 cursor-pointer"
@@ -326,21 +377,22 @@ export default function AIPhotoUpload() {
               Upload Photo Guidance
             </button>
           </p>
-      </div>
 
-      {/* Next Button */}
-      <button
-        onClick={handleUpload}
-        disabled={!fileToUpload || loading || !isValidUserImage}
-        className={`w-full py-3.5 font-medium rounded-lg transition-opacity duration-200 ${
-          fileToUpload && isValidUserImage && !loading
-            ? 'bg-primary text-white'
-            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-        }`}
-        style={{ borderRadius: "8px" }}
-      >
-        {loading ? 'Analyzing...' : 'Analyze Photo'}
-      </button>
+          {/* Upload Button */}
+          <button
+            onClick={handleUpload}
+            disabled={!fileToUpload || loading || !isValidUserImage}
+            className={`w-full py-3.5 font-medium rounded-lg transition-opacity duration-200 ${
+              fileToUpload && isValidUserImage && !loading
+                ? 'bg-primary text-white'
+                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            }`}
+            style={{ borderRadius: '8px' }}
+          >
+            {loading ? 'Analyzing...' : 'Analyze Photo'}
+          </button>
+        </div>
+      </main>
 
       {isUserPhotoGuidanceOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 px-4">
@@ -390,7 +442,39 @@ export default function AIPhotoUpload() {
         </div>
       )}
 
-
+      {showRegisterPrompt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 px-4">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl text-center">
+            <h2 className="text-xl font-bold mb-4 text-primary">Want More Personalized Styles?</h2>
+            <p className="text-sm text-gray-700 mb-6">
+              Tell us a little about yourself — so we can tailor outfit ideas that fit your lifestyle better.
+            </p>
+            <div className="flex justify-center gap-4">
+              <button
+                onClick={() => {
+                  localStorage.setItem("registerFrom", "physical-appearances");
+                  localStorage.setItem('showRegister', 'false');
+                  setShowRegisterPrompt(false);
+                  setisLoading(true);
+                  router.push('/register');
+                }}
+                className="px-5 py-2 bg-primary text-white rounded-lg hover:bg-[#0a1b56] transition"
+              >
+                Continue
+              </button>
+              <button
+                onClick={() => {
+                  localStorage.setItem('showRegister', 'false');
+                  setShowRegisterPrompt(false);
+                }}
+                className="px-5 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition"
+              >
+                Maybe Later
+              </button>
+            </div>
+          </div>
+        </div>
+      )} 
       {/* AI Analysis Modal */}
       {showAIModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -486,7 +570,6 @@ export default function AIPhotoUpload() {
           </div>
         </div>
       )}
-      </div>
     </div>
   );
 } 

@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { useAuth } from "react-oidc-context";
 import LoadingModalSpinner from '@/components/ui/LoadingState';
 
@@ -101,20 +101,30 @@ export default function PhysicalAttributesStep1() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-white p-4">
-      <div className="w-full max-w-md bg-white rounded-3xl border border-gray-200 shadow-sm p-6 md:p-8">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-white px-4 py-8 lg:px-0">
+      {/* Progress Bar */}
+      <div className="w-full max-w-2xl mx-auto mb-6">
+        <div className="w-full h-2 rounded-full bg-gray-200 overflow-hidden">
+          <div
+            className="h-full bg-primary transition-all duration-300"
+            style={{ width: '44%' }}
+          ></div>
+        </div>
+      </div>
+
+      {/* Form Container */}
+      <div className="w-full max-w-2xl bg-white rounded-3xl border border-gray-200 shadow-md p-6 sm:p-8">
         <form onSubmit={(e) => e.preventDefault()} className="space-y-8">
+          
           {/* Gender Selection */}
           <div>
-            <h1 className="text-4xl block font-semibold text-primary mb-3">Gender</h1>
-            <div className="flex gap-3">
+            <h1 className="text-4xl font-semibold text-primary mb-3">Gender</h1>
+            <div className="flex gap-4 flex-wrap">
               <button
                 type="button"
                 onClick={() => setGender('male')}
-                className={`min-w-16 px-5 py-2 rounded-full text-xl font-medium ${
-                  gender === 'male'
-                    ? 'bg-primary text-white'
-                    : 'bg-gray-100 text-gray-700'
+                className={`min-w-[120px] px-6 py-2 rounded-full text-xl font-medium ${
+                  gender === 'male' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-700'
                 }`}
               >
                 Male
@@ -122,10 +132,8 @@ export default function PhysicalAttributesStep1() {
               <button
                 type="button"
                 onClick={() => setGender('female')}
-                className={`min-w-16 px-5 py-2 rounded-full text-xl font-medium ${
-                  gender === 'female'
-                    ? 'bg-primary text-white'
-                    : 'bg-gray-100 text-gray-700'
+                className={`min-w-[120px] px-6 py-2 rounded-full text-xl font-medium ${
+                  gender === 'female' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-700'
                 }`}
               >
                 Female
@@ -134,18 +142,18 @@ export default function PhysicalAttributesStep1() {
           </div>
 
           {/* Skin Tone Selection */}
-          <div className="mt-6 mb-6">
-            <h1 className="text-4xl block font-semibold text-primary mt-6 mb-3">Skin Tone</h1>
-            <div className="flex justify-between mt-4 mb-4">
+          <div className="mt-6">
+            <h1 className="text-4xl font-semibold text-primary mb-3">Skin Tone</h1>
+            <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mb-4">
               {skinTones.map((tone, index) => (
                 <button
                   key={tone}
                   type="button"
                   onClick={() => handleSkinToneClick(tone, index)}
-                  className={`px-3 py-1 rounded-full text-xl ${
+                  className={`w-full py-2 rounded-full text-sm sm:text-base font-medium transition ${
                     skinTone === tone
                       ? 'bg-primary text-white'
-                      : 'bg-gray-100 text-gray-700'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
                   {capitalizeWords(tone)}
@@ -153,27 +161,29 @@ export default function PhysicalAttributesStep1() {
               ))}
             </div>
 
-            {/* Skin Tone Gradient Bar with Slider */}
+            {/* Skin Tone Gradient Slider */}
             <div
               ref={sliderContainerRef}
               className="relative w-full h-4 rounded-full bg-gradient-to-r from-amber-50 via-amber-200 to-amber-800 mb-2 cursor-pointer"
               onClick={handleSlide}
               onMouseDown={() => {
                 document.addEventListener('mousemove', handleSlide);
-                document.addEventListener('mouseup', () => {
-                  document.removeEventListener('mousemove', handleSlide);
-                }, { once: true });
+                document.addEventListener('mouseup', () =>
+                  document.removeEventListener('mousemove', handleSlide),
+                  { once: true }
+                );
               }}
               onTouchStart={(e) => {
                 const touch = e.touches[0];
                 handleSlide({ clientX: touch.clientX });
                 document.addEventListener('touchmove', (e) => {
-                  const touch = e.touches[0];
-                  handleSlide({ clientX: touch.clientX });
+                  const t = e.touches[0];
+                  handleSlide({ clientX: t.clientX });
                 });
-                document.addEventListener('touchend', () => {
-                  document.removeEventListener('touchmove', handleSlide);
-                }, { once: true });
+                document.addEventListener('touchend', () =>
+                  document.removeEventListener('touchmove', handleSlide),
+                  { once: true }
+                );
               }}
             >
               <div
@@ -199,4 +209,5 @@ export default function PhysicalAttributesStep1() {
       </div>
     </div>
   );
+
 }

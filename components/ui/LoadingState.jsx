@@ -1,22 +1,37 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 
 export default function LoadingModalSpinner({
   message = "Loading...",
-  subMessage="Please wait"
+  subMessage = "Please wait"
 }) {
   return (
     <div style={{
       position: 'fixed',
       top: 0, left: 0, right: 0, bottom: 0,
-      backgroundColor: 'rgba(255, 255, 255, 0.85)',
+      backgroundColor: 'rgba(255, 255, 255, 0.9)',
       zIndex: 9999,
       display: 'flex',
       flexDirection: 'column',
       justifyContent: 'center',
-      alignItems: 'center'
+      alignItems: 'center',
+      padding: '1rem',
     }}>
+      
+      {/* FYUSE logo */}
+      <Image
+        src="/logo-tb.png"
+        alt="FYUSE Logo"
+        width={120}
+        height={0} 
+        priority
+        style={{ height: 'auto', width: '120px' }}
+        className="mb-6 mx-auto"
+      />
+
+      {/* Spinner */}
       <div style={{
         width: '60px',
         height: '60px',
@@ -25,6 +40,8 @@ export default function LoadingModalSpinner({
         borderRadius: '50%',
         animation: 'spin 1s linear infinite'
       }} />
+
+      {/* Text Messages */}
       <p style={{
         marginTop: '16px',
         color: '#0B1F63',
@@ -34,6 +51,7 @@ export default function LoadingModalSpinner({
       }}>
         {message}
       </p>
+
       {subMessage && (
         <p style={{
           marginTop: '8px',
@@ -44,6 +62,8 @@ export default function LoadingModalSpinner({
           {subMessage}
         </p>
       )}
+
+      {/* Spinner animation */}
       <style jsx>{`
         @keyframes spin {
           0% { transform: rotate(0deg); }

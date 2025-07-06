@@ -7,42 +7,34 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "react-oidc-context";
 import Navbar from "@/components/Navbar";
 import LoadingModalSpinner from "@/components/ui/LoadingState";
-import { LayoutGrid, Venus, Mars, User, ChevronRight, Shirt, MapPin, Sparkles, BriefcaseBusiness } from "lucide-react";
+import ReferralModal from "@/components/ReferralModal";
+import { Venus, Mars, User, ChevronRight, Shirt, MapPin, Sparkles, BriefcaseBusiness, CreditCard } from "lucide-react";
 import axios from "axios";
 
 export default function dashboard() {
-  const { user, isLoading, signinRedirect } = useAuth();
   const router = useRouter();
-  const [Loading, setLoading] = useState(false);
-  const [showRegisterPrompt, setShowRegisterPrompt] = useState(false);
+  const { user, isLoading, signinRedirect } = useAuth();
+  const userEmail = user?.profile?.email;
+  const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
+  
+  const [tryOnCount, setTryOnCount] = useState(0);
+  const [subscriptionPlan, setSubscriptionPlan] = useState(null);  
   const [nickname, setNickname] = useState("");
   const [likedRecommendations, setLikedRecommendations] = useState([]);
   const [tryonItems, setTryonItems] = useState([]);
-  const userEmail = user?.profile?.email;
-  const [subscriptionPlan, setSubscriptionPlan] = useState(null);
-  const [tryOnCount, setTryOnCount] = useState(0);
-  const [tipsCount, setTipsCount] = useState(0);
   const [profileItems, setProfileItems] = useState([]);
+  const [Loading, setLoading] = useState(false);  
+  const [showRegisterPrompt, setShowRegisterPrompt] = useState(false);
+  const [showReferralModal, setShowReferralModal] = useState(false);
+  const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   
-  const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
+  // Gender icon mapping
   const genderIconMap = {
     male: <Mars className="w-20 h-20 text-primary" />,
     female: <Venus className="w-20 h-20 text-primary" />,
   };
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const data = JSON.parse(localStorage.getItem("profile") || "{}");
-        console.log("Loaded profile from localStorage:", data);
-        if (data.nickname) {
-          setNickname(data.nickname);
-        }
-      } catch (err) {
-        console.warn("Failed to parse profile from localStorage:", err);
-      }
-    }
-  }, []);
 
+  // Body shape image mapping
   const bodyShapeImageMap = {
     male: {
       'rectangle': '/images/body-shape/male/rectangle.png',
@@ -60,12 +52,27 @@ export default function dashboard() {
     }
   };
 
+  // Skin tone image mapping
   const skinToneImageMap = {
     'fair': '/images/skin-tone/fair.png',
     'light': '/images/skin-tone/light.png',
     'medium': '/images/skin-tone/medium.png',
     'deep': '/images/skin-tone/deep.png',
   };
+
+  // Load nickname from localStorage
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const data = JSON.parse(localStorage.getItem("profile") || "{}");
+        if (data.nickname) {
+          setNickname(data.nickname);
+        }
+      } catch (err) {
+        console.warn("Failed to parse profile from localStorage:", err);
+      }
+    }
+  }, []);
 
   // Utility for display
   function capitalizeWords(str) {
@@ -77,6 +84,18 @@ export default function dashboard() {
       .join(' ');
   }
 
+  // Track user actions
+  const track = async (action, metadata = {}) => {
+    if (!userEmail) return;
+    await axios.post(`${API_BASE_URL}/trackevent`, {
+      userEmail,
+      action,
+      timestamp: new Date().toISOString(),
+      page: 'Dashboard',
+      ...metadata,
+    }).catch(console.error);
+  };
+
   // Check if user has registered
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -86,6 +105,15 @@ export default function dashboard() {
     }
   }, []);
 
+  // Show referral modal if applicable
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const seeReferral = localStorage.getItem("seeReferral");
+      if (seeReferral === "true") {
+        setShowReferralModal(true);
+      }
+    }
+  }, []);
 
   // Redirect to landing page if not authenticated
   useEffect(() => {
@@ -94,14 +122,13 @@ export default function dashboard() {
     }
   }, [isLoading, user, signinRedirect]);
 
+  // Fetch user subscription plan and counts
   useEffect(() => {
     const fetchUserPlan = async () => {
       try {
         const res = await axios.get(`${API_BASE_URL}/userPlan?userEmail=${userEmail}`);
         const planupdate = res.data.plan;
         const updatedCount = res.data.tryOnCount || 0;
-        const count = res.data.tipsCount || 0;
-        setTipsCount(count);
         setTryOnCount(updatedCount);
         setSubscriptionPlan(planupdate);
       } catch (err) {
@@ -114,11 +141,12 @@ export default function dashboard() {
     }
   }, [userEmail]);
 
+  // Fetch user history
   useEffect(() => {
     if (!isLoading && user) {
       const fetchHistory = async () => {
         try {
-          const endpoint = `${API_BASE_URL}/userHistory`;
+          const endpoint = `${API_BASE_URL}/fetchTryonData`;
           const res = await fetch(
             `${endpoint}?email=${encodeURIComponent(userEmail)}`,
             {
@@ -141,7 +169,7 @@ export default function dashboard() {
           }
 
           if (Array.isArray(data.likedRecommendations)) {
-            setLikedRecommendations(data.likedRecommendations.slice(0, 5));
+            setLikedRecommendations(data.likedRecommendations);
           } else {
             setLikedRecommendations([]);
           }
@@ -168,14 +196,12 @@ export default function dashboard() {
         const gender = localStorage.getItem('gender') || "Not Set";
         const bodyShape = localStorage.getItem('body-shape') || "Not Set";
         const skinTone = localStorage.getItem('skin-tone') || "Not Set";
-        const generation = getGeneration(birthdate);
 
         const items = [
           {
-            label: "User Profile",
+            label: "Profile",
             items: [
               { icon: MapPin, label: "Location", value: location },
-              { icon: Sparkles, label: "Generation", value: generation },
               { icon: Sparkles, label: "Skin Tone", value: skinTone },
               { icon: User, label: "Gender", value: gender },
               { icon: Sparkles, label: "Body Shape", value: bodyShape },
@@ -185,9 +211,8 @@ export default function dashboard() {
           {
             label: "Monthly Status",
             items: [
-              { icon: Sparkles, label: "Fitting", value: `${tryOnCount}x` },
-              { icon: Sparkles, label: "Styling", value: `${tipsCount}x` },
-              { icon: ChevronRight, label: "Plan", value: `${subscriptionPlan}` },
+              { icon: Shirt, label: "Styling", value: `${tryOnCount}x` },
+              { icon: CreditCard, label: "Plan", value: `${subscriptionPlan}` },
             ],
           },
 
@@ -199,235 +224,347 @@ export default function dashboard() {
         setProfileItems([]);
       }
     }
-  }, [userEmail, tryOnCount, tipsCount, subscriptionPlan]);
+  }, [userEmail, tryOnCount, subscriptionPlan]);
 
   // Filter recommendations by category
   const tops = likedRecommendations.filter(item => item.category === "top");
   const bottoms = likedRecommendations.filter(item => item.category === "bottom");
 
-  // Add this utility function at the top of your file
-  function getGeneration(birthdate) {
-    if (!birthdate) return "Unknown";
-    const year = new Date(birthdate).getFullYear();
-    if (year >= 2013 && year <= 2028) return "Gen Alpha";
-    if (year >= 1997 && year <= 2012) return "Gen Z";
-    if (year >= 1981 && year <= 1996) return "Millennials";
-    if (year >= 1965 && year <= 1980) return "Gen X";
-    return "Other";
-  }  
-
+  // Show loading spinner if data is still being fetched
   if (isLoading || !user || Loading) {
     return <LoadingModalSpinner />;
   };
 
   return (
-  <div className="bg-gradient-to-b from-gray-50 to-white w-full min-h-screen flex flex-col">
-  <Navbar />
+  <div className="bg-background w-full min-h-screen flex flex-col text-primary">
+    <Navbar />
 
-  {/* Main Content */}
-  <div className="flex-1 overflow-y-auto pb-20 pt-16">
-  
-  {/* Hero Section with Greeting and Profile Summary */}
-  <div className="px-6 pt-8 pb-6">
-    <div className="flex items-center justify-between mb-6">
-      <div>
-        <h1 className="text-3xl font-bold text-primary mb-1">
-          {nickname ? `Hi ${nickname}!` : "Hi there!"}
-        </h1>
-        <p className="text-gray-600">Ready to style your day?</p>
+    {/* Main Content */}
+    <div className="flex-1 overflow-y-auto pb-20 pt-16">
+    
+      {/* Greeting Section */}
+      <div className="px-6 pt-8 pb-6">
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold mb-1">
+            {nickname ? `Hi ${nickname}!` : "Hi there!"}
+          </h1>
+          <p className="text-sm text-primary/70">Let's find your next favorite look.</p>
 
-        {/* ✅ Inserted block here */}
-        {showRegisterPrompt && (
-          <div className="mt-4 p-4 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100">
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <p className="font-semibold text-gray-900 mb-1">Want More Personalized Styles?</p>
-                <p className="text-sm text-gray-600 mr-2">Tell us a little about yourself so we can style you better.</p>
+          {showRegisterPrompt && (
+            <div className="mt-4 p-4 rounded-2xl bg-white/5 border border-primary/20">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex-1">
+                  <p className="font-semibold text-primary mb-1">Want More Personalized Styles?</p>
+                  <p className="text-sm text-primary/60">Tell us a little about yourself so we can style you better.</p>
+                </div>
+                <button
+                  onClick={() => {
+                    localStorage.setItem("registerFrom", "dashboard");
+                    setLoading(true);
+                    router.push("/register");
+                  }}
+                  className="bg-primary text-white px-4 py-2 rounded-xl text-sm shadow-sm"
+                >
+                  Setup
+                </button>
               </div>
-              <button
-                onClick={() => {
-                  localStorage.setItem("registerFrom", "dashboard");
-                  setLoading(true);
-                  router.push("/style-discovery/register");
-                }}
-                className="bg-white text-blue-600 px-4 py-2 rounded-xl font-medium text-sm shadow-sm border border-blue-200"
-              >
-                Setup
-              </button>
             </div>
-          </div>
-        )}
-      </div>
-    </div>
-      <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
-        {(() => {
-          const section = profileItems.find((s) => s.label === "Monthly Status");
-          if (!section) return null;
+          )}
+        </div>
 
-          const itemMap = {};
-          section.items.forEach((item) => {
-            itemMap[item.label] = item;
-          });
+        {/* Profile + Monthly Status Combined Section */}
+        <div className="px-6 mb-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
 
-          return (
-            <div className="bg-white rounded-2xl p-4 shadow-sm w-full">
-              <h3 className="text-lg font-semibold mb-3 text-primary">{section.label}</h3>
-              <div className="flex gap-2 w-full">
-                {[itemMap["Fitting"], itemMap["Styling"]].map((item, i) => (
-                  item && (
-                    <div
-                      key={i}
-                      className="flex flex-col justify-between bg-gray-50 rounded-xl p-3 w-full"
-                    >
-                      <div className="flex items-start gap-2">
-                        <item.icon className="w-4 h-4 mt-0.5 text-primary" />
-                        <div className="flex flex-col">
-                          <span className="text-lg text-gray-500">{item.label}</span>
-                          <p className="text-lg font-bold text-gray-900">{item.value}</p>
-                        </div>
-                      </div>
+            {/* Profile Card */}
+            {(() => {
+              const section = profileItems.find((s) => s.label === "Profile");
+              if (!section) return null;
+
+              const itemMap = {};
+              section.items.forEach((item) => {
+                itemMap[item.label] = item;
+              });
+
+              return (
+                <div className="bg-white rounded-2xl p-6 shadow-md col-span-1 lg:col-span-2 flex flex-col justify-between">
+                  <h3 className="text-xl sm:text-2xl font-bold tracking-tight text-primary mb-4">
+                    {section.label}
+                  </h3>
+                  <div className="flex gap-2 mb-4">
+
+                    {/* Skin Tone */}
+                    <div className="flex-1 flex flex-col items-center bg-gray-50 rounded-xl p-3">
+                      {skinToneImageMap[(itemMap["Skin Tone"]?.value || "").toLowerCase()] ? (
+                        <Image
+                          src={skinToneImageMap[(itemMap["Skin Tone"]?.value || "").toLowerCase()]}
+                          alt="Skin Tone"
+                          width={64}
+                          height={64}
+                          className="rounded-md object-contain"
+                        />
+                      ) : <span className="text-gray-400">-</span>}
+                      <span className="text-sm font-medium text-gray-900 mt-5">
+                        {capitalizeWords(itemMap["Skin Tone"]?.value)}
+                      </span>
                     </div>
-                  )
-                ))}
 
-                {itemMap["Plan"] && (
-                  <div className="col-span-2 bg-gray-50 rounded-xl p-3 flex items-start gap-2 w-full">
-                    {(() => {
-                      const IconComponent = itemMap["Plan"].icon;
-                      return <IconComponent className="w-4 h-4 mt-0.5 text-gray-600" />;
-                    })()}
-                    <div>
-                      <span className="text-lg text-gray-500 block">Plan</span>
-                      <p className="text-lg font-bold text-gray-900">{itemMap["Plan"].value}</p>
+                    {/* Body Shape */}
+                    <div className="flex-1 flex flex-col items-center bg-gray-50 rounded-xl p-3">
+                      {itemMap["Gender"]?.value && itemMap["Body Shape"]?.value &&
+                      bodyShapeImageMap[itemMap["Gender"].value.toLowerCase()]?.[itemMap["Body Shape"].value.toLowerCase()] ? (
+                        <Image
+                          src={bodyShapeImageMap[itemMap["Gender"].value.toLowerCase()][itemMap["Body Shape"].value.toLowerCase()]}
+                          alt="Body Shape"
+                          width={80}
+                          height={80}
+                          className="rounded-md object-contain"
+                        />
+                      ) : <span className="text-gray-400">-</span>}
+                      <span className="text-sm font-medium text-gray-900 mt-1">
+                        {capitalizeWords(itemMap["Body Shape"]?.value)}
+                      </span>
                     </div>
                   </div>
-                )}
-              </div>
-            </div>
-          );
-        })()}
-      </div>
 
+                  {/* Location and Occupation */}
+                  <div className="flex gap-2">
+                    {[itemMap["Location"], itemMap["Occupation"]].map((item, i) =>
+                      item && (
+                        <div key={i} className="bg-gray-50 rounded-xl p-3 flex items-start gap-2 flex-1">
+                          <item.icon className="w-6 h-6 text-primary" />
+                          <div>
+                            <p className="text-sm font-medium text-gray-700">{item.value}</p>
+                          </div>
+                        </div>
+                      )
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
 
-  {/* Profile Summary Cards */}
-  <div className="mb-6">
-  {(() => {
-  if (profileItems.length === 0) {
-    return (
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-4 border border-blue-100">
-        <div className="flex items-center justify-between">
-          <div className="flex-1">
-            <p className="font-semibold text-gray-900 mb-1">Complete Your Style Profile</p>
-            <p className="text-sm text-gray-600">Tell us about your preferences</p>
+            {/* Monthly Status Card */}
+            {(() => {
+              const section = profileItems.find((s) => s.label === "Monthly Status");
+              if (!section) return null;
+
+              const itemMap = Object.fromEntries(section.items.map(item => [item.label, item]));
+              const stylingItem = itemMap["Styling"];
+              const planItem = itemMap["Plan"];
+              const IconComponent = stylingItem.icon;
+              const PlanIcon = planItem.icon;
+
+              return (
+                <div className="bg-white rounded-2xl p-6 border border-primary/20 shadow-md backdrop-blur-sm flex flex-col justify-between">
+                  <h3 className="text-lg sm:text-xl font-bold mb-4">Monthly Status</h3>
+                  <div className="flex flex-row flex-wrap gap-3 sm:flex-col">
+                    {/* Styling */}
+                    <div className="flex-1 min-w-[140px] flex items-center gap-4 bg-background rounded-xl p-4 border border-white/10">
+                      <IconComponent className="w-10 h-10 text-primary" />
+                      <div>
+                        <p className="text-sm text-primary/60 mb-1">Styling</p>
+                        <p className="text-xl font-bold text-primary">{stylingItem.value}</p>
+                      </div>
+                    </div>
+
+                    {/* Plan */}
+                    <div className="flex-1 min-w-[140px] flex items-center gap-4 bg-background rounded-xl p-4 border border-white/10">
+                      <PlanIcon className="w-10 h-10 text-primary" />
+                      <div>
+                        <p className="text-sm text-primary/60 mb-1">Current Plan</p>
+                        <p className="text-xl font-bold text-primary">{planItem.value}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+              );
+            })()}
           </div>
-          <Link href="/onboarding/physical-attributes/step-1">
-            <button className="bg-white text-blue-600 px-4 py-2 rounded-xl font-medium text-sm shadow-sm border border-blue-200">
-              Setup Preferences
-            </button>
-          </Link>
+        </div>
+
+        {/* CTA Button */}
+        <div className="mb-6">
+          <button
+            onClick={() => setShowConfirmationModal(true)}
+            className="bg-primary text-white font-bold text-lg py-4 w-full rounded-3xl shadow-lg hover:bg-primary/90"
+          >
+            Start Style Discovery
+          </button>
         </div>
       </div>
-    )
-  }
 
+      {/* Styling History & Wardrobe Collection Side by Side on Desktop */}
+      <div className="px-6 mb-8 flex flex-col gap-6 lg:grid lg:grid-cols-2 lg:gap-6">
 
+        {/* Styling History Section */}
+        <div className="flex flex-col mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-primary mb-4">Styling History</h2>
+            <Link href="/history" className="flex items-center text-sm text-primary font-medium">
+              View All <ChevronRight size={16} className="ml-1"/>
+            </Link>
+          </div>
+          <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-2">
+            {tryonItems.length > 0
+              ? tryonItems.slice(0, 3).map((item, index) => (
+                  <Link
+                    key={index}
+                    href="/history"
+                    className="min-w-36 h-48 rounded-3xl overflow-hidden flex-shrink-0 bg-white shadow-md border border-gray-100 relative group"
+                  >
+                    {item?.generatedImageUrl ? (
+                      <Image
+                        src={item.generatedImageUrl}
+                        alt={`Try-on #${tryonItems.length - index}`}
+                        fill
+                        sizes="144px"
+                        priority
+                        className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+                        <Shirt className="w-10 h-10 text-gray-400" />
+                      </div>
+                    )}
+                    <div className="absolute bottom-3 left-3 right-3 space-y-1">
+                      <div className="bg-white/90 backdrop-blur-sm rounded-xl px-3 py-1.5">
+                        {item.timestamp && (
+                          <p className="text-xs text-gray-500">
+                            {new Date(item.timestamp).toLocaleDateString()}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </Link>
+                ))
+              : [1, 2, 3].map((item) => (
+                  <div
+                    key={item}
+                    className="min-w-36 h-48 rounded-3xl overflow-hidden flex-shrink-0 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center relative"
+                  >
+                    <Shirt className="w-10 h-10 text-gray-400" />
+                    <div className="absolute bottom-3 left-3 right-3">
+                      <div className="bg-white/80 backdrop-blur-sm rounded-xl px-3 py-1.5">
+                        <p className="text-xs font-medium text-gray-600">Try something new</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+          </div>
+        </div>
 
-  })()}
-  </div>
-  <button
-    onClick={() => (window.location.href = "/style-discovery")}
-    className="w-full bg-primary text-primary-foreground py-5 rounded-3xl font-bold text-lg flex items-center justify-center shadow-lg shadow-blue-200/50 mb-2 px-4">
-    <span>Style discovery</span>
-  </button>
+        {/* Wardrobe Collection Section */}
+        <div className="flex flex-col">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-primary mb-4">My Wardrobe</h2>
+            <Link href="/wardrobe" className="flex items-center text-sm text-primary font-medium">
+              View All <ChevronRight size={16} className="ml-1" />
+            </Link>
+          </div>
 
-  </div>
+          {/* Wardrobe Grid */}
+          <div className="flex flex-col lg:flex-row gap-6">
 
-  {/* Try-On History Section */}
-  <div className="px-6 mb-8">
-    <div className="flex items-center justify-between mb-4">
-      <h2 className="text-xl font-bold text-primary">Try-On History</h2>
-      <Link href="/tryOnHistory" className="flex items-center text-sm text-primary font-medium">
-      View All <ChevronRight size={16} className="ml-1"/>
-      </Link>
+            {/* Tops Section */}
+            <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 max-h-80 lg:max-h-72 overflow-hidden flex-1 flex flex-col">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-primary">Top</h3>
+              </div>
+              <div className="flex gap-3">
+                {tops.length > 0
+                  ? tops.slice(0, 3).map((recommendation) => (
+                      <Link
+                        key={recommendation.productId}
+                        href="/wardrobe"
+                        className="flex-1 max-w-[120px] aspect-[3/4] rounded-2xl overflow-hidden bg-white shadow-sm border border-gray-100 relative group"
+                      >
+                        {recommendation.imageUrl ? (
+                          <Image
+                            src={recommendation.imageUrl || "placeholder.svg"}
+                            alt="Top Item"
+                            fill
+                            className="object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+                            <Shirt className="w-8 h-8 text-gray-400" />
+                          </div>
+                        )}
+                      </Link>
+                    ))
+                  : [1, 2].map((item) => (
+                      <div
+                        key={item}
+                        className="flex-1 max-w-[120px] aspect-[3/4] rounded-2xl overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center"
+                      >
+                        <Shirt className="w-8 h-8 text-gray-400" />
+                      </div>
+                    ))}
+              </div>
+            </div>
+
+            {/* Bottoms Section */}
+            <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 max-h-80 lg:max-h-72 overflow-hidden flex-1 flex flex-col">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-primary">Bottom</h3>
+              </div>
+              <div className="flex gap-3">
+                {bottoms.length > 0
+                  ? bottoms.slice(0, 3).map((recommendation) => (
+                      <Link
+                        key={recommendation.productId}
+                        href="/wardrobe"
+                        className="flex-1 max-w-[120px] aspect-[3/4] rounded-2xl overflow-hidden bg-white shadow-sm border border-gray-100 relative group"
+                      >
+                        {recommendation.imageUrl ? (
+                          <Image
+                            src={recommendation.imageUrl || "/placeholder.svg"}
+                            alt="Bottom Item"
+                            fill
+                            className="object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+                            <Shirt className="w-8 h-8 text-gray-400" />
+                          </div>
+                        )}
+                      </Link>
+                    ))
+                  : [1, 2].map((item) => (
+                      <div
+                        key={item}
+                        className="flex-1 max-w-[120px] aspect-[3/4] rounded-2xl overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center"
+                      >
+                        <Shirt className="w-8 h-8 text-gray-400" />
+                      </div>
+                    ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-  
-  <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-2">
-  {tryonItems.length > 0
-  ? tryonItems.slice(0, 3).map((item, index) => (
-  <Link
-  key={index}
-  href="/tryOnHistory"
-  className="min-w-36 h-48 rounded-3xl overflow-hidden flex-shrink-0 bg-white shadow-md border border-gray-100 relative group"
-  >
-  {item?.generatedImageUrl ? (
-  <Image
-    src={item.generatedImageUrl}
-    alt={`Try-on #${tryonItems.length - index}`}
-    fill
-    sizes="144px"
-    priority
-    className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
-  />
-  ) : (
-  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
-  <Shirt className="w-10 h-10 text-gray-400" />
-  </div>
-  )}
-  <div className="absolute bottom-3 left-3 right-3 space-y-1">
-  <div className="bg-white/90 backdrop-blur-sm rounded-xl px-3 py-1.5">
-  {item.timestamp && (
-  <p className="text-xs text-gray-500">
-  {new Date(item.timestamp).toLocaleDateString()}
-  </p>
-  )}
-  </div>
-  </div>
-  </Link>
-  ))
-  : [1, 2, 3].map((item) => (
-  <div
-  key={item}
-  className="min-w-36 h-48 rounded-3xl overflow-hidden flex-shrink-0 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center relative"
-  >
-  <Shirt className="w-10 h-10 text-gray-400" />
-  <div className="absolute bottom-3 left-3 right-3">
-  <div className="bg-white/80 backdrop-blur-sm rounded-xl px-3 py-1.5">
-  <p className="text-xs font-medium text-gray-600">Try something new</p>
-  </div>
-  </div>
-  </div>
-  ))}
-  </div>
-  </div>
-    {/* User Profile */}
-    <div className="px-6 mb-8">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
-        {(() => {
-          const section = profileItems.find((s) => s.label === "User Profile");
-          if (!section) return null;
 
-          const itemMap = {};
-          section.items.forEach((item) => {
-            itemMap[item.label] = item;
-          });
+    {/* Confirmation Modal */}
+    {showConfirmationModal && (
+      <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center overflow-y-auto">
+        <div className="modal-content w-full max-w-5xl rounded-2xl p-8 bg-white shadow-xl flex flex-col gap-10 md:flex-row md:gap-12">
+          {/* Left Column: Profile Summary */}
+          <div className="w-full md:w-[60%] space-y-6">
 
-          return (
-            <div className="bg-white rounded-2xl p-4 shadow-sm w-full">
-              <h3 className="text-xl font-semibold mb-3 text-primary">{section.label}</h3>
-              <div className="flex gap-2 mb-2">
-                <div className="flex-1 flex flex-col items-center bg-gray-50 rounded-xl p-3">
-                  {genderIconMap[(itemMap["Gender"]?.value || "").toLowerCase()] || (
-                    <span className="text-gray-400">-</span>
-                  )}
-                  <span className="text-sm font-medium text-gray-900 mt-3">
-                    {capitalizeWords(itemMap["Gender"]?.value)}
-                  </span>
-                </div>
-                <div className="flex-1 flex flex-col items-center bg-gray-50 rounded-xl p-3">
-                  {skinToneImageMap[(itemMap["Skin Tone"]?.value || "").toLowerCase()] ? (
+            {/* Physical Attributes */}
+            <div className="border rounded-xl p-5 bg-muted">
+              <h3 className="font-bold text-xl text-primary mb-4">Physical Attributes</h3>
+              <div className="flex justify-between items-center gap-4">
+
+                {/* Skin Tone */}
+                <div className="flex flex-col items-center bg-white p-4 rounded-xl shadow w-full">
+                  {skinToneImageMap[(localStorage.getItem("skin-tone") || "").toLowerCase()] ? (
                     <Image
-                      src={skinToneImageMap[(itemMap["Skin Tone"]?.value || "").toLowerCase()]}
-                      alt={itemMap["Skin Tone"]?.value || "Skin Tone"}
+                      src={skinToneImageMap[(localStorage.getItem("skin-tone") || "").toLowerCase()]}
+                      alt="Skin Tone"
                       width={64}
                       height={64}
                       className="rounded-md object-contain"
@@ -435,153 +572,121 @@ export default function dashboard() {
                   ) : (
                     <span className="text-gray-400">-</span>
                   )}
-                  <span className="text-sm font-medium text-gray-900 mt-5">
-                    {capitalizeWords(itemMap["Skin Tone"]?.value)}
-                  </span>
+                  <p className="text-sm font-medium text-gray-700 mt-2">
+                    {capitalizeWords(localStorage.getItem("skin-tone") || "Not Set")}
+                  </p>
                 </div>
-                <div className="flex-1 flex flex-col items-center bg-gray-50 rounded-xl p-3">
-                  {itemMap["Gender"]?.value && itemMap["Body Shape"]?.value &&
-                  bodyShapeImageMap[itemMap["Gender"].value.toLowerCase()]?.[itemMap["Body Shape"].value.toLowerCase()] ? (
+
+                {/* Body Shape */}
+                <div className="flex flex-col items-center bg-white p-4 rounded-xl shadow w-full">
+                  {localStorage.getItem("gender") &&
+                  localStorage.getItem("body-shape") &&
+                  bodyShapeImageMap[localStorage.getItem("gender").toLowerCase()]?.[localStorage.getItem("body-shape").toLowerCase()] ? (
                     <Image
-                      src={bodyShapeImageMap[itemMap["Gender"].value.toLowerCase()][itemMap["Body Shape"].value.toLowerCase()]}
-                      alt={itemMap["Body Shape"]?.value || "Body Shape"}
-                      width={80}
-                      height={80}
+                      src={
+                        bodyShapeImageMap[localStorage.getItem("gender").toLowerCase()][localStorage.getItem("body-shape").toLowerCase()]
+                      }
+                      alt="Body Shape"
+                      width={64}
+                      height={64}
                       className="rounded-md object-contain"
                     />
                   ) : (
                     <span className="text-gray-400">-</span>
                   )}
-                  <span className="text-sm font-medium text-gray-900 mt-1">
-                    {capitalizeWords(itemMap["Body Shape"]?.value)}
-                  </span>
-                </div>                                                
-              </div>
-              <div className="flex gap-2 mb-2">  
-
-              </div>  
-              <div className="flex gap-2 mb-2">
-                {[itemMap["Location"], itemMap["Occupation"]].map((item, i) =>
-                  item && (
-                    <div key={i} className="bg-gray-50 rounded-xl p-3 flex items-start gap-2 flex-1">
-                      <item.icon className="w-10 h-10 mt-0.5 text-gray-600" />
-                      <div>
-                        <p className="text-xl font-medium text-gray-900 mt-2">{item.value}</p>
-                      </div>
-                    </div>
-                  )
-                )}
+                  <p className="text-sm font-medium text-gray-700 mt-2">
+                    {capitalizeWords(localStorage.getItem("body-shape") || "Not Set")}
+                  </p>
+                </div>
               </div>
             </div>
-          );
-        })()}
-      </div>
-    </div>
-    {/* Wardrobe Collection */}
-    <div className="px-6 pb-8">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-bold text-primary">My Wardrobe</h2>
-        <Link href="/wardrobe" className="flex items-center text-sm text-primary font-medium">
-        View All <ChevronRight size={16} className="ml-1" />
-        </Link>
-      </div>
 
-      {/* Wardrobe Grid */}
-      <div className="space-y-6">
-      {/* Tops Section */}
-      <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-bold text-primary">Top</h3>
-        </div>
-        <div className="flex gap-3">
-          {tops.length > 0
-            ? tops.slice(0, 2).map((recommendation) => (
-                <Link
-                  key={recommendation.productId}
-                  href="/wardrobe"
-                  className="flex-1 aspect-[3/4] rounded-2xl overflow-hidden bg-white shadow-sm border border-gray-100 relative group"
-                >
-                  {recommendation.imageUrl ? (
+            {/* Liked Item Summary */}
+            <div className="border rounded-xl p-5 bg-muted">
+              <h3 className="font-bold text-xl text-primary mb-4">Latest Preference</h3>
+              {likedRecommendations.length > 0 ? (
+                <div className="flex items-center gap-5">
+                  <div className="rounded-xl overflow-hidden shadow-sm bg-white border border-gray-200 aspect-[3/4] w-[100px] h-[130px]">
                     <Image
-                      src={recommendation.imageUrl || "/placeholder.svg"}
-                      alt="Top Item"
-                      fill
-                      className="object-cover group-hover:scale-105 transition-transform duration-300"
+                      src={likedRecommendations[likedRecommendations.length - 1].imageUrl || "/placeholder.svg"}
+                      alt="Liked item"
+                      width={100}
+                      height={130}
+                      className="w-full h-full object-cover"
                     />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
-                      <Shirt className="w-8 h-8 text-gray-400" />
-                    </div>
-                  )}
-                </Link>
-              ))
-            : [1, 2].map((item) => (
-                <div
-                  key={item}
-                  className="flex-1 aspect-[3/4] rounded-2xl overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center"
-                >
-                  <Shirt className="w-8 h-8 text-gray-400" />
+                  </div>
+                  <div className="flex flex-col text-sm text-primary">
+                    <p>
+                      <span className="font-semibold">Fashion Type:</span>{" "}
+                      {capitalizeWords(localStorage.getItem("fashion-type") || "Not Set")}
+                    </p>
+                    <p>
+                      <span className="font-semibold">Category:</span>{" "}
+                      {capitalizeWords(localStorage.getItem("clothing-category") || "Not Set")}
+                    </p>
+                  </div>
                 </div>
-              ))}
-        </div>
-      </div>
+              ) : (
+                <p className="text-gray-500 text-sm">No style pick found.</p>
+              )}
+            </div>
 
-      {/* Bottoms Section */}
-      <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-bold text-primary">Bottom</h3>
-        </div>
-        <div className="flex gap-3">
-          {bottoms.length > 0
-            ? bottoms.slice(0, 2).map((recommendation) => (
-                <Link
-                  key={recommendation.productId}
-                  href="/wardrobe"
-                  className="flex-1 aspect-[3/4] rounded-2xl overflow-hidden bg-white shadow-sm border border-gray-100 relative group"
-                >
-                  {recommendation.imageUrl ? (
-                    <Image
-                      src={recommendation.imageUrl || "/placeholder.svg"}
-                      alt="Bottom Item"
-                      fill
-                      className="object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
-                      <Shirt className="w-8 h-8 text-gray-400" />
-                    </div>
-                  )}
-                </Link>
-              ))
-            : [1, 2].map((item) => (
-                <div
-                  key={item}
-                  className="flex-1 aspect-[3/4] rounded-2xl overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center"
-                >
-                  <Shirt className="w-8 h-8 text-gray-400" />
-                </div>
-              ))}
-        </div>
-      </div>
-      </div>
-    </div>
-  </div>
+            {/* Buttons */}
+            <div className="flex flex-wrap gap-3 pt-2 py-2">
+              <button
+                onClick={() => {
+                  setShowConfirmationModal(false);
+                  router.push("/personalized-styling/result");
+                }}
+                className="bg-primary text-white px-5 py-2.5 rounded-lg w-full md:w-auto"
+              >
+                Continue
+              </button>
+              <button
+                onClick={() => {
+                  setShowConfirmationModal(false);
+                  router.push("/personalized-styling/physical-appearances");
+                }}
+                className="bg-gray-100 text-gray-800 px-5 py-2.5 rounded-lg w-full md:w-auto"
+              >
+                Re-upload Photo
+              </button>
+              <button
+                onClick={() => {
+                  setShowConfirmationModal(false);
+                  router.push("/personalized-styling/style-preferences");
+                }}
+                className="bg-gray-100 text-gray-800 px-5 py-2.5 rounded-lg w-full md:w-auto"
+              >
+                Change Preferences
+              </button>
+            </div>
+          </div>
 
-  {/* Bottom Navigation Bar - Unchanged */}
-  <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white shadow-[0_-2px_10px_rgba(0,0,0,0.1)] flex justify-around items-center px-2 pt-2 pb-1 z-10">
-  <Link href="/dashboard" className="flex flex-col items-center text-gray-400 ">
-  <LayoutGrid size={20} />
-  <span className="text-xs mt-1">Dashboard</span>
-  </Link>
-  <Link href="/wardrobe" className="flex flex-col items-center text-gray-400 hover:text-blue-900">
-  <Shirt className="w-5 h-5 mb-0.5" />
-  <span className="text-xs mt-1">Wardrobe</span>
-  </Link>
-  <Link href="/insights" className="flex flex-col items-center text-gray-400 hover:text-blue-900">
-  <User className="w-5 h-5 mb-0.5" />
-  <span className="text-xs mt-1">Profile</span>
-  </Link>
-  </div>
+          {/* Right Column: User Image */}
+          <div className="w-full md:w-[40%] flex justify-center md:justify-end">
+            <img
+              src={localStorage.getItem("user_image") || "/placeholder.svg"}
+              alt="User Upload"
+              className="w-40 h-120 md:w-full md:max-w-xs object-cover rounded-xl border"
+            />
+          </div>
+        </div>
+      </div>
+    )}
+
+    {/* Referral Modal */}
+    {showReferralModal && (
+      <ReferralModal
+        isOpen={showReferralModal}
+        handleTrack={(selectedOption) => {
+          track("Referral selection", { selection: selectedOption }); 
+          localStorage.removeItem("seeReferral");
+          setShowReferralModal(false);
+        }}
+        onClose={() => setShowReferralModal(false)}
+      />
+    )}
   </div>
   )
 }

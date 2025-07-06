@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useAuth } from "react-oidc-context";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import LoadingModalSpinner from "@/components/ui/LoadingState";
 
 export default function PricingPlans({ isOpen, onClose, sourcePage = "Unknown" }) {
   const router = useRouter();
+  const { user } = useAuth();
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [selectedPremiumPlan, setSelectedPremiumPlan] = useState(null);
   const [showThankYou, setShowThankYou] = useState(false);
@@ -49,8 +51,7 @@ export default function PricingPlans({ isOpen, onClose, sourcePage = "Unknown" }
 
   const handlePlanSelect = (planName) => {
     try {
-      const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
-      const email = loggedInUser?.profile?.email || loggedInUser?.email;
+      const email = user?.profile?.email; // fixed reference
       if (email) {
         fetch(`${process.env.NEXT_PUBLIC_FYUSEAPI}/trackevent`, {
           method: "POST",
@@ -64,19 +65,13 @@ export default function PricingPlans({ isOpen, onClose, sourcePage = "Unknown" }
           }),
         });
       }
-
-      if (window?.gtag) {
-        const userId = loggedInUser?.profile?.sub || email;
-        window.gtag("set", { user_id: userId });
-        window.gtag("event", "select_plan", { plan: planName });
-      }
     } catch (error) {
       console.error("Tracking error:", error.message);
     }
 
     if (planName === "Basic") {
       setIsRedirecting(true);
-      onClose();
+      if (onClose) onClose(); // fallback
       router.push("/dashboard");
     } else {
       setSelectedPremiumPlan(planName);
@@ -87,21 +82,27 @@ export default function PricingPlans({ isOpen, onClose, sourcePage = "Unknown" }
   const handleThankYouClose = () => {
     setIsRedirecting(true);
     setShowThankYou(false);
-    onClose();
+    if (onClose) onClose(); // fallback
     router.push("/dashboard");
   };
 
+  const selectedPlanPrice = plans.find(p => p.name === selectedPremiumPlan)?.price;
+
   return (
     <>
-    {isRedirecting && (
-      <LoadingModalSpinner/>
-    )}
+      {isRedirecting && <LoadingModalSpinner />}
 
       {/* Pricing Modal */}
       {!showThankYou && (
-        <div className="fixed inset-0 z-50 bg-black bg-opacity-70 flex justify-center items-center overflow-y-auto">
+        <div
+          className="fixed inset-0 z-50 bg-black bg-opacity-70 flex justify-center items-center overflow-y-auto"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              if (onClose) onClose(); // close when backdrop is clicked
+            }
+          }}
+        >
           <div className="bg-background text-primary rounded-3xl p-8 max-w-7xl w-full mx-4 shadow-2xl relative overflow-y-auto max-h-[90vh]">
-
             <h2 className="text-3xl md:text-4xl font-bold text-center mb-8">
               Choose Your Plan
             </h2>
@@ -140,6 +141,8 @@ export default function PricingPlans({ isOpen, onClose, sourcePage = "Unknown" }
           </div>
         </div>
       )}
+
+      {/* Thank You Modal */}
       {showThankYou && (
         <div className="fixed inset-0 z-60 bg-black bg-opacity-70 flex justify-center items-center">
           <div className="bg-background text-primary p-8 rounded-3xl shadow-2xl max-w-lg w-full mx-4 text-center">
@@ -152,8 +155,8 @@ export default function PricingPlans({ isOpen, onClose, sourcePage = "Unknown" }
               Your interest helps us improve FYUSE for you.
             </p>
             <p className="text-green-700 font-semibold mt-2">
-              ✔ You’re now pre-enrolled in the {selectedPremiumPlan} Plan (
-              {selectedPremiumPlan === "Elegant" ? "Rp.29,999/mo" : "Rp.59,999/mo"})
+              ✔ You’re now pre-enrolled in the {selectedPremiumPlan} Plan
+              {selectedPlanPrice ? ` (${selectedPlanPrice})` : null}
             </p>
             <Button
               onClick={handleThankYouClose}
@@ -163,7 +166,7 @@ export default function PricingPlans({ isOpen, onClose, sourcePage = "Unknown" }
             </Button>
           </div>
         </div>
-      )}      
+      )}
     </>
   );
 }

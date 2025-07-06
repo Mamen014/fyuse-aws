@@ -26,7 +26,7 @@ export default function PricingPlans() {
       action,
       selection: planName,
       timestamp: new Date().toISOString(),
-      page: "PricingPage",
+      page: "planPage",
     };
 
     try {

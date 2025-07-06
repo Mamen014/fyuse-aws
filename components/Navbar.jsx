@@ -13,6 +13,8 @@ import {
   BookOpenText,
   ChevronRight,
   LayoutGrid,
+  HistoryIcon,
+  Shirt
 } from "lucide-react";
 import { useAuth } from "react-oidc-context";
 import { useRouter } from "next/navigation";
@@ -40,6 +42,7 @@ export default function Navbar() {
 
   const handleSignOut = () => {
     sessionStorage.clear();
+    localStorage.removeItem("hasRegistered");
     const origin = typeof window !== "undefined" ? window.location.origin : "";
     const logoutUrl = `https://ap-southeast-2imonu7fwb.auth.ap-southeast-2.amazoncognito.com/logout?client_id=4l7l5ebjj2io1vap6qohbl2i7l&logout_uri=${encodeURIComponent(
       origin + "/"
@@ -60,14 +63,23 @@ export default function Navbar() {
     );
   };
 
-  const menuItems = [
-    { label: "Dashboard", icon: LayoutGrid, path: "/dashboard" },
+  const baseMenuItems = [
     { label: "Features", icon: Sparkles, path: "/features" },
     { label: "About", icon: Info, path: "/about" },
-    { label: "Pricing", icon: CreditCard, path: "/pricing" },
     { label: "Contact", icon: Phone, path: "/contact" },
     { label: "Journal", icon: BookOpenText, path: "/journal" },
   ];
+
+  const authOnlyMenuItems = [
+    { label: "Dashboard", icon: LayoutGrid, path: "/dashboard" },
+    { label: "Plan", icon: CreditCard, path: "/plan" },
+    { label: "Styling History", icon: HistoryIcon, path: "/history" },
+    { label: "Wardrobe", icon: Shirt, path: "/wardrobe" },
+  ];
+
+  const menuItems = auth.isAuthenticated
+    ? [...authOnlyMenuItems, ...baseMenuItems]
+    : baseMenuItems;
 
   return (
     <nav className="fixed top-0 left-0 w-full bg-white z-50 shadow-sm">
@@ -103,22 +115,25 @@ export default function Navbar() {
           isMenuOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <div className="px-6 py-6 bg-gray-50 border-b border-gray-200">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
-              <span className="text-blue-600 font-semibold text-lg">
-                {userName.charAt(0).toUpperCase()}
-              </span>
-            </div>
-            <div className="flex-1 min-w-0">
-              <h3 className="text-base font-semibold text-gray-900 truncate">{userName}</h3>
-              {userEmail && <p className="text-sm text-gray-500 truncate">{userEmail}</p>}
-            </div>
-            <div className="px-0 text-red-600">
-              <SignOutButton isInMobileMenu />
+        {auth.isAuthenticated && (
+          <div className="px-6 py-6 bg-gray-50 border-b border-gray-200">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                <span className="text-blue-600 font-semibold text-lg">
+                  {userName.charAt(0).toUpperCase()}
+                </span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-base font-semibold text-gray-900 truncate">{userName}</h3>
+                {userEmail && <p className="text-sm text-gray-500 truncate">{userEmail}</p>}
+              </div>
+              <div className="px-0 text-red-600">
+                <SignOutButton isInMobileMenu />
+              </div>
             </div>
           </div>
-        </div>
+        )}
+
 
         <div className="overflow-y-auto h-[calc(100%-160px)] py-4">
           <div className="px-4 pb-2">
