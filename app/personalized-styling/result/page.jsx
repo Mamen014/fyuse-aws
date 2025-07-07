@@ -26,7 +26,7 @@ export default function AutoTryOnRecommendationPage() {
   const [isPolling, setIsPolling] = useState(false);
 
   const PLAN_LIMITS = {
-    Basic: { tryOn: 5 },
+    Basic: { tryOn: 10 },
     Elegant: { tryOn: 20 },
     Glamour: { tryOn: 40 },
   };
