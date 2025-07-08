@@ -189,7 +189,7 @@ export default function AIPhotoUpload() {
 
       // Store the image URL
       localStorage.setItem('user_image', uploadData.imageUrl);
-      track('upload photo', { selection: uploadData.imageUrl })
+      track('upload_photo', { selection: uploadData.imageUrl })
 
       // Analyze the uploaded image
       const analyzerResponse = await fetch(`${API_BASE_URL}/userAnalyzer`, {
@@ -266,7 +266,7 @@ export default function AIPhotoUpload() {
   // Accept AI analysis
   const handleAcceptAnalysis = async () => {
     if (isSubmitting) return;
-    track('Accept Analysis');
+    track('accept_analysis');
     setIsSubmitting(true);
     setisLoading(true);
     
@@ -298,7 +298,7 @@ export default function AIPhotoUpload() {
     try {
       
       // Navigate to the first step of manual physical attributes
-      track('Customize Manually');
+      track('customize_manually');
       router.push('physical-appearances/manual/step-1');
     } catch (error) {
       console.error('Error during customization:', error);
@@ -314,7 +314,7 @@ export default function AIPhotoUpload() {
         userEmail,
         action,
         timestamp: new Date().toISOString(),
-        page: 'Physical_Appearance',
+        page: 'physical_appearancePage',
         ...metadata,
       });
     } catch (err) {

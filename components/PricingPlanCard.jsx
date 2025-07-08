@@ -58,7 +58,7 @@ export default function PricingPlans({ isOpen, onClose, sourcePage = "Unknown" }
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             userEmail: email,
-            action: "Selected Pricing Plan",
+            action: "selected_pricing_plan",
             selection: planName,
             timestamp: new Date().toISOString(),
             page: sourcePage,

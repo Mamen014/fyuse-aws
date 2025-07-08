@@ -91,7 +91,7 @@ export default function dashboard() {
       userEmail,
       action,
       timestamp: new Date().toISOString(),
-      page: 'Dashboard',
+      page: 'dashboardPage',
       ...metadata,
     }).catch(console.error);
   };
@@ -680,7 +680,7 @@ export default function dashboard() {
       <ReferralModal
         isOpen={showReferralModal}
         handleTrack={(selectedOption) => {
-          track("Referral selection", { selection: selectedOption }); 
+          track("referral_selection", { selection: selectedOption }); 
           localStorage.removeItem("seeReferral");
           setShowReferralModal(false);
         }}

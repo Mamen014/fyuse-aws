@@ -135,7 +135,7 @@ export default function LandingPage() {
     e.preventDefault();
     try {
       setIsRedirecting(true);
-      track('Start_Free_Styling', 'top')
+      track('start_free_styling', 'top')
       localStorage.setItem('from', 'landing-page');
       localStorage.setItem('hasRegistered', 'true');
       localStorage.setItem('showRegister', 'true');
@@ -159,7 +159,7 @@ export default function LandingPage() {
     e.preventDefault();
     try {
       setIsRedirecting(true);
-      track('Start_Free_Styling', 'bottom')
+      track('start_free_styling', 'bottom')
       localStorage.setItem('from', 'landing-page');
       localStorage.setItem('hasRegistered', 'true');
       localStorage.setItem('showRegister', 'true');

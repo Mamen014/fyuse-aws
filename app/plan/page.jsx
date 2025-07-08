@@ -20,7 +20,6 @@ export default function PricingPlans() {
   const [selectedPlan, setSelectedPlan] = useState(null);
 
   const handleTrack = async (action, planName) => {
-    console.log(`User selected plan: ${planName}`);
     const payload = {
       userEmail,
       action,
@@ -30,7 +29,7 @@ export default function PricingPlans() {
     };
 
     try {
-      const res = await fetch(`${API_BASE_URL}/trackevent`, {
+      await fetch(`${API_BASE_URL}/trackevent`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -38,8 +37,6 @@ export default function PricingPlans() {
         body: JSON.stringify(payload),
       });
 
-      const result = await res.json();
-      console.log("Tracking result:", result);
     } catch (err) {
       console.error("Failed to track user event:", err);
     }

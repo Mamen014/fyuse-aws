@@ -164,7 +164,7 @@ export default function AutoTryOnRecommendationPage() {
         userEmail,
         action,
         timestamp: new Date().toISOString(),
-        page: 'TryOnResult',
+        page: 'resultPage',
         ...metadata,
       });
     } catch (err) {
@@ -249,7 +249,7 @@ export default function AutoTryOnRecommendationPage() {
         onSelect={(plan) => {
           console.log('Plan selected:', plan);
         }}
-        sourcePage="result"
+        sourcePage="resultPage"
       />
     );
   }
@@ -334,7 +334,7 @@ export default function AutoTryOnRecommendationPage() {
             <button
               onClick={async () => {
                 setIsDownloading(true);
-                track('Download Look', { selection: resultImageUrl });
+                track('download_look', { selection: resultImageUrl });
                 trackPersonalizeEvent({
                   userId: userEmail,
                   itemId: product?.productId,
