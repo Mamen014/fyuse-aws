@@ -25,9 +25,9 @@ export default function AIPhotoUpload() {
   const [showRegisterPrompt, setShowRegisterPrompt] = useState(false);
   const [error, setError] = useState(null);
   const { user } = useAuth();
+
   const userEmail = user?.profile?.email;
   const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
-
   const allowedTypes = ["image/jpeg", "image/jpg"];
   const maxSizeMB = 4.5;
   const minResolution = 300;
@@ -51,6 +51,7 @@ export default function AIPhotoUpload() {
     },
   ];
 
+  //Check for register modal
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
@@ -60,12 +61,13 @@ export default function AIPhotoUpload() {
     };
   });
 
+  //Gender mapping
   const genderIconMap = {
     male: <Mars className="w-24 h-24 text-primary inline-block ml-4" />,
     female: <Venus className="w-24 h-24 text-primary inline-block mr-2" />,
   };
 
-  // Add this near your genderIconMap
+  // Body shape mapping based on gender
   const bodyShapeImageMap = {
     male: {
       'rectangle': '/images/body-shape/male/rectangle.png',
@@ -83,7 +85,7 @@ export default function AIPhotoUpload() {
     }
   };
 
-  // Add this near your other mappings
+  // Skin tone mapping
   const skinToneImageMap = {
     'fair': '/images/skin-tone/fair.png',
     'light': '/images/skin-tone/light.png',
@@ -93,6 +95,7 @@ export default function AIPhotoUpload() {
     // Add more as needed, keys should match aiAnalysis?.skinTone (case-insensitive)
   };
 
+  // Capitalizing user' attribute first word
   function capitalizeWords(str) {
     if (!str) return '';
     return str
@@ -102,6 +105,7 @@ export default function AIPhotoUpload() {
       .join(' ');
   }
 
+  // Handle file selection, validation, and upload
   const handleFileSelect = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -145,6 +149,7 @@ export default function AIPhotoUpload() {
     reader.readAsDataURL(file);
   };
 
+  // Upload user photo
   const handleUpload = async () => {
     if (!fileToUpload || !userEmail) return;
 
@@ -169,7 +174,7 @@ export default function AIPhotoUpload() {
         userEmail: userEmail,
       };
 
-      // Upload image
+      // Upload to S3 bucket with Lambda
       const uploadResponse = await fetch(`${API_BASE_URL}/upload-user-image`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -183,6 +188,7 @@ export default function AIPhotoUpload() {
 
       // Store the image URL
       localStorage.setItem('user_image', uploadData.imageUrl);
+      track('upload photo', { selection: uploadData.imageUrl })
 
       // Analyze the uploaded image
       const analyzerResponse = await fetch(`${API_BASE_URL}/userAnalyzer`, {
@@ -241,8 +247,6 @@ export default function AIPhotoUpload() {
         
       } catch (error) {
         console.error('Error saving to backend:', error);
-        // Even if backend save fails, we can continue with the flow
-        // since we've saved to localStorage
       }
       
       setIsAnalyzing(false);
@@ -258,8 +262,10 @@ export default function AIPhotoUpload() {
     }
   };
 
+  // Accept AI analysis
   const handleAcceptAnalysis = async () => {
     if (isSubmitting) return;
+    track('Accept Analysis');
     setIsSubmitting(true);
     setisLoading(true);
     
@@ -273,6 +279,7 @@ export default function AIPhotoUpload() {
     }
   };
 
+  // Show loading spinner
   if (isloading) {
     return (
     <LoadingModalSpinner 
@@ -282,6 +289,7 @@ export default function AIPhotoUpload() {
     );
   }
 
+  // Customize physical Appearance
   const handleCustomize = async () => {
     if (isSubmitting) return;
     setIsSubmitting(true);
@@ -289,10 +297,27 @@ export default function AIPhotoUpload() {
     try {
       
       // Navigate to the first step of manual physical attributes
+      track('Customize Manually');
       router.push('physical-appearances/manual/step-1');
     } catch (error) {
       console.error('Error during customization:', error);
       setIsSubmitting(false);
+    }
+  };
+
+  // Tracker for user activity
+  const track = async (action, metadata = {}) => {
+    if (!userEmail) return;
+    try {
+      await axios.post(`${API_BASE_URL}/trackevent`, {
+        userEmail,
+        action,
+        timestamp: new Date().toISOString(),
+        page: 'Physical_Appearance',
+        ...metadata,
+      });
+    } catch (err) {
+      console.error('Tracking failed:', err.message);
     }
   };
 
@@ -454,6 +479,7 @@ export default function AIPhotoUpload() {
                 onClick={() => {
                   localStorage.setItem("registerFrom", "physical-appearances");
                   localStorage.setItem('showRegister', 'false');
+                  track('register', 'true');
                   setShowRegisterPrompt(false);
                   setisLoading(true);
                   router.push('/register');
@@ -465,6 +491,7 @@ export default function AIPhotoUpload() {
               <button
                 onClick={() => {
                   localStorage.setItem('showRegister', 'false');
+                  track('register', 'false')
                   setShowRegisterPrompt(false);
                 }}
                 className="px-5 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition"

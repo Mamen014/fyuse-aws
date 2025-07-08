@@ -71,15 +71,6 @@ export default function StylePreferencesPage() {
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 userEmail,
-                section: 'StylePref2',
-                data: { brands: [], colors: [] },
-              }),
-            }),
-            fetch(`${API_BASE_URL}/userPref`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                userEmail,
                 section: 'StylePref3',
                 data: { clothingType },
               }),

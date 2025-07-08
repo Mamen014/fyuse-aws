@@ -172,18 +172,17 @@ export default function AutoTryOnRecommendationPage() {
     }
   };
 
-  const trackPersonalizeEvent = ({ userId, itemId, eventType, liked }) => {
-    fetch(`${API_BASE_URL}/trackevent`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        userEmail: userId,
-        action: `personalize-${eventType}`,
-        itemId,
-        liked,
-        timestamp: new Date().toISOString(),
-      }),
-    }).catch(console.error);
+  const trackPersonalizeEvent = async ({ userId, itemId, eventType, liked }) => {
+    const sessionId = `session-${Date.now()}`;
+    try {
+      await fetch(`${API_BASE_URL}/stylingRecTrack`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, sessionId, itemId, eventType, liked }),
+      });
+    } catch (err) {
+      console.error('Failed to track personalize event:', err);
+    }
   };
 
   useEffect(() => {
