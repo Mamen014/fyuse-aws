@@ -272,6 +272,7 @@ export default function AIPhotoUpload() {
     
     try {
       // Navigate to the next page
+      setisLoading(true);
       router.push('style-preferences');
     } catch (error) {
       console.error('Error accepting analysis:', error);
@@ -299,6 +300,7 @@ export default function AIPhotoUpload() {
       
       // Navigate to the first step of manual physical attributes
       track('customize_manually');
+      setisLoading(true);
       router.push('physical-appearances/manual/step-1');
     } catch (error) {
       console.error('Error during customization:', error);

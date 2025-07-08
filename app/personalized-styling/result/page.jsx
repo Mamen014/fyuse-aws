@@ -395,6 +395,7 @@ export default function AutoTryOnRecommendationPage() {
               });
               sessionStorage.removeItem('currentTaskId');
               sessionStorage.removeItem('recommendedProduct');
+              setLoading(true);
               router.push('/dashboard');
             }}
             className="w-full py-3 rounded-full font-semibold bg-white border text-primary"

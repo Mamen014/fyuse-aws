@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import { useAuth } from 'react-oidc-context';
 import { ChevronDown } from 'lucide-react';
@@ -131,15 +130,14 @@ export default function LandingPage() {
   };
 
   // Authentication and redirection logic
-  const handleClickTop = async (e) => {
+  const handleClick = async (e) => {
     e.preventDefault();
     try {
       setIsRedirecting(true);
-      track('start_free_styling', 'top')
       localStorage.setItem('from', 'landing-page');
-      localStorage.setItem('hasRegistered', 'true');
       localStorage.setItem('showRegister', 'true');
-      localStorage.setItem('seeReferral', 'true');      
+      localStorage.setItem('seeReferral', 'true');
+      document.cookie = "hasRegistered=true; path=/; max-age=31536000";      
 
       if (!user) {
         setTimeout(() => {
@@ -151,46 +149,6 @@ export default function LandingPage() {
     } catch (error) {
       console.error('Authentication error:', error);
       router.push('/');
-    }
-  };
-
-  // Authentication and redirection logic
-  const handleClickBottom = async (e) => {
-    e.preventDefault();
-    try {
-      setIsRedirecting(true);
-      track('start_free_styling', 'bottom')
-      localStorage.setItem('from', 'landing-page');
-      localStorage.setItem('hasRegistered', 'true');
-      localStorage.setItem('showRegister', 'true');
-      localStorage.setItem('seeReferral', 'true');      
-
-      if (!user) {
-        setTimeout(() => {
-          signinRedirect();
-        }, 100);
-      } else {
-        router.push('/');
-      }
-    } catch (error) {
-      console.error('Authentication error:', error);
-      router.push('/');
-    }
-  };
-
-  // Tracker selection
-  const track = async (action, metadata = {}) => {
-    if (!userEmail) return;
-    try {
-      await axios.post(`${API_BASE_URL}/trackevent`, {
-        userEmail,
-        action,
-        timestamp: new Date().toISOString(),
-        page: 'LandingPage',
-        ...metadata,
-      });
-    } catch (err) {
-      console.error('Tracking failed:', err.message);
     }
   };
 
@@ -253,7 +211,7 @@ export default function LandingPage() {
                 </motion.h1>
 
                 <button
-                  onClick={handleClickTop}
+                  onClick={handleClick}
                   className="inline-block px-6 sm:px-10 py-3 sm:py-4 rounded-full w-full max-w-xs sm:max-w-sm text-lg sm:text-xl font-semibold transition-all duration-300 shadow-xl mt-6 cursor-pointer bg-primary text-primary-foreground hover:bg-primary/90 hover:-translate-y-1 hover:shadow-md"
                 >
                   Start Free Styling
@@ -482,7 +440,7 @@ export default function LandingPage() {
             </p>
             <div className="space-y-4 max-w-xs w-full mx-auto sm:space-y-0 sm:space-x-4 sm:flex sm:justify-center sm:items-center">
               <button
-                onClick={handleClickBottom}
+                onClick={handleClick}
                 className="inline-block px-6 sm:px-10 py-3 sm:py-4 rounded-full text-lg sm:text-xl font-semibold transition-all duration-300 shadow-xl mb-4 sm:mb-0 cursor-pointer bg-primary text-primary-foreground hover:bg-primary/90 hover:-translate-y-1 hover:shadow-md"
               >
                 Start Free Styling

@@ -1,27 +1,10 @@
-'use client';
+// app/page.js
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import LoadingModalSpinner from '@/components/ui/LoadingState';
+export default async function HomeRedirectPage() {
+  const cookieStore = await cookies();
+  const hasRegistered = cookieStore.get('hasRegistered')?.value === 'true';
 
-export default function LandingPage() {
-  const router = useRouter();
-  const [hydrated, setHydrated] = useState(false);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    setHydrated(true);
-  }, []);
-
-  useEffect(() => {
-    if (!hydrated) return;
-
-    const hasRegistered = localStorage.getItem('hasRegistered') === 'true';
-    const target = hasRegistered ? '/dashboard' : '/landing-page';
-
-    router.replace(target);
-  }, [hydrated, router]);
-
-  return <LoadingModalSpinner />;
+  redirect(hasRegistered ? '/dashboard' : '/landing-page');
 }

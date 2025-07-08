@@ -72,7 +72,6 @@ export default function PhysicalAttributesStep1() {
   }
 
     const physic1 = async () => {
-    console.log("Registering user with data:", data);
     const payload = {
       userEmail,
       section: "physicalAppearance1",
@@ -80,7 +79,7 @@ export default function PhysicalAttributesStep1() {
     };
     
     try {
-      const res = await fetch(`${API_BASE_URL}/userPref`, {
+      fetch(`${API_BASE_URL}/userPref`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -88,9 +87,7 @@ export default function PhysicalAttributesStep1() {
         body: JSON.stringify(payload),
       });
 
-      const result = await res.json();
-      console.log("Inputing data:", result);
-      await handleSubmit();
+      handleSubmit();
     } catch (err) {
       console.error("Failed to input data:", err);
     }

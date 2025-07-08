@@ -636,6 +636,7 @@ export default function dashboard() {
               <button
                 onClick={() => {
                   setShowConfirmationModal(false);
+                  setLoading(true);
                   router.push("/personalized-styling/result");
                 }}
                 className="bg-primary text-white px-5 py-2.5 rounded-lg w-full md:w-auto"
@@ -645,6 +646,7 @@ export default function dashboard() {
               <button
                 onClick={() => {
                   setShowConfirmationModal(false);
+                  setLoading(true);
                   router.push("/personalized-styling/physical-appearances");
                 }}
                 className="bg-gray-100 text-gray-800 px-5 py-2.5 rounded-lg w-full md:w-auto"
@@ -654,6 +656,7 @@ export default function dashboard() {
               <button
                 onClick={() => {
                   setShowConfirmationModal(false);
+                  setLoading(true);
                   router.push("/personalized-styling/style-preferences");
                 }}
                 className="bg-gray-100 text-gray-800 px-5 py-2.5 rounded-lg w-full md:w-auto"
