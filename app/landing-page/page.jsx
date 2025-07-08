@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
+import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import { useAuth } from 'react-oidc-context';
 import { ChevronDown } from 'lucide-react';
