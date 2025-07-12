@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
     const logs = await prisma.styling_log.findMany({
       where: {
         user_id,
-        status: "succeed", // 👈 make sure this matches your DB
+        status: "succeed",
       },
       orderBy: {
         updated_at: "desc",
