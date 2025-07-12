@@ -1,0 +1,49 @@
+{
+  "compilerOptions": {
+    /* Core Setup */
+    "target": "ESNext",
+    "module": "CommonJS",
+    "strict": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    /* JavaScript + TypeScript Hybrid Support */
+    "allowJs": true, // Allow .js files
+    "noEmit": true,
+    "checkJs": false, // You can set this to true to get type-checking in JS too
+    "isolatedModules": true,
+    /* Module Resolution & Paths */
+    "moduleResolution": "Node",
+    "resolveJsonModule": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": [
+        "./*"
+      ]
+    },
+    /* JSX support (optional, if using .tsx or .jsx) */
+    "jsx": "preserve",
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ]
+  },
+  "include": [
+    "app/**/*.js", // TypeScript files (e.g., prisma.ts)
+    "components/**/*.js", // JS files used in routing logic (App Router)
+    "lib/**/*.ts", // If using Pages Router
+    "pages/**/*.js",
+    "utils/**/*.js",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

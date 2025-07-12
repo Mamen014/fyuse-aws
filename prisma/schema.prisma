@@ -1,0 +1,74 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model subs_plan {
+  user_id   String  @id
+  subs_date DateTime?
+  plan      String?
+  status    String?
+  profile   Profile @relation(fields: [user_id], references: [user_id])
+}
+
+model style_preference {
+  id                String   @id @default(cuid())
+  user_id           String
+  clothing_category String
+  fashion_type      String
+  timestamp         DateTime
+  profile           Profile  @relation(fields: [user_id], references: [user_id])
+}
+
+model styling_log {
+  task_id          String   @id
+  user_id          String
+  item_id          String
+  created_at       DateTime?
+  updated_at       DateTime?
+  styling_image_url String?
+  user_image_url   String?
+  status           String?
+  wardrobe         Boolean?
+  profile          Profile  @relation(fields: [user_id], references: [user_id])
+  product          product_data @relation(fields: [item_id], references: [item_id])
+}
+
+model product_data {
+  item_id           String   @id
+  brand             String
+  gender            String
+  clothing_category String
+  cloth_fitting     String
+  clothing_type     String
+  fashion_type      String
+  product_name      String
+  color             String
+  product_image_url String
+  product_link      String
+
+  styling_logs      styling_log[]
+}
+
+model Profile {
+  user_id        String   @id
+  gender         String?
+  body_shape     String?
+  skin_tone      String?
+  user_image_url String?
+  nickname       String?
+  birthdate      DateTime?
+  country        String?
+  city           String?
+  phone_number   String?
+  occupation     String?
+
+  subs_plan         subs_plan?
+  style_preferences style_preference[]
+  styling_logs      styling_log[]
+}
+
