@@ -226,9 +226,9 @@ export default function dashboard() {
     }
   }, [userEmail, tryOnCount, subscriptionPlan]);
 
-  // Filter recommendations by category
-  const tops = likedRecommendations.filter(item => item.category === "top");
-  const bottoms = likedRecommendations.filter(item => item.category === "bottom");
+  //filter category
+  const tops = likedRecommendations.filter(item => item.category?.toLowerCase() === "top");
+  const bottoms = likedRecommendations.filter(item => item.category?.toLowerCase() === "bottom");
 
   // Show loading spinner if data is still being fetched
   if (isLoading || !user || Loading) {
