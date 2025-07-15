@@ -27,9 +27,30 @@ export async function getSecrets(): Promise<SecretsShape> {
       return parsed;
     }
 
-    throw new Error("Secrets not found");
+    throw new Error("SecretString is empty");
   } catch (error) {
-    console.error("❌ Failed to load secrets:", error);
-    throw error;
+    console.warn("⚠️ Failed to load secrets from Secrets Manager. Falling back to process.env");
+    console.error("❌ Secrets error:", error);
+
+    const fallbackSecrets: SecretsShape = {
+      KOLORS_ACCESS_KEY_ID: process.env.KOLORS_ACCESS_KEY_ID || "",
+      KOLORS_ACCESS_KEY_SECRET: process.env.KOLORS_ACCESS_KEY_SECRET || "",
+      KOLORS_API_URL: process.env.KOLORS_API_URL || "",
+      TESTING_CALLBACK_URL: process.env.TESTING_CALLBACK_URL || "",
+      UPSTASH_REDIS_REST_URL: process.env.UPSTASH_REST_URL || "",
+      UPSTASH_REDIS_REST_TOKEN: process.env.UPSTASH_REDIS_REST_TOKEN || "",
+    };
+
+    // ✅ Validation
+    const missingKeys = Object.entries(fallbackSecrets)
+      .filter(([_, value]) => !value)
+      .map(([key]) => key);
+
+    if (missingKeys.length > 0) {
+      throw new Error(`Missing required env variables: ${missingKeys.join(", ")}`);
+    }
+
+    cachedSecrets = fallbackSecrets;
+    return fallbackSecrets;
   }
 }
