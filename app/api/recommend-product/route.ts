@@ -1,4 +1,4 @@
-// app/api/recommend-history/route.ts
+// app/api/recommend-product/route.ts
 
 import { NextRequest, NextResponse } from "next/server";
 import { jwtDecode } from "jwt-decode";
@@ -107,11 +107,10 @@ export async function POST(req: NextRequest) {
     });
     const excludedIds = new Set(
         previousLogs
-            .filter((log) => {
+            .filter((log: { updated_at: Date | null; wardrobe: boolean | null; item_id: string }) => {
             const isRecent = log.updated_at && log.updated_at > thirtyDaysAgo;
             const isStillInWardrobe = log.wardrobe === true;
-
-            return isRecent || isStillInWardrobe; // Only allow old + removed
+            return isRecent || isStillInWardrobe;
             })
             .map((log) => log.item_id)
         );
