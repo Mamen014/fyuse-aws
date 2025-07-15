@@ -106,14 +106,14 @@ export async function POST(req: NextRequest) {
      },
     });
     const excludedIds = new Set(
-        previousLogs
-            .filter((log: { updated_at: Date | null; wardrobe: boolean | null; item_id: string }) => {
-            const isRecent = log.updated_at && log.updated_at > thirtyDaysAgo;
-            const isStillInWardrobe = log.wardrobe === true;
-            return isRecent || isStillInWardrobe;
-            })
-            .map((log) => log.item_id)
-        );
+      previousLogs
+        .filter((log: { updated_at: Date | null; wardrobe: boolean | null; item_id: string }) => {
+        const isRecent = log.updated_at && log.updated_at > thirtyDaysAgo;
+        const isStillInWardrobe = log.wardrobe === true;
+        return isRecent || isStillInWardrobe;
+        })
+        .map((log: { item_id: string }) => log.item_id)
+      );
 
     const validRecommendations = recommendedIds.filter((id) => !excludedIds.has(id));
 
