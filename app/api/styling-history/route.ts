@@ -129,8 +129,8 @@ export async function GET(req: NextRequest) {
     });
 
     return NextResponse.json(result);
-  } catch (error) {
-    console.error("Error fetching styling history:", error);
+  } catch (err) {
+    console.error("Error fetching styling history:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

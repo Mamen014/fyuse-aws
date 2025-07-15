@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
   try {
     const decoded = jwtDecode<{ sub: string }>(token);
     user_id = decoded.sub;
-  } catch (err) {
+  } catch {
     return NextResponse.json({ error: "Invalid token" }, { status: 401 });
   }
 
@@ -38,8 +38,8 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json(stylePreference, { status: 201 });
-  } catch (error) {
-    console.error("Error saving style preference:", error);
+  } catch (err) {
+    console.error("Error saving style preference:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

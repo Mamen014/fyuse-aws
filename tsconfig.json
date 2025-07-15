@@ -36,10 +36,16 @@
     ]
   },
   "include": [
-    "app/**/*.js", // TypeScript files (e.g., prisma.ts)
-    "components/**/*.js", // JS files used in routing logic (App Router)
-    "lib/**/*.ts", // If using Pages Router
+    "app/**/*.ts",
+    "app/**/*.tsx",
+    "app/**/*.js",
+    "components/**/*.ts",
+    "components/**/*.tsx",
+    "components/**/*.js",
+    "lib/**/*.ts",
+    "pages/**/*.ts",
     "pages/**/*.js",
+    "utils/**/*.ts",
     "utils/**/*.js",
     ".next/types/**/*.ts"
   ],

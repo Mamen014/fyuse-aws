@@ -43,7 +43,8 @@ export async function PATCH(req: NextRequest) {
     }
 
     return NextResponse.json({ message: "Item removed from wardrobe." });
-  } catch {
+  } catch (err) {
+    console.error("Failed to remove item:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

@@ -66,7 +66,8 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json(profile, { status: 200 });
-  } catch {
+  } catch (err) {
+    console.error("Failed to register profile:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

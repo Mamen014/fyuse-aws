@@ -38,8 +38,8 @@ export async function GET(request: Request) {
     }
 
     return NextResponse.json(profile);
-  } catch (error) {
-    console.error("Error fetching profile:", error);
+  } catch (err) {
+    console.error("Error fetching profile:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

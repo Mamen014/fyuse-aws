@@ -79,8 +79,8 @@ export async function GET(req: NextRequest) {
     successful_stylings: successfulTasks.length,
 });
 
-  } catch (error) {
-    console.error("Error retrieving subscription:", error);
+  } catch (err) {
+    console.error("Error retrieving subscription:", err);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }

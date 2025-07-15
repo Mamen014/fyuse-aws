@@ -155,7 +155,8 @@ export async function POST(req: NextRequest) {
       imageS3Url: product.product_image_url,
       productLink: product.product_link,
     });
-  } catch {
+  } catch (err) {
+    console.error("Failed to retrieve recommendation item:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

@@ -1,3 +1,5 @@
+// components/Navbar.jsx
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -85,21 +87,36 @@ export default function Navbar() {
     <nav className="fixed top-0 left-0 w-full bg-white z-50 shadow-sm">
       {loading && <LoadingModalSpinner message="Redirecting..." subMessage="Please wait a moment" />}
 
-      <div className="h-16 px-4 flex items-center justify-between max-w-7xl mx-auto">
-        <button
-          type="button"
-          onClick={() => setIsMenuOpen(!isMenuOpen)}
-          className="w-16 h-16 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors"
-          aria-expanded={isMenuOpen}
-          aria-label="Toggle menu"
-        >
-          {isMenuOpen ? <X className="w-10 h-10 text-gray-700" /> : <Menu className="w-10 h-10 text-gray-700" />}
-        </button>
+      <div className="h-16 px-4 sm:px-6 flex items-center justify-between max-w-7xl mx-auto">
 
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+        {/* Left: Hamburger */}
+        <div className="flex justify-start">
+          <button
+            type="button"
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="w-16 h-16 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors"
+            aria-expanded={isMenuOpen}
+            aria-label="Toggle menu"
+          >
+            {isMenuOpen ? <X className="w-10 h-10 text-gray-700" /> : <Menu className="w-10 h-10 text-gray-700" />}
+          </button>
+        </div>
+
+        {/* Center: Logo */}
+        <div className="flex justify-center min-w-0 overflow-hidden">
           <Link href="/dashboard">
-            <Image src="/logo-tb.png" alt="FYUSE Logo" width={1920} height={800} priority className="h-20 w-auto" />
+            <Image
+            src="/logo-tb.png"
+            alt="FYUSE Logo"
+            width={1920}
+            height={800}
+            priority
+            className="h-12 w-auto max-w-[160px] sm:max-w-[200px]"
+          />
           </Link>
+        </div>
+        {/* Right: Empty div to balance flex layout */}
+        <div className="w-12">
         </div>
       </div>
 
@@ -144,11 +161,15 @@ export default function Navbar() {
             {menuItems.map(({ label, icon: Icon, path }) => (
               <button
                 key={label}
-                onClick={() => {
-                  setIsMenuOpen(false);
-                  setLoading(true);
-                  router.push(path);
-                }}
+                  onClick={() => {
+                    if (path === window.location.pathname) {
+                      setIsMenuOpen(false);
+                      return;
+                    }
+                    setIsMenuOpen(false);
+                    setLoading(true);
+                    router.push(path);
+                  }}
                 className="flex items-center gap-3 w-full text-left px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 <Icon className="w-5 h-5 text-gray-500" />
