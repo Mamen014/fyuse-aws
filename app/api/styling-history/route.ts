@@ -1,18 +1,16 @@
-// app/api/styling-history/route.ts
-
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { jwtDecode } from "jwt-decode";
 
 type ProductMeta = {
-  image?: string;
-  color?: string;
-  link?: string;
-  fashType?: string;
-  name?: string;
-  brand?: string;
-  category?: string;
-  clothType?: string;
+  image: string;
+  color: string;
+  link: string;
+  fashType: string;
+  name: string;
+  brand: string;
+  category: string;
+  clothType: string;
 };
 
 export async function GET(req: NextRequest) {
@@ -33,7 +31,7 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    // Get all styling logs for the user, ordered by latest update
+    // 1. Get styling logs
     const logs = await prisma.styling_log.findMany({
       where: {
         user_id,
@@ -53,9 +51,11 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    const itemIds = logs.map((log: { item_id: string }) => log.item_id);
+    const itemIds = logs.map((log: {
+      item_id: string;
+    }) => log.item_id);
 
-    // Fetch corresponding product info (image + category)
+    // 2. Fetch products
     const products = await prisma.product_data.findMany({
       where: {
         item_id: { in: itemIds },
@@ -73,7 +73,7 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    // Map item_id to product metadata
+    // 3. Map product data
     const productMap: Record<string, ProductMeta> = Object.fromEntries(
       products.map((p: {
         item_id: string;
@@ -100,24 +100,31 @@ export async function GET(req: NextRequest) {
       ])
     );
 
-    // Combine data
-    const result = logs.map(log => {
-      const product = productMap[log.item_id] ?? {};
+    // 4. Build response
+    const result = logs.map((log: {
+      item_id: string;
+      task_id: string;
+      styling_image_url: string | null;
+      user_image_url: string | null;
+      updated_at: Date | null;
+      status: string | null;
+    }) => {
+      const product = productMap[log.item_id];
       return {
         item_id: log.item_id,
         task_id: log.task_id,
-        styling_image_url: log.styling_image_url,
-        user_image_url: log.user_image_url,
-        product_image_url: product.image,
-        category: product.category,
-        fashType: product.fashType,
-        link: product.link,
-        brand: product.brand,
-        name: product.name,
-        color: product.color,
-        cloth_type: product.clothType,
-        status: log.status,
-        updated_at: log.updated_at,
+        styling_image_url: log.styling_image_url ?? null,
+        user_image_url: log.user_image_url ?? null,
+        product_image_url: product?.image ?? null,
+        category: product?.category ?? null,
+        fashType: product?.fashType ?? null,
+        link: product?.link ?? null,
+        brand: product?.brand ?? null,
+        name: product?.name ?? null,
+        color: product?.color ?? null,
+        cloth_type: product?.clothType ?? null,
+        status: log.status ?? null,
+        updated_at: log.updated_at ?? null,
       };
     });
 
