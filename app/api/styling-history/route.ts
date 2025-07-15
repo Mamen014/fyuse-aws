@@ -75,7 +75,29 @@ export async function GET(req: NextRequest) {
 
     // Map item_id to product metadata
     const productMap: Record<string, ProductMeta> = Object.fromEntries(
-      products.map(p => [p.item_id, { image: p.product_image_url, color: p.color, link: p.product_link, fashType: p.fashion_type, name: p.product_name, brand: p.brand, category: p.clothing_category, clothType: p.clothing_type }])
+      products.map((p: {
+        item_id: string;
+        product_image_url: string;
+        color: string;
+        product_link: string;
+        fashion_type: string;
+        product_name: string;
+        brand: string;
+        clothing_category: string;
+        clothing_type: string;
+      }) => [
+        p.item_id,
+        {
+          image: p.product_image_url,
+          color: p.color,
+          link: p.product_link,
+          fashType: p.fashion_type,
+          name: p.product_name,
+          brand: p.brand,
+          category: p.clothing_category,
+          clothType: p.clothing_type,
+        },
+      ])
     );
 
     // Combine data
@@ -86,14 +108,14 @@ export async function GET(req: NextRequest) {
         task_id: log.task_id,
         styling_image_url: log.styling_image_url,
         user_image_url: log.user_image_url,
-        product_image_url: product.image ?? null,
-        category: product.category ?? null,
-        fashType: product.fashType ?? null,
-        link: product.link ?? null,
-        brand: product.brand ?? null,
-        name: product.name ?? null,
-        color: product.color ?? null,
-        cloth_type: product.clothType ?? null,
+        product_image_url: product.image,
+        category: product.category,
+        fashType: product.fashType,
+        link: product.link,
+        brand: product.brand,
+        name: product.name,
+        color: product.color,
+        cloth_type: product.clothType,
         status: log.status,
         updated_at: log.updated_at,
       };
