@@ -61,27 +61,20 @@ export default function PhysicalAttributesStep1() {
   };
 
   const handleSubmit = () => {
-    localStorage.setItem('gender', gender);
-    localStorage.setItem('skin-tone', skinTone);
-    router.push(`step-2`);
+    router.push(`step-2?gender=${gender?.toLowerCase()}`);
   };
-
-  const data = {
-    gender,
-    skinTone,
-  }
 
     const physic1 = async () => {
     const payload = {
-      userEmail,
-      section: "physicalAppearance1",
-      data,
+      gender,
+      skin_tone: skinTone,
     };
     
     try {
-      fetch(`${API_BASE_URL}/userPref`, {
+      fetch("/api/register-profile", {
         method: "POST",
         headers: {
+          Authorization: `Bearer ${user.id_token}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify(payload),

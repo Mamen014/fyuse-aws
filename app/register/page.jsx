@@ -20,17 +20,17 @@ export default function RegisterAI() {
   const router = useRouter();
   const { user } = useAuth();
   const userEmail = user?.profile?.email;
-  const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
   const countrySelectId = useId();
   const citySelectId = useId();
 
   const [formData, setFormData] = useState({
     nickname: '',
     birthdate: '',
-    phoneNumber: '',
+    phone_number: '',
     country: '',
     city: '',
     occupation: '',
+    customOccupation: '',
   });
 
   const [countryOptions, setCountryOptions] = useState([]);
@@ -45,6 +45,31 @@ export default function RegisterAI() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCheckingRedirect, setIsCheckingRedirect] = useState(true);
 
+  const occupationOptions = [
+    { label: "Student", value: "Student" },
+    { label: "Content Creator", value: "Content Creator" },
+    { label: "Consultant", value: "Consultant" },
+    { label: "Software Engineer", value: "Software Engineer" },
+    { label: "Product Manager", value: "Product Manager" },
+    { label: "Fashion Stylist", value: "Fashion Stylist" },
+    { label: "Entrepreneur", value: "Entrepreneur" },
+    { label: "Engineer", value: "Engineer" },
+    { label: "Banker", value: "Banker" },
+    { label: "Sales Executive", value: "Sales Executive" },
+    { label: "Lawyer", value: "Lawyer" },
+    { label: "HR Professional", value: "HR Professional" },
+    { label: "Marketing Specialist", value: "Marketing Specialist" },
+    { label: "Accountant", value: "Accountant" },
+    { label: "Designer", value: "Designer" },
+    { label: "Civil Servant", value: "Civil Servant" },
+    { label: "Lecturer", value: "Lecturer" },
+    { label: "Doctor", value: "Doctor" },
+    { label: "Nurse", value: "Nurse" },
+    { label: "Teacher", value: "Teacher" },
+    { label: "Freelancer", value: "Freelancer" },
+    { label: "Other", value: "Other" },
+  ];
+
   useEffect(() => {
     setIsClient(true);
     setIsCheckingRedirect(false);
@@ -52,16 +77,99 @@ export default function RegisterAI() {
 
   useEffect(() => {
     if (!isClient) return;
-    
-    const allCountries = Country.getAllCountries();
-    const formattedCountries = allCountries.map(country => ({
-      value: country.isoCode,
-      label: country.name,
-      phonecode: country.phonecode,
-    })).sort((a, b) => a.label.localeCompare(b.label));
 
-    setCountryOptions(formattedCountries);
+    const loadCountries = () => {
+      const allCountries = Country.getAllCountries();
+      const formattedCountries = allCountries.map(country => ({
+        value: country.isoCode,
+        label: country.name,
+        phonecode: country.phonecode,
+      })).sort((a, b) => a.label.localeCompare(b.label));
+      setCountryOptions(formattedCountries);
+      return formattedCountries;
+    };
 
+    const resolveLocation = async (latitude, longitude, countryList) => {
+      try {
+        const apiKey = process.env.NEXT_PUBLIC_OPENCAGE_API_KEY;
+        const res = await fetch(`https://api.opencagedata.com/geocode/v1/json?q=${latitude}+${longitude}&key=${apiKey}`);
+        const data = await res.json();
+        const components = data.results?.[0]?.components || {};
+
+        const countryName = components.country;
+        const cityName = components.city || components.town || components.village || "";
+
+        const matchedCountry = countryList.find(c => c.label === countryName);
+        if (matchedCountry) {
+          setSelectedCountry(matchedCountry);
+          setFormData(prev => ({ ...prev, country: matchedCountry.label }));
+          setCountryCode("+" + matchedCountry.phonecode);
+
+          const cities = City.getCitiesOfCountry(matchedCountry.value) || [];
+          const formattedCities = cities.map(city => ({
+            value: city.name,
+            label: city.name,
+          }));
+          setCityOptions(formattedCities);
+
+          const matchedCity = formattedCities.find(c => c.label.toLowerCase() === cityName.toLowerCase());
+          if (matchedCity) {
+            setSelectedCity(matchedCity);
+            setFormData(prev => ({ ...prev, city: matchedCity.label }));
+          }
+        }
+      } catch (err) {
+        console.error("Failed reverse geocoding:", err);
+      }
+    };
+
+    const fallbackIpLocation = async (countryList) => {
+      try {
+        const res = await fetch("https://ipapi.co/json/");
+        const data = await res.json();
+        const matchedCountry = countryList.find(c => c.label === data.country_name);
+        if (matchedCountry) {
+          setSelectedCountry(matchedCountry);
+          setFormData(prev => ({ ...prev, country: matchedCountry.label }));
+          setCountryCode("+" + matchedCountry.phonecode);
+
+          const cities = City.getCitiesOfCountry(matchedCountry.value) || [];
+          const formattedCities = cities.map(city => ({
+            value: city.name,
+            label: city.name,
+          }));
+          setCityOptions(formattedCities);
+
+          const matchedCity = formattedCities.find(c => c.label.toLowerCase() === data.city.toLowerCase());
+          if (matchedCity) {
+            setSelectedCity(matchedCity);
+            setFormData(prev => ({ ...prev, city: matchedCity.label }));
+          }
+        }
+      } catch (err) {
+        console.error("IP location fallback failed:", err);
+      }
+    };
+
+    const setupLocation = async () => {
+      const countryList = loadCountries();
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          resolveLocation(latitude, longitude, countryList);
+        },
+        (error) => {
+          console.warn("Geolocation failed or denied, falling back to IP", error);
+          fallbackIpLocation(countryList);
+        },
+        { timeout: 8000 }
+      );
+    };
+
+    setupLocation();
+
+    // Restore privacy agreement if exists
     if (userEmail) {
       const storedAgreement = localStorage.getItem(`privacyAgreement:${userEmail}`);
       if (storedAgreement === "true") {
@@ -70,13 +178,19 @@ export default function RegisterAI() {
     }
   }, [isClient, userEmail]);
 
-  const isFormValid = formData.nickname &&
-                     formData.birthdate && 
-                     formData.phoneNumber && 
-                     selectedCountry && 
-                     selectedCity && 
-                     formData.occupation &&
-                     agreeToPrivacy;
+
+  const isFormValid = () => {
+    return (
+      formData.nickname.trim() !== "" &&
+      formData.birthdate !== "" &&
+      selectedCountry &&
+      selectedCity &&
+      formData.phone_number.trim() !== "" &&
+      formData.occupation !== "" &&
+      (formData.occupation !== "Other" || formData.customOccupation.trim() !== "") &&
+      agreeToPrivacy
+    );
+  };
 
   const handleCountryChange = (selectedOption) => {
     setSelectedCountry(selectedOption);
@@ -109,48 +223,72 @@ export default function RegisterAI() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (isLoading || isSubmitting) return;
+
     setIsCheckingRedirect(true);
     setIsLoading(true);
     setIsSubmitting(true);
-    
-    const fullPhoneNumber = `${countryCode}${formData.phoneNumber}`;
-    const updatedFormData = { ...formData, phoneNumber: fullPhoneNumber };
-    
+
+    // ✅ Require custom occupation if "Other" is selected
+    if (
+      formData.occupation === "Other" &&
+      !formData.customOccupation.trim()
+    ) {
+      alert("Please specify your occupation.");
+      setIsLoading(false);
+      setIsSubmitting(false);
+      return;
+    }
+
+    // ✅ Determine final occupation
+    const finalOccupation =
+      formData.occupation === "Other"
+        ? formData.customOccupation
+        : formData.occupation;
+
+    // ✅ Format full phone number
+    const fullPhoneNumber = `${countryCode}${formData.phone_number}`;
+
+    // ✅ Merge data including normalized occupation
+    const updatedFormData = {
+      ...formData,
+      phone_number: fullPhoneNumber,
+      occupation: finalOccupation, // ← overwrite with correct value
+    };
+
+    // ✅ Convert all string fields to lowercase (except some)
+    const lowercasedPayload = Object.fromEntries(
+      Object.entries(updatedFormData).map(([key, value]) => {
+        const skip = ["nickname", "user_image_url", "phone_number"];
+        if (typeof value === "string" && !skip.includes(key)) {
+          return [key, value.toLowerCase()];
+        }
+        return [key, value];
+      })
+    );
+
     try {
-      // Save data to localStorage immediately
-      localStorage.setItem('profile', JSON.stringify(updatedFormData));
-      
-      // Start API call in the background but don't wait for it
-      const savePromise = fetch(`${API_BASE_URL}/userPref`, {
-        method: 'POST',
+      // ✅ Send API request
+      fetch("/api/register-profile", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          Authorization: `Bearer ${user.id_token}`,
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          userEmail,
-          section: 'userProfile',
-          data: updatedFormData,
-        }),
+        body: JSON.stringify(lowercasedPayload),
       });
-      
-      // Handle API response in the background
-      savePromise
-        .then(res => res.json())
-        .catch(err => console.error('Failed to save registration data:', err));
-      
-      // Just trigger the navigation - Next.js will handle the loading state
-      const registerFrom = localStorage.getItem('registerFrom');
-      if (registerFrom === 'dashboard') {
-        router.push('/dashboard');
-        localStorage.removeItem("showRegister");
-        localStorage.removeItem('registerFrom');
-      } else if (registerFrom === 'physical-appearances') {
-        router.push('personalized-styling/physical-appearances');
-        localStorage.removeItem("showRegister");
-        localStorage.removeItem('registerFrom');
+
+      // ✅ Redirect based on register source
+      const registerFrom = localStorage.getItem("registerFrom");
+      if (registerFrom === "dashboard") {
+        router.push("/dashboard");
+      } else if (registerFrom === "physical-appearances") {
+        router.push("personalized-styling/physical-appearances");
       }
+
+      localStorage.removeItem("showRegister");
+      localStorage.removeItem("registerFrom");
     } catch (err) {
-      console.error('Failed to save registration data:', err);
+      console.error("Failed to save registration data:", err);
       setIsSubmitting(false);
       setIsLoading(false);
     }
@@ -251,8 +389,8 @@ export default function RegisterAI() {
               />
               <input
                 type="tel"
-                name="phoneNumber"
-                value={formData.phoneNumber}
+                name="phone_number"
+                value={formData.phone_number}
                 onChange={handleChange}
                 className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
                 required
@@ -260,19 +398,48 @@ export default function RegisterAI() {
             </div>
           </div>
 
-          <div>
+          <div className="relative z-0">
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Occupation
             </label>
-            <input
-              type="text"
-              name="occupation"
-              value={formData.occupation}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+            <DynamicSelect
+              instanceId="occupation-select"
+              options={occupationOptions}
+              value={occupationOptions.find(opt => opt.value === formData.occupation)}
+              onChange={(selected) => {
+                setFormData(prev => ({
+                  ...prev,
+                  occupation: selected?.value || ""
+                }));
+              }}
+              placeholder="Select an occupation"
+              className="react-select-container"
+              classNamePrefix="react-select"
+              menuPortalTarget={typeof window !== "undefined" ? document.body : null}
+              menuPosition="fixed"
               required
             />
+
+            {/* Note for "Other" selection */}
+            <p className="text-xs text-gray-500 mt-1">
+              Don’t see your occupation? Select <strong>"Other"</strong> to type your own.
+            </p>
+
+            {formData.occupation === "Other" && (
+              <div className="mt-2">
+                <input
+                  type="text"
+                  name="customOccupation"
+                  value={formData.customOccupation}
+                  onChange={handleChange}
+                  placeholder="Please specify"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  required
+                />
+              </div>
+            )}
           </div>
+
 
           <div className="flex items-center space-x-2">
             <input
@@ -307,15 +474,14 @@ export default function RegisterAI() {
 
           <button
             type="submit"
-            disabled={isLoading || !isFormValid || isSubmitting}
-            className={`w-full py-3 px-4 rounded-lg transition-colors ${
-              isFormValid
-                ? 'bg-[#0B1F63] text-white hover:bg-[#0a1b56]'
-                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            disabled={isLoading || isSubmitting || !isFormValid()}
+            className={`bg-primary text-white px-5 py-2.5 rounded-lg w-full transition-opacity ${
+              !isFormValid() || isLoading || isSubmitting ? "opacity-50 cursor-not-allowed" : ""
             }`}
           >
             Save & Continue
           </button>
+
         </form>
       </div>
             {isPrivacyModalOpen && (

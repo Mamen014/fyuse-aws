@@ -2,56 +2,51 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from 'react-oidc-context';
-import Image from 'next/image';
 import { Shirt } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import LoadingModalSpinner from '@/components/ui/LoadingState';
 
 export default function TryOnHistoryPage() {
   const { user } = useAuth();
-  const userEmail = user?.profile?.email;
   const [tryonHistory, setTryonHistory] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const fetchHistory = async () => {
-      if (!userEmail) return;
-      
-      try {
-        const endpoint = `${API_BASE_URL}/historyHandler`;
-        const res = await fetch(
-          `${endpoint}?email=${encodeURIComponent(userEmail)}`,
-          {
+    if (!loading && user) {
+      const fetchHistory = async () => {
+        try {
+          const token = user.id_token || user.access_token;
+          if (!token) throw new Error("Missing token");
+
+          const res = await fetch("/api/styling-history", {
             method: "GET",
             headers: {
-              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
             },
-          }
-        );
-        
-        if (!res.ok) throw new Error(`Failed to fetch history: ${res.status}`);
-        const data = await res.json();
-        
-        if (Array.isArray(data.tryonItems)) {
-          const sortedTryonItems = data.tryonItems
-            .filter(item => item.timestamp)
-            .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-          setTryonHistory(sortedTryonItems);
-        } else {
+          });
+
+          if (!res.ok) throw new Error(`Failed to fetch history: ${res.status}`);
+          const data = await res.json();
+
+          // Sort by timestamp descending and take latest 3
+          setTryonHistory(data);
+
+          // OPTIONAL: Keep this if you still plan to support likedRecommendations from response
+          // if (Array.isArray(data.likedRecommendations)) {
+          //   setLikedRecommendations(data.likedRecommendations);
+          // } else {
+          //   setLikedRecommendations([]);
+          // }
+
+        } catch (err) {
+          console.error("Error fetching history:", err);
           setTryonHistory([]);
         }
-      } catch (err) {
-        console.error("Error fetching history:", err);
-        setTryonHistory([]);
-      } finally {
-        setLoading(false);
-      }
-    };
+      };
 
-    fetchHistory();
-  }, [userEmail]);
+      fetchHistory();
+    }
+  }, [loading, user]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -76,11 +71,10 @@ export default function TryOnHistoryPage() {
             {tryonHistory.slice(0, 15).map((item, index) => (
               <div key={index} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                 <div className="aspect-[3/4] relative">
-                  {item.generatedImageUrl ? (
-                    <Image
-                      src={item.generatedImageUrl}
+                  {item.styling_image_url ? (
+                    <img
+                      src={item.styling_image_url}
                       alt={`Try-on #${index + 1}`}
-                      fill
                       className="object-cover"
                     />
                   ) : (
@@ -94,9 +88,9 @@ export default function TryOnHistoryPage() {
                   <div className="flex justify-between items-start mb-2">
                   </div>
                   
-                  {item.timestamp && (
+                  {item.updated_at && (
                     <p className="text-sm text-gray-500">
-                      {new Date(item.timestamp).toLocaleDateString()}
+                      {new Date(item.updated_at).toLocaleDateString()}
                     </p>
                   )}
                   

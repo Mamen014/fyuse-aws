@@ -205,52 +205,29 @@ export default function AIPhotoUpload() {
       // Format the AI analysis results
       const aiAnalysisResults = {
         gender: analyzerData.gender,
-        skinTone: analyzerData.skinTone,
-        bodyShape: analyzerData.bodyShape
+        skin_tone: analyzerData.skinTone,
+        body_shape: analyzerData.bodyShape,
+        user_image_url: uploadData.imageUrl
+        
       };
       
       // Save to state for the modal
       setAiAnalysis(aiAnalysisResults);
-      
-      // Save to localStorage in the format expected by the onboarding flow      
-      localStorage.setItem('gender', analyzerData.gender);
-      localStorage.setItem('skin-tone', analyzerData.skinTone);
-      localStorage.setItem('body-shape', analyzerData.bodyShape);
+      setIsAnalyzing(false);
 
       // Save to backend API
       try {
-        // First call - physicalAppearance1 (gender and skin tone)
-        await fetch(`${API_BASE_URL}/userPref`, {
+        await fetch("/api/register-profile", {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            userEmail,
-            section: 'physicalAppearance1',
-            data: {
-              gender: analyzerData.gender,
-              skinTone: analyzerData.skinTone
-            }
-          })
+          headers: {
+            Authorization: `Bearer ${user.id_token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(aiAnalysisResults),
         });
-
-        // Second call - physicalAppearance2 (body shape)
-        await fetch(`${API_BASE_URL}/userPref`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            userEmail,
-            section: 'physicalAppearance2',
-            data: {
-              bodyShape: analyzerData.bodyShape
-            }
-          })
-        });
-        
       } catch (error) {
         console.error('Error saving to backend:', error);
-      }
-      
-      setIsAnalyzing(false);
+      };
 
     } catch (err) {
       console.error('Upload error:', err);
@@ -268,7 +245,7 @@ export default function AIPhotoUpload() {
     if (isSubmitting) return;
     track('accept_analysis');
     setIsSubmitting(true);
-    setisLoading(true);
+    setisLoading(true);   
     
     try {
       // Navigate to the next page
@@ -533,34 +510,34 @@ export default function AIPhotoUpload() {
                   <div className="flex flex-col items-center mt-2">
                     <p className="text-2xl font-medium text-gray-600 whitespace-nowrap">Skin Tone</p>
                     <div className="flex flex-col items-center">
-                      {aiAnalysis?.skinTone && (
+                      {aiAnalysis?.skin_tone && (
                         <Image
-                          src={skinToneImageMap[aiAnalysis.skinTone?.toLowerCase()]}
-                          alt={aiAnalysis.skinTone || 'Skin Tone'}
+                          src={skinToneImageMap[aiAnalysis.skin_tone?.toLowerCase()]}
+                          alt={aiAnalysis.skin_tone || 'Skin Tone'}
                           width={60}
                           height={60}
                           className="rounded-md object-contain mt-2"
                         />
                       )}
-                      <span className="text-lg text-primary mt-2">{capitalizeWords(aiAnalysis?.skinTone || 'Not detected')}</span>
+                      <span className="text-lg text-primary mt-2">{capitalizeWords(aiAnalysis?.skin_tone || 'Not detected')}</span>
                     </div>
                   </div>
                 </div>
                 {/* Right: Body Shape */}
                 <div className="flex flex-col items-center">
                   <p className="text-2xl font-medium text-gray-600">Body Shape</p>
-                  {aiAnalysis?.gender && aiAnalysis?.bodyShape && (
+                  {aiAnalysis?.gender && aiAnalysis?.body_shape && (
                     <Image
                       src={
-                        bodyShapeImageMap[aiAnalysis.gender.toLowerCase()]?.[aiAnalysis.bodyShape.toLowerCase()]
+                        bodyShapeImageMap[aiAnalysis.gender.toLowerCase()]?.[aiAnalysis.body_shape.toLowerCase()]
                       }
-                      alt={aiAnalysis.bodyShape || 'Body Shape'}
+                      alt={aiAnalysis.body_shape || 'Body Shape'}
                       width={512}
                       height={512}
                       className="w-64 h-64 rounded-lg object-contain mt-2 scale-125 transition-transform"
                     />
                   )}
-                  <span className="text-lg text-primary mt-2">{capitalizeWords(aiAnalysis?.bodyShape || 'Not detected')}</span>
+                  <span className="text-lg text-primary mt-2">{capitalizeWords(aiAnalysis?.body_shape || 'Not detected')}</span>
                 </div>
               </div>            
                 <div className="space-y-3">

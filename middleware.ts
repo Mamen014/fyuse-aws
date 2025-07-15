@@ -2,6 +2,7 @@ import { NextResponse, NextRequest } from "next/server";
 import { Redis } from "@upstash/redis";
 import { Ratelimit } from "@upstash/ratelimit";
 import { jwtDecode } from "jwt-decode";
+import { getSecrets } from "@/lib/secrets";
 
 // Create Redis instance from env vars
 const redis = new Redis({

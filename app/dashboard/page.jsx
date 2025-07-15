@@ -2,13 +2,12 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAuth } from "react-oidc-context";
 import Navbar from "@/components/Navbar";
 import LoadingModalSpinner from "@/components/ui/LoadingState";
 import ReferralModal from "@/components/ReferralModal";
-import { Venus, Mars, User, ChevronRight, Shirt, MapPin, Sparkles, BriefcaseBusiness, CreditCard } from "lucide-react";
+import { User, ChevronRight, Shirt, MapPin, Sparkles, BriefcaseBusiness, CreditCard } from "lucide-react";
 import axios from "axios";
 
 export default function dashboard() {
@@ -20,19 +19,15 @@ export default function dashboard() {
   const [tryOnCount, setTryOnCount] = useState(0);
   const [subscriptionPlan, setSubscriptionPlan] = useState(null);  
   const [nickname, setNickname] = useState("");
-  const [likedRecommendations, setLikedRecommendations] = useState([]);
+  const [clothCategory, setClothCategory] = useState([]);
+  const [fashType, setFashType] = useState([]);
   const [tryonItems, setTryonItems] = useState([]);
+  const [profileRaw, setProfileRaw] = useState(null);
   const [profileItems, setProfileItems] = useState([]);
   const [Loading, setLoading] = useState(false);  
   const [showRegisterPrompt, setShowRegisterPrompt] = useState(false);
   const [showReferralModal, setShowReferralModal] = useState(false);
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
-  
-  // Gender icon mapping
-  const genderIconMap = {
-    male: <Mars className="w-20 h-20 text-primary" />,
-    female: <Venus className="w-20 h-20 text-primary" />,
-  };
 
   // Body shape image mapping
   const bodyShapeImageMap = {
@@ -59,20 +54,6 @@ export default function dashboard() {
     'medium': '/images/skin-tone/medium.png',
     'deep': '/images/skin-tone/deep.png',
   };
-
-  // Load nickname from localStorage
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const data = JSON.parse(localStorage.getItem("profile") || "{}");
-        if (data.nickname) {
-          setNickname(data.nickname);
-        }
-      } catch (err) {
-        console.warn("Failed to parse profile from localStorage:", err);
-      }
-    }
-  }, []);
 
   // Utility for display
   function capitalizeWords(str) {
@@ -126,18 +107,49 @@ export default function dashboard() {
   useEffect(() => {
     const fetchUserPlan = async () => {
       try {
-        const res = await axios.get(`${API_BASE_URL}/userPlan?userEmail=${userEmail}`);
-        const planupdate = res.data.plan;
-        const updatedCount = res.data.tryOnCount || 0;
-        setTryOnCount(updatedCount);
-        setSubscriptionPlan(planupdate);
+        const token = user?.id_token || user?.access_token;
+        if (!token) return;
+
+        const res = await axios.get("/api/subscription-status", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const { plan, successful_stylings } = res.data;
+        setTryOnCount(successful_stylings);
+        setSubscriptionPlan(plan);
       } catch (err) {
         console.error("Failed to fetch subscription plan:", err);
       }
     };
 
-    if (userEmail) {
+    if (user) {
       fetchUserPlan();
+    }
+  }, [user]);
+
+  // Fetch user style preference
+  useEffect(() => {
+    const fetchStylePref = async () => {
+      try {
+        const token = user?.id_token || user?.access_token;
+        if (!token) return;
+
+        const res = await axios.get("/api/style-preference", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const { clothing_category, fashion_type } = res.data;
+        setClothCategory(clothing_category);
+        setFashType(fashion_type);
+      } catch (err) {
+        console.error("Failed to fetch style preferences:", err);
+      }
+    };
+
+    if (userEmail) {
+      fetchStylePref();
     }
   }, [userEmail]);
 
@@ -146,33 +158,29 @@ export default function dashboard() {
     if (!isLoading && user) {
       const fetchHistory = async () => {
         try {
-          const endpoint = `${API_BASE_URL}/fetchTryonData`;
-          const res = await fetch(
-            `${endpoint}?email=${encodeURIComponent(userEmail)}`,
-            {
-              method: "GET",
-              headers: {
-                "Content-Type": "application/json",
-              },
-            }
-          );
+          const token = user.id_token || user.access_token;
+          if (!token) throw new Error("Missing token");
+
+          const res = await fetch("/api/styling-history", {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+
           if (!res.ok) throw new Error(`Failed to fetch history: ${res.status}`);
           const data = await res.json();
 
-          if (Array.isArray(data.tryonItems)) {
-            const sortedTryonItems = data.tryonItems
-              .filter(item => item.timestamp)
-              .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-            setTryonItems(sortedTryonItems.slice(0, 3));
-          } else {
-            setTryonItems([]);
-          }
+          // Sort by timestamp descending and take latest 3
+          const sortedTryonItems = data
+          setTryonItems(sortedTryonItems.slice(0, 3));
 
-          if (Array.isArray(data.likedRecommendations)) {
-            setLikedRecommendations(data.likedRecommendations);
-          } else {
-            setLikedRecommendations([]);
-          }
+          // OPTIONAL: Keep this if you still plan to support likedRecommendations from response
+          // if (Array.isArray(data.likedRecommendations)) {
+          //   setLikedRecommendations(data.likedRecommendations);
+          // } else {
+          //   setLikedRecommendations([]);
+          // }
 
         } catch (err) {
           console.error("Error fetching history:", err);
@@ -183,28 +191,32 @@ export default function dashboard() {
 
       fetchHistory();
     }
-  }, [isLoading, user, API_BASE_URL, router]);
+  }, [isLoading, user]);
 
   // Load profile display data
   useEffect(() => {
-    if (typeof window !== 'undefined' && userEmail) {
+    const fetchUserProfile = async () => {
       try {
-        const data = JSON.parse(localStorage.getItem("profile") || "{}");
-        const birthdate = data.birthdate || "Not Set";
-        const location = data.city || "Not Set";
-        const occupation = data.occupation || "Not Set";
-        const gender = localStorage.getItem('gender') || "Not Set";
-        const bodyShape = localStorage.getItem('body-shape') || "Not Set";
-        const skinTone = localStorage.getItem('skin-tone') || "Not Set";
+        const token = user?.id_token || user?.access_token;
+        if (!token) return;
 
+        const res = await axios.get("/api/user-profile", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const { skin_tone, body_shape, occupation, city, gender, nickname, user_image_url } = res.data;
+        setProfileRaw({ skin_tone, body_shape, occupation, city, gender, nickname, user_image_url });
+        setNickname(nickname || "");
         const items = [
           {
             label: "Profile",
             items: [
-              { icon: MapPin, label: "Location", value: location },
-              { icon: Sparkles, label: "Skin Tone", value: skinTone },
+              { icon: MapPin, label: "Location", value: city },
+              { icon: Sparkles, label: "Skin Tone", value: skin_tone },
               { icon: User, label: "Gender", value: gender },
-              { icon: Sparkles, label: "Body Shape", value: bodyShape },
+              { icon: Sparkles, label: "Body Shape", value: body_shape },
               { icon: BriefcaseBusiness, label: "Occupation", value: occupation },
             ],
           },
@@ -224,11 +236,15 @@ export default function dashboard() {
         setProfileItems([]);
       }
     }
+    
+    if (user) {
+      fetchUserProfile();
+    }    
   }, [userEmail, tryOnCount, subscriptionPlan]);
 
   // Filter recommendations by category
-  const tops = likedRecommendations.filter(item => item.category === "top");
-  const bottoms = likedRecommendations.filter(item => item.category === "bottom");
+  const tops = tryonItems.filter(item => item.category === "top");
+  const bottoms = tryonItems.filter(item => item.category === "bottom");
 
   // Show loading spinner if data is still being fetched
   if (isLoading || !user || Loading) {
@@ -296,7 +312,7 @@ export default function dashboard() {
                     {/* Skin Tone */}
                     <div className="flex-1 flex flex-col items-center bg-gray-50 rounded-xl p-3">
                       {skinToneImageMap[(itemMap["Skin Tone"]?.value || "").toLowerCase()] ? (
-                        <Image
+                        <img
                           src={skinToneImageMap[(itemMap["Skin Tone"]?.value || "").toLowerCase()]}
                           alt="Skin Tone"
                           width={64}
@@ -313,7 +329,7 @@ export default function dashboard() {
                     <div className="flex-1 flex flex-col items-center bg-gray-50 rounded-xl p-3">
                       {itemMap["Gender"]?.value && itemMap["Body Shape"]?.value &&
                       bodyShapeImageMap[itemMap["Gender"].value.toLowerCase()]?.[itemMap["Body Shape"].value.toLowerCase()] ? (
-                        <Image
+                        <img
                           src={bodyShapeImageMap[itemMap["Gender"].value.toLowerCase()][itemMap["Body Shape"].value.toLowerCase()]}
                           alt="Body Shape"
                           width={80}
@@ -414,13 +430,12 @@ export default function dashboard() {
                     href="/history"
                     className="min-w-36 h-48 rounded-3xl overflow-hidden flex-shrink-0 bg-white shadow-md border border-gray-100 relative group"
                   >
-                    {item?.generatedImageUrl ? (
-                      <Image
-                        src={item.generatedImageUrl}
+                    {item?.styling_image_url ? (
+                      <img
+                        src={item.styling_image_url}
                         alt={`Try-on #${tryonItems.length - index}`}
-                        fill
                         sizes="144px"
-                        priority
+                        priority="true"
                         className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
                       />
                     ) : (
@@ -476,15 +491,14 @@ export default function dashboard() {
                 {tops.length > 0
                   ? tops.slice(0, 3).map((recommendation) => (
                       <Link
-                        key={recommendation.productId}
+                        key={recommendation.item_id}
                         href="/wardrobe"
                         className="flex-1 max-w-[120px] aspect-[3/4] rounded-2xl overflow-hidden bg-white shadow-sm border border-gray-100 relative group"
                       >
-                        {recommendation.imageUrl ? (
-                          <Image
-                            src={recommendation.imageUrl || "placeholder.svg"}
+                        {recommendation.product_image_url ? (
+                          <img
+                            src={recommendation.product_image_url || "placeholder.svg"}
                             alt="Top Item"
-                            fill
                             className="object-cover group-hover:scale-105 transition-transform duration-300"
                           />
                         ) : (
@@ -514,15 +528,14 @@ export default function dashboard() {
                 {bottoms.length > 0
                   ? bottoms.slice(0, 3).map((recommendation) => (
                       <Link
-                        key={recommendation.productId}
+                        key={recommendation.item_id}
                         href="/wardrobe"
                         className="flex-1 max-w-[120px] aspect-[3/4] rounded-2xl overflow-hidden bg-white shadow-sm border border-gray-100 relative group"
                       >
-                        {recommendation.imageUrl ? (
-                          <Image
-                            src={recommendation.imageUrl || "/placeholder.svg"}
+                        {recommendation.product_image_url ? (
+                          <img
+                            src={recommendation.product_image_url || "/placeholder.svg"}
                             alt="Bottom Item"
-                            fill
                             className="object-cover group-hover:scale-105 transition-transform duration-300"
                           />
                         ) : (
@@ -561,9 +574,9 @@ export default function dashboard() {
 
                 {/* Skin Tone */}
                 <div className="flex flex-col items-center bg-white p-4 rounded-xl shadow w-full">
-                  {skinToneImageMap[(localStorage.getItem("skin-tone") || "").toLowerCase()] ? (
-                    <Image
-                      src={skinToneImageMap[(localStorage.getItem("skin-tone") || "").toLowerCase()]}
+                  {profileRaw?.skin_tone && skinToneImageMap[profileRaw.skin_tone.toLowerCase()] ? (
+                    <img
+                      src={skinToneImageMap[profileRaw.skin_tone.toLowerCase()]}
                       alt="Skin Tone"
                       width={64}
                       height={64}
@@ -572,19 +585,19 @@ export default function dashboard() {
                   ) : (
                     <span className="text-gray-400">-</span>
                   )}
+
                   <p className="text-sm font-medium text-gray-700 mt-2">
-                    {capitalizeWords(localStorage.getItem("skin-tone") || "Not Set")}
+                    {capitalizeWords(profileRaw?.skin_tone || "Not Set")}
                   </p>
                 </div>
 
                 {/* Body Shape */}
                 <div className="flex flex-col items-center bg-white p-4 rounded-xl shadow w-full">
-                  {localStorage.getItem("gender") &&
-                  localStorage.getItem("body-shape") &&
-                  bodyShapeImageMap[localStorage.getItem("gender").toLowerCase()]?.[localStorage.getItem("body-shape").toLowerCase()] ? (
-                    <Image
+                  {profileRaw?.gender && profileRaw?.body_shape &&
+                  bodyShapeImageMap[profileRaw.gender.toLowerCase()]?.[profileRaw.body_shape.toLowerCase()] ? (
+                    <img
                       src={
-                        bodyShapeImageMap[localStorage.getItem("gender").toLowerCase()][localStorage.getItem("body-shape").toLowerCase()]
+                        bodyShapeImageMap[profileRaw.gender.toLowerCase()][profileRaw.body_shape.toLowerCase()]
                       }
                       alt="Body Shape"
                       width={64}
@@ -594,8 +607,9 @@ export default function dashboard() {
                   ) : (
                     <span className="text-gray-400">-</span>
                   )}
+
                   <p className="text-sm font-medium text-gray-700 mt-2">
-                    {capitalizeWords(localStorage.getItem("body-shape") || "Not Set")}
+                    {capitalizeWords(profileRaw?.body_shape || "Not Set")}
                   </p>
                 </div>
               </div>
@@ -604,11 +618,11 @@ export default function dashboard() {
             {/* Liked Item Summary */}
             <div className="border rounded-xl p-5 bg-muted">
               <h3 className="font-bold text-xl text-primary mb-4">Latest Preference</h3>
-              {likedRecommendations.length > 0 ? (
+              {tryonItems.length > 0 ? (
                 <div className="flex items-center gap-5">
                   <div className="rounded-xl overflow-hidden shadow-sm bg-white border border-gray-200 aspect-[3/4] w-[100px] h-[130px]">
-                    <Image
-                      src={likedRecommendations[likedRecommendations.length - 1].imageUrl || "/placeholder.svg"}
+                    <img
+                      src={tryonItems[0].product_image_url || "/placeholder.svg"}
                       alt="Liked item"
                       width={100}
                       height={130}
@@ -618,11 +632,11 @@ export default function dashboard() {
                   <div className="flex flex-col text-sm text-primary">
                     <p>
                       <span className="font-semibold">Fashion Type:</span>{" "}
-                      {capitalizeWords(localStorage.getItem("fashion-type") || "Not Set")}
+                      {capitalizeWords(fashType || "Not Set")}
                     </p>
                     <p>
                       <span className="font-semibold">Category:</span>{" "}
-                      {capitalizeWords(localStorage.getItem("clothing-category") || "Not Set")}
+                      {capitalizeWords(clothCategory || "Not Set")}
                     </p>
                   </div>
                 </div>
@@ -669,7 +683,7 @@ export default function dashboard() {
           {/* Right Column: User Image */}
           <div className="w-full md:w-[40%] flex justify-center md:justify-end">
             <img
-              src={localStorage.getItem("user_image") || "/placeholder.svg"}
+              src={profileRaw?.user_image_url || "/placeholder.svg"}
               alt="User Upload"
               className="w-40 h-120 md:w-full md:max-w-xs object-cover rounded-xl border"
             />

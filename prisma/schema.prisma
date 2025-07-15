@@ -16,7 +16,7 @@ model subs_plan {
 }
 
 model style_preference {
-  id                String   @id @default(cuid())
+  id                Int      @id @default(autoincrement())
   user_id           String
   clothing_category String
   fashion_type      String
@@ -25,17 +25,19 @@ model style_preference {
 }
 
 model styling_log {
-  task_id          String   @id
-  user_id          String
-  item_id          String
-  created_at       DateTime?
-  updated_at       DateTime?
+  task_id           String   @id
+  user_id           String
+  item_id           String
+  kling_task_id     String?  @unique
+  created_at        DateTime?
+  updated_at        DateTime?
   styling_image_url String?
-  user_image_url   String?
-  status           String?
-  wardrobe         Boolean?
-  profile          Profile  @relation(fields: [user_id], references: [user_id])
-  product          product_data @relation(fields: [item_id], references: [item_id])
+  user_image_url    String?
+  status            String?
+  wardrobe          Boolean?
+
+  profile           Profile       @relation(fields: [user_id], references: [user_id])
+  product           product_data  @relation(fields: [item_id], references: [item_id])
 }
 
 model product_data {

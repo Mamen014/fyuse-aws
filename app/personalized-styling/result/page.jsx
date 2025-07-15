@@ -1,19 +1,23 @@
+// app/personalized-styling/result/page.jsx
+
 'use client';
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from 'react-oidc-context';
 import axios from 'axios';
+import { useRef } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
 import PricingPlans from '@/components/PricingPlanCard';
 import LoadingModalSpinner from '@/components/ui/LoadingState';
 
 export default function AutoTryOnRecommendationPage() {
   const router = useRouter();
-  const auth = useAuth();
-  const userEmail = auth?.user?.profile?.email;
+  const { user, isLoading } = useAuth();
+  const userEmail = user?.profile?.email;
   const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
-
+  const controllerRef = useRef(null);
+  const cleanupRef = useRef(null);
   const [product, setProduct] = useState(null);
   const [resultImageUrl, setResultImageUrl] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -22,13 +26,12 @@ export default function AutoTryOnRecommendationPage() {
   const [showPricingPlans, setShowPricingPlans] = useState(false);
   const [tryOnCount, setTryOnCount] = useState(0);
   const [subscriptionPlan, setSubscriptionPlan] = useState(null);
-  const [subsDate, setSubsDate] = useState(null);
   const [isPolling, setIsPolling] = useState(false);
 
   const PLAN_LIMITS = {
-    Basic: { tryOn: 10 },
-    Elegant: { tryOn: 20 },
-    Glamour: { tryOn: 40 },
+    basic: { tryOn: 10 },
+    elegant: { tryOn: 20 },
+    glamour: { tryOn: 40 },
   };
 
   const resetState = () => {
@@ -41,34 +44,34 @@ export default function AutoTryOnRecommendationPage() {
     sessionStorage.removeItem('recommendedProduct');
   };
 
-  const getActivePlan = () => {
-    if (!subscriptionPlan || !subsDate) return 'Basic';
-    const parsedDate = new Date(subsDate);
-    if (isNaN(parsedDate)) return 'Basic';
-    const diff = (Date.now() - parsedDate.getTime()) / (1000 * 60 * 60 * 24);
-    return diff > 30 ? 'Basic' : subscriptionPlan;
-  };
-
   const fetchUserPlan = async () => {
-    const res = await axios.get(`${API_BASE_URL}/userPlan?userEmail=${userEmail}`);
-    const { plan, subsDate, tryOnCount } = res.data;
+    try {
+      const token = user?.id_token || user?.access_token;
+      if (!token) return;
 
-    if (!plan || !subsDate) throw new Error("Invalid plan response");
-
-    setSubscriptionPlan(plan);
-    setSubsDate(subsDate);
-    setTryOnCount(tryOnCount || 0);
-
-    return {
-      plan,
-      subsDate,
-      tryOnCount: tryOnCount || 0,
-    };
+      const res = await axios.get("/api/subscription-status", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const { plan, successful_stylings } = res.data;
+      setTryOnCount(successful_stylings);
+      setSubscriptionPlan(plan);
+      return { plan, tryOnCount: successful_stylings };
+    } catch (err) {
+      console.error("Failed to fetch subscription plan:", err);
+      return { plan: "Basic", tryOnCount: 0 };
+    }
   };
 
   const fetchRecommendation = async () => {
-    const res = await axios.post(`${API_BASE_URL}/StyleRec`, { userEmail });
-    const data = res.data;
+    const res = await fetch('/api/recommend-product', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${user?.id_token}`,
+      },
+    });
+    const data = await res.json();
     if (data?.productId) {
       setProduct(data);
       sessionStorage.setItem('recommendedProduct', JSON.stringify(data));
@@ -78,30 +81,40 @@ export default function AutoTryOnRecommendationPage() {
     }
   };
 
-  const initiateTryOn = async (apparelImage) => {
-    const userImage = localStorage.getItem('user_image');
-    if (!userImage || !apparelImage) throw new Error('Missing images.');
+  const initiateTryOn = async () => {
+    const token = user?.id_token || user?.access_token;
+    if (!token) throw new Error("Missing auth token");
 
-    const res = await axios.post(`${API_BASE_URL}/tryon-image`, {
-      person_image_url: userImage,
-      garment_image_url: apparelImage,
-      userEmail,
+    const res = await fetch("/api/tryon", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     });
 
-    const taskId = res.data?.taskId;
-    sessionStorage.setItem('currentTaskId', taskId);
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData.error || "Try-on initiation failed.");
+    }
+
+    const data = await res.json();
+    const taskId = data.task_id;
+    if (!taskId) throw new Error("No task ID returned from try-on API");
+
+    sessionStorage.setItem("currentTaskId", taskId);
     return taskId;
   };
 
-  const pollTryOnResult = (taskId) => {
+  const pollStylingHistory = (taskId, controller) => {
+    const signal = controller?.signal; // safe access
     setIsPolling(true);
     let attempts = 0;
-    const maxAttempts = 12;
+    const maxAttempts = 15;
 
-    const interval = setInterval(async () => {
+    const poll = setInterval(async () => {
       attempts++;
       if (attempts > maxAttempts) {
-        clearInterval(interval);
+        clearInterval(poll);
         setIsPolling(false);
         toast.error("Try-on is taking too long. Please try again.");
         setLoading(false);
@@ -109,49 +122,76 @@ export default function AutoTryOnRecommendationPage() {
       }
 
       try {
-        const res = await axios.get(`${API_BASE_URL}/process-tryon-result?taskId=${taskId}`);
-        const data = res.data;
-        if (data.status === 'succeed') {
-          clearInterval(interval);
-          setResultImageUrl(data.generatedImageUrl);
+        console.log("🔁 Polling attempt #", attempts);
+        const token = user?.id_token || user?.access_token;
+        const res = await fetch('/api/styling-history', {
+          headers: { Authorization: `Bearer ${token}` },
+          signal,
+        });
+
+        const data = await res.json();
+        const latest = data?.[0];
+        if (
+          latest?.task_id === taskId &&
+          latest?.status === 'succeed' &&
+          latest?.styling_image_url
+        ) {
+          clearInterval(poll);
+          setResultImageUrl(latest.styling_image_url);
           setIsPolling(false);
           setLoading(false);
           toast.success('Style added to wardrobe!');
-        } else if (data.status === 'failed') {
-          clearInterval(interval);
-          setIsPolling(false);
-          setError(data.errorMessage || 'Try-on failed.');
-          setLoading(false);
-          toast.error(data.errorMessage || 'Try-on failed.');
         }
       } catch (err) {
-        clearInterval(interval);
+        if (err.name === 'AbortError') {
+          console.warn("🛑 Polling fetch aborted");
+          return;
+        }
+        clearInterval(poll);
         setIsPolling(false);
-        setError(err.message || 'Polling failed.');
         setLoading(false);
-        toast.error(err.message || 'Polling failed.');
+        toast.error("Polling failed. Try again.");
       }
     }, 5000);
+
+    // ✅ Safely add abort listener
+    if (signal && typeof signal.addEventListener === 'function') {
+      signal.addEventListener('abort', () => {
+        clearInterval(poll);
+        console.log('🧹 Polling interval cleared due to abort');
+      });
+    }
+
+    return () => {
+      if (controller?.abort) controller.abort();
+      clearInterval(poll);
+    };
   };
 
   const handleFullFlow = async () => {
     try {
+      controllerRef.current = new AbortController();
+
       const { plan, tryOnCount } = await fetchUserPlan();
       if (tryOnCount >= PLAN_LIMITS[plan].tryOn) {
         setShowPricingPlans(true);
         setLoading(false);
         toast('You have reached your monthly limit. Please upgrade.', {
           icon: '⚠️',
-          duration: 6000,
+          duration: 3000,
         });
         return;
       }
 
       const recommendation = await fetchRecommendation();
       const taskId = await initiateTryOn(recommendation.imageS3Url);
-      pollTryOnResult(taskId);
+      cleanupRef.current = pollStylingHistory(taskId, controllerRef.current);
     } catch (err) {
-      console.error('Retry flow error:', err);
+      if (controllerRef.current?.signal.aborted) {
+        console.warn('❌ Flow manually aborted');
+        return;
+      }
+      console.error('❌ Retry flow error:', err);
       setError(err.message || 'Unexpected error occurred.');
       setLoading(false);
     }
@@ -186,22 +226,21 @@ export default function AutoTryOnRecommendationPage() {
   };
 
   useEffect(() => {
-    if (!userEmail) {
-      setError('You must be signed in to use this feature.');
-      setLoading(false);
-      return;
-    }
+    if (isLoading || !user) return;
 
-    const startFlow = async () => {
+    controllerRef.current = new AbortController();
+
+    const runTryOnFlow = async () => {
       try {
         const { plan, tryOnCount } = await fetchUserPlan();
+
         if (tryOnCount >= PLAN_LIMITS[plan].tryOn) {
-          setShowPricingPlans(true);
-          setLoading(false);
           toast('You have reached your monthly limit. Please upgrade.', {
             icon: '⚠️',
-            duration: 6000,
+            duration: 3000,
           });
+          setShowPricingPlans(true);
+          setLoading(false);
           return;
         }
 
@@ -213,33 +252,34 @@ export default function AutoTryOnRecommendationPage() {
         }
 
         if (savedTaskId && !resultImageUrl) {
-          pollTryOnResult(savedTaskId);
-        } else {
-          const recommendation = await fetchRecommendation();
-          const taskId = await initiateTryOn(recommendation.imageS3Url);
-          pollTryOnResult(taskId);
+          cleanupRef.current = pollStylingHistory(savedTaskId, controllerRef.current);
+          return;
         }
+
+        const recommendation = await fetchRecommendation();
+        const taskId = await initiateTryOn(recommendation.imageS3Url);
+        cleanupRef.current = pollStylingHistory(taskId, controllerRef.current);
       } catch (err) {
-        console.error('Flow error:', err);
+        if (controllerRef.current?.signal.aborted) {
+          console.warn('🚫 Flow aborted');
+          return;
+        }
+        console.error('❌ Flow error:', err);
         setError(err.message || 'Unexpected error occurred.');
         setLoading(false);
       }
     };
 
-    startFlow();
-  }, [userEmail]);
+    runTryOnFlow();
 
-  useEffect(() => {
-    const handleVisibility = () => {
-      if (document.visibilityState === 'visible' && !resultImageUrl && !loading && !isPolling) {
-        window.location.reload();
-      }
+    return () => {
+      controllerRef.current?.abort();
+      cleanupRef.current?.();
     };
-    document.addEventListener('visibilitychange', handleVisibility);
-    return () => document.removeEventListener('visibilitychange', handleVisibility);
-  }, [resultImageUrl, loading, isPolling]);
+  }, [user, isLoading]);
 
-  if (loading) return <LoadingModalSpinner message="Styling..." subMessage="This process only takes 30 seconds." />;
+
+  if (isLoading || loading) return <LoadingModalSpinner message="Styling..." subMessage="This process only takes 30 seconds." />;
 
   if (showPricingPlans && subscriptionPlan !== null && tryOnCount !== null) {
     return (
@@ -318,7 +358,7 @@ export default function AutoTryOnRecommendationPage() {
                           liked: true
                         });
                       }}
-                      className="inline-block mt-3 text-white bg-[#0B1F63] hover:bg-[#0a1a57] px-4 py-2 rounded-full"
+                      className="inline-block mt-3 text-white bg-primary hover:bg-[#0a1a57] px-4 py-2 rounded-full"
                     >
                       View Product
                     </a>

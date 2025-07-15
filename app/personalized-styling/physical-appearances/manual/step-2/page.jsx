@@ -3,22 +3,23 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from 'react-oidc-context';
 import LoadingModalSpinner from '@/components/ui/LoadingState';
+import { useSearchParams } from 'next/navigation';
 
 export default function PhysicalAttributesStep3() {
   const [gender, setGender] = useState('');
   const [bodyShape, setBodyShape] = useState('');
   const [loading, setloading] = useState(false);
   const { user } = useAuth();
+  const params = useSearchParams();
   const userEmail = user?.profile?.email;
-  const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const storedGender = localStorage.getItem('gender');
+      const storedGender = params.get('gender');
       if (storedGender === 'male' || storedGender === 'female') {
         setGender(storedGender);
       } else {
-        console.warn("Gender not found or invalid in localStorage.");
+        console.warn("Gender not found or invalid.");
       }
     }
   }, []);
@@ -77,21 +78,16 @@ export default function PhysicalAttributesStep3() {
   const bodyTypeImages = gender === 'female' ? femaleBodyTypeImages : maleBodyTypeImages;
   const bodyTypeDescriptions = gender === 'female' ? femaleBodyTypeDescriptions : maleBodyTypeDescriptions;
 
-    const data = {
-    bodyShape,
-  }
-
-    const physic2 = async () => {
+  const physic2 = async () => {
     const payload = {
-      userEmail,
-      section: "physicalAppearance2",
-      data,
+      body_shape: bodyShape,
     };
-    
+
     try {
-      fetch(`${API_BASE_URL}/userPref`, {
+      await fetch("/api/register-profile", {
         method: "POST",
         headers: {
+          Authorization: `Bearer ${user.id_token}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify(payload),
@@ -100,6 +96,8 @@ export default function PhysicalAttributesStep3() {
       handleSubmit();
     } catch (err) {
       console.error("Failed to input data:", err);
+    } finally {
+      setloading(false);
     }
   };
 

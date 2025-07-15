@@ -51,44 +51,27 @@ export default function StylePreferencesPage() {
     setloading(true);
 
     try {
-      localStorage.setItem('fashion-type', fashionType);
-      localStorage.setItem('clothing-category', clothingType);
 
-      const savePreferences = async () => {
-        try {
-          await Promise.all([
-            fetch(`${API_BASE_URL}/userPref`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                userEmail,
-                section: 'StylePref1',
-                data: { selectedType: fashionType },
-              }),
-            }),
-            fetch(`${API_BASE_URL}/userPref`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                userEmail,
-                section: 'StylePref3',
-                data: { clothingType },
-              }),
-            }),
-          ]);
-        } catch (error) {
-          console.error('Error saving preferences:', error);
-        }
-      };
+      await fetch("/api/save-style-preference", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${user.id_token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          clothing_category: clothingType,
+          fashion_type: fashionType,
+        }),
+      });
 
-      savePreferences();
-      router.push('result');
+      router.push("result");
     } catch (error) {
-      console.error('Error in form submission:', error);
+      console.error("Error saving preferences:", error);
       setIsSubmitting(false);
       setloading(false);
     }
   };
+
 
   // Show loading spinner while submitting
   if (loading) return <LoadingModalSpinner />;

@@ -1,6 +1,19 @@
+// app/api/styling-history/route.ts
+
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { jwtDecode } from "jwt-decode";
+
+type ProductMeta = {
+  image?: string;
+  color?: string;
+  link?: string;
+  fashType?: string;
+  name?: string;
+  brand?: string;
+  category?: string;
+  clothType?: string;
+};
 
 export async function GET(req: NextRequest) {
   const authHeader = req.headers.get("authorization");
@@ -25,15 +38,18 @@ export async function GET(req: NextRequest) {
       where: {
         user_id,
         status: "succeed",
+        wardrobe: true,
       },
       orderBy: {
         updated_at: "desc",
       },
       select: {
         item_id: true,
+        task_id: true,
         styling_image_url: true,
         user_image_url: true,
         updated_at: true,
+        status: true,
       },
     });
 
@@ -58,7 +74,7 @@ export async function GET(req: NextRequest) {
     });
 
     // Map item_id to product metadata
-    const productMap = Object.fromEntries(
+    const productMap: Record<string, ProductMeta> = Object.fromEntries(
       products.map(p => [p.item_id, { image: p.product_image_url, color: p.color, link: p.product_link, fashType: p.fashion_type, name: p.product_name, brand: p.brand, category: p.clothing_category, clothType: p.clothing_type }])
     );
 
@@ -67,6 +83,7 @@ export async function GET(req: NextRequest) {
       const product = productMap[log.item_id] ?? {};
       return {
         item_id: log.item_id,
+        task_id: log.task_id,
         styling_image_url: log.styling_image_url,
         user_image_url: log.user_image_url,
         product_image_url: product.image ?? null,
@@ -77,7 +94,7 @@ export async function GET(req: NextRequest) {
         name: product.name ?? null,
         color: product.color ?? null,
         cloth_type: product.clothType ?? null,
-
+        status: log.status,
         updated_at: log.updated_at,
       };
     });
