@@ -2,7 +2,6 @@ import { NextResponse, NextRequest } from "next/server";
 import { Redis } from "@upstash/redis";
 import { Ratelimit } from "@upstash/ratelimit";
 import { jwtDecode } from "jwt-decode";
-import { getSecrets } from "@/lib/secrets";
 
 // Create Redis instance from env vars
 const redis = new Redis({
@@ -18,9 +17,15 @@ const ratelimit = new Ratelimit({
 });
 
 export async function middleware(req: NextRequest) {
-  const authHeader = req.headers.get("authorization");
+  const pathname = req.nextUrl.pathname;
 
-  // 1. Ensure token exists
+  // ✅ 1. Exclude Kling callback route
+  if (pathname === "/api/tryon/callback") {
+    return NextResponse.next();
+  }
+
+  // 2. Require Bearer token
+  const authHeader = req.headers.get("authorization");
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -28,18 +33,15 @@ export async function middleware(req: NextRequest) {
   const token = authHeader.split(" ")[1];
 
   let userId: string | undefined;
-
   try {
-    // 2. Decode token to extract Cognito user_id (sub)
     const decoded: any = jwtDecode(token);
     userId = decoded.sub;
   } catch (error) {
     return NextResponse.json({ error: "Invalid token" }, { status: 401 });
   }
 
-  // 3. Rate limit by user_id
+  // 3. Rate limit by user ID
   const { success, limit, remaining, reset } = await ratelimit.limit(userId);
-
   if (!success) {
     return NextResponse.json(
       { error: "Rate limit exceeded" },
@@ -47,14 +49,14 @@ export async function middleware(req: NextRequest) {
     );
   }
 
-  // 4. Allow request through
+  // 4. Allow request and attach rate limit headers
   const res = NextResponse.next();
   res.headers.set("X-RateLimit-Limit", limit.toString());
   res.headers.set("X-RateLimit-Remaining", remaining.toString());
   res.headers.set("X-RateLimit-Reset", reset.toString());
   return res;
-};
+}
 
 export const config = {
-  matcher: ["/api/:path*"],
+  matcher: ["/api/:path*"], // Keep matching all API routes
 };
