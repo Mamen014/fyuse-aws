@@ -98,7 +98,7 @@ export default function Navbar() {
 
         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
           <Link href="/dashboard">
-            <Image src="/logo-tb.png" alt="FYUSE Logo" width={1920} height={800} priority className="w-40 h-auto" />
+            <Image src="/logo-tb.png" alt="FYUSE Logo" width={1920} height={800} priority className="h-20 w-auto" />
           </Link>
         </div>
       </div>

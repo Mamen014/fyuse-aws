@@ -11,7 +11,6 @@ export default function PhysicalAttributesStep3() {
   const [loading, setloading] = useState(false);
   const { user } = useAuth();
   const params = useSearchParams();
-  const userEmail = user?.profile?.email;
 
   useEffect(() => {
     if (typeof window !== 'undefined') {

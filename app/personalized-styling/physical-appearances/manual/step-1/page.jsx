@@ -14,8 +14,6 @@ export default function PhysicalAttributesStep1() {
   const sliderRef = useRef(null);
   const sliderContainerRef = useRef(null);
   const { user } = useAuth();
-  const userEmail = user?.profile?.email;
-  const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
 
   // Skin tone options
   const skinTones = ['fair', 'light', 'medium', 'deep'];

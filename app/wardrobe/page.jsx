@@ -181,9 +181,10 @@ export default function WardrobePage() {
           </div>
           {userImage && (
             <div className="mt-2">
-              <img
+              <Image
                 src={userImage}
                 alt="User Avatar"
+                priority
                 width={225}
                 height={300}
                 className="rounded-xl object-cover border border-primary shadow-sm"
@@ -215,8 +216,9 @@ function WardrobeSection({ title, items, onRemove }) {
                 {item.product_image_url ? (
                   <Image 
                   src={item.product_image_url} 
-                  alt={item.cloth_type} 
-                  fill 
+                  alt={item.cloth_type}
+                  sizes="144px"
+                  fill
                   className="object-cover" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-gray-400">No Image</div>

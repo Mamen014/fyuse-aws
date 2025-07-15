@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from 'next/image';
 import { useRouter } from "next/navigation";
 import { useAuth } from "react-oidc-context";
 import Navbar from "@/components/Navbar";
@@ -148,10 +149,10 @@ export default function dashboard() {
       }
     };
 
-    if (userEmail) {
+    if (user) {
       fetchStylePref();
     }
-  }, [userEmail]);
+  }, [user]);
 
   // Fetch user history
   useEffect(() => {
@@ -240,7 +241,7 @@ export default function dashboard() {
     if (user) {
       fetchUserProfile();
     }    
-  }, [userEmail, tryOnCount, subscriptionPlan]);
+  }, [user, tryOnCount, subscriptionPlan]);
 
   // Filter recommendations by category
   const tops = tryonItems.filter(item => item.category === "top");
@@ -312,7 +313,7 @@ export default function dashboard() {
                     {/* Skin Tone */}
                     <div className="flex-1 flex flex-col items-center bg-gray-50 rounded-xl p-3">
                       {skinToneImageMap[(itemMap["Skin Tone"]?.value || "").toLowerCase()] ? (
-                        <img
+                        <Image
                           src={skinToneImageMap[(itemMap["Skin Tone"]?.value || "").toLowerCase()]}
                           alt="Skin Tone"
                           width={64}
@@ -329,11 +330,12 @@ export default function dashboard() {
                     <div className="flex-1 flex flex-col items-center bg-gray-50 rounded-xl p-3">
                       {itemMap["Gender"]?.value && itemMap["Body Shape"]?.value &&
                       bodyShapeImageMap[itemMap["Gender"].value.toLowerCase()]?.[itemMap["Body Shape"].value.toLowerCase()] ? (
-                        <img
+                        <Image
                           src={bodyShapeImageMap[itemMap["Gender"].value.toLowerCase()][itemMap["Body Shape"].value.toLowerCase()]}
                           alt="Body Shape"
                           width={80}
                           height={80}
+                          priority
                           className="rounded-md object-contain"
                         />
                       ) : <span className="text-gray-400">-</span>}
@@ -431,11 +433,12 @@ export default function dashboard() {
                     className="min-w-36 h-48 rounded-3xl overflow-hidden flex-shrink-0 bg-white shadow-md border border-gray-100 relative group"
                   >
                     {item?.styling_image_url ? (
-                      <img
+                      <Image
                         src={item.styling_image_url}
                         alt={`Try-on #${tryonItems.length - index}`}
                         sizes="144px"
-                        priority="true"
+                        fill
+                        priority
                         className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
                       />
                     ) : (
@@ -496,9 +499,11 @@ export default function dashboard() {
                         className="flex-1 max-w-[120px] aspect-[3/4] rounded-2xl overflow-hidden bg-white shadow-sm border border-gray-100 relative group"
                       >
                         {recommendation.product_image_url ? (
-                          <img
+                          <Image
                             src={recommendation.product_image_url || "placeholder.svg"}
                             alt="Top Item"
+                            fill
+                            sizes="144px"
                             className="object-cover group-hover:scale-105 transition-transform duration-300"
                           />
                         ) : (
@@ -533,9 +538,11 @@ export default function dashboard() {
                         className="flex-1 max-w-[120px] aspect-[3/4] rounded-2xl overflow-hidden bg-white shadow-sm border border-gray-100 relative group"
                       >
                         {recommendation.product_image_url ? (
-                          <img
+                          <Image
                             src={recommendation.product_image_url || "/placeholder.svg"}
                             alt="Bottom Item"
+                            fill
+                            sizes="144px"
                             className="object-cover group-hover:scale-105 transition-transform duration-300"
                           />
                         ) : (
@@ -575,7 +582,7 @@ export default function dashboard() {
                 {/* Skin Tone */}
                 <div className="flex flex-col items-center bg-white p-4 rounded-xl shadow w-full">
                   {profileRaw?.skin_tone && skinToneImageMap[profileRaw.skin_tone.toLowerCase()] ? (
-                    <img
+                    <Image
                       src={skinToneImageMap[profileRaw.skin_tone.toLowerCase()]}
                       alt="Skin Tone"
                       width={64}
@@ -595,7 +602,7 @@ export default function dashboard() {
                 <div className="flex flex-col items-center bg-white p-4 rounded-xl shadow w-full">
                   {profileRaw?.gender && profileRaw?.body_shape &&
                   bodyShapeImageMap[profileRaw.gender.toLowerCase()]?.[profileRaw.body_shape.toLowerCase()] ? (
-                    <img
+                    <Image
                       src={
                         bodyShapeImageMap[profileRaw.gender.toLowerCase()][profileRaw.body_shape.toLowerCase()]
                       }
@@ -621,7 +628,7 @@ export default function dashboard() {
               {tryonItems.length > 0 ? (
                 <div className="flex items-center gap-5">
                   <div className="rounded-xl overflow-hidden shadow-sm bg-white border border-gray-200 aspect-[3/4] w-[100px] h-[130px]">
-                    <img
+                    <Image
                       src={tryonItems[0].product_image_url || "/placeholder.svg"}
                       alt="Liked item"
                       width={100}
@@ -682,10 +689,12 @@ export default function dashboard() {
 
           {/* Right Column: User Image */}
           <div className="w-full md:w-[40%] flex justify-center md:justify-end">
-            <img
+            <Image
               src={profileRaw?.user_image_url || "/placeholder.svg"}
+              width={40}
+              height={120}
               alt="User Upload"
-              className="w-40 h-120 md:w-full md:max-w-xs object-cover rounded-xl border"
+              className="md:w-full md:max-w-xs object-cover rounded-xl border"
             />
           </div>
         </div>

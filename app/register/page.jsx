@@ -1,3 +1,5 @@
+// app/register/page.jsx
+
 'use client';
 
 import { useState, useEffect, useId } from 'react';
@@ -422,7 +424,7 @@ export default function RegisterAI() {
 
             {/* Note for "Other" selection */}
             <p className="text-xs text-gray-500 mt-1">
-              Don’t see your occupation? Select <strong>"Other"</strong> to type your own.
+              Don’t see your occupation? Select <strong>&quot;Other&quot;</strong> to type your own.
             </p>
 
             {formData.occupation === "Other" && (

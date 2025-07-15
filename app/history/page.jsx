@@ -5,6 +5,7 @@ import { useAuth } from 'react-oidc-context';
 import { Shirt } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import LoadingModalSpinner from '@/components/ui/LoadingState';
+import Image from 'next/image';
 
 export default function TryOnHistoryPage() {
   const { user } = useAuth();
@@ -72,9 +73,11 @@ export default function TryOnHistoryPage() {
               <div key={index} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                 <div className="aspect-[3/4] relative">
                   {item.styling_image_url ? (
-                    <img
+                    <Image
                       src={item.styling_image_url}
                       alt={`Try-on #${index + 1}`}
+                      fill
+                      priority
                       className="object-cover"
                     />
                   ) : (
