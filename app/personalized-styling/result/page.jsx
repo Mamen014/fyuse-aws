@@ -87,54 +87,60 @@ export default function AutoTryOnRecommendationPage() {
     return task_id;
   }, [token]);
 
-  const pollTaskStatus = useCallback((taskId, controller) => {
-    setIsPolling(true);
-    let attempts = 0;
-    const maxAttempts = 20;
-    const interval = 5000;
-    const signal = controller.signal;
+const pollTaskStatus = useCallback((taskId, controller) => {
+  setIsPolling(true);
+  let attempts = 0;
+  const maxAttempts = 20;
+  const max404Retries = 3; // ✅ Soft retry for 404
+  const interval = 5000;
+  const signal = controller.signal;
 
-    const poll = async () => {
-      try {
-        const res = await fetch(`/api/tryon/status?task_id=${taskId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-          signal,
-        });
+  const poll = async () => {
+    try {
+      const res = await fetch(`/api/tryon/status?task_id=${taskId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+        signal,
+      });
 
-        if (!res.ok) {
-          throw new Error(`Polling failed: ${res.status}`);
-        }
+      if (res.status === 404 && attempts < max404Retries) {
+        console.warn("🔁 Got 404, retrying...");
+        attempts++;
+        return setTimeout(poll, interval);
+      }
 
-        const data = await res.json();
-        const { status, styling_image_url } = data;
+      if (!res.ok) {
+        throw new Error(`Polling failed: ${res.status}`);
+      }
 
-        if (status === "succeed" && styling_image_url) {
-          setResultImageUrl(styling_image_url);
-          setIsPolling(false);
-          setLoading(false);
-          toast.success("Style added to wardrobe!");
-          return;
-        }
+      const data = await res.json();
+      const { status, styling_image_url } = data;
 
-        if (++attempts < maxAttempts) {
-          setTimeout(poll, interval);
-        } else {
-          setIsPolling(false);
-          setLoading(false);
-          toast.error("Try-on timed out.");
-        }
-      } catch (err) {
-        if (err.name === "AbortError") return;
-        console.error("Polling error:", err);
+      if (status === "succeed" && styling_image_url) {
+        setResultImageUrl(styling_image_url);
         setIsPolling(false);
         setLoading(false);
-        toast.error("Polling failed.");
+        toast.success("Style added to wardrobe!");
+        return;
       }
-    };
 
-    poll();
-  }, [token]);
+      if (++attempts < maxAttempts) {
+        setTimeout(poll, interval);
+      } else {
+        setIsPolling(false);
+        setLoading(false);
+        toast.error("Try-on timed out.");
+      }
+    } catch (err) {
+      if (err.name === "AbortError") return;
+      console.error("Polling error:", err);
+      setIsPolling(false);
+      setLoading(false);
+      toast.error("Polling failed.");
+    }
+  };
 
+  poll();
+}, [token]);
 
   const track = async (action, metadata = {}) => {
     if (!userEmail) return;
@@ -183,6 +189,10 @@ export default function AutoTryOnRecommendationPage() {
 
       const recommendation = await fetchRecommendation();
       const taskId = await initiateTryOn(recommendation.imageS3Url);
+
+      // ✅ Delay before polling to let callback update DB
+      await new Promise((res) => setTimeout(res, 1000));
+
       cleanupRef.current = pollTaskStatus(taskId, controllerRef.current);
     } catch (err) {
       if (controllerRef.current?.signal.aborted) return;
@@ -222,7 +232,7 @@ export default function AutoTryOnRecommendationPage() {
       <div className="min-h-screen flex flex-col justify-center items-center text-center px-4">
         <h1 className="text-2xl font-bold text-red-600 mb-4">Error</h1>
         <p className="mb-6">{error}</p>
-        <button onClick={() => router.push('/dashboard')} className="bg-primary text-white-800">
+        <button onClick={() => router.push('/dashboard')} className="bg-primary text-white">
           Back to Dashboard
         </button>
       </div>
