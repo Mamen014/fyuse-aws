@@ -32,13 +32,6 @@ export default function TryOnHistoryPage() {
           // Sort by timestamp descending and take latest 3
           setTryonHistory(data);
 
-          // OPTIONAL: Keep this if you still plan to support likedRecommendations from response
-          // if (Array.isArray(data.likedRecommendations)) {
-          //   setLikedRecommendations(data.likedRecommendations);
-          // } else {
-          //   setLikedRecommendations([]);
-          // }
-
         } catch (err) {
           console.error("Error fetching history:", err);
           setTryonHistory([]);

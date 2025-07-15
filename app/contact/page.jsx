@@ -144,7 +144,7 @@ const ContactForm = () => {
             animate={{ opacity: 1 }}
             className="text-green-600 mb-4 text-sm"
           >
-            Message sent successfully! We'll get back to you soon.
+            Message sent successfully! We&apos;ll get back to you soon.
           </motion.p>
         )}
 
@@ -193,7 +193,7 @@ export default function Contact() {
               Contact Us
             </h1>
             <p className="mt-4 text-lg text-foreground max-w-2xl mx-auto">
-              Have questions, feedback, or just want to say hi? We’d love to
+              Have questions, feedback, or just want to say hi? We&apos;d love to
               hear from you!
             </p>
           </motion.div>

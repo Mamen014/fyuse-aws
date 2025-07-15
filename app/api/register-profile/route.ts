@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
   try {
     const decoded = jwtDecode<{ sub: string }>(token);
     user_id = decoded.sub;
-  } catch (err) {
+  } catch {
     return NextResponse.json({ error: "Invalid token" }, { status: 401 });
   }
 
@@ -66,8 +66,7 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json(profile, { status: 200 });
-  } catch (error) {
-    console.error("Error saving user profile:", error);
+  } catch {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

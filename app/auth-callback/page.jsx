@@ -6,7 +6,6 @@ import LoadingModalSpinner from '@/components/ui/LoadingState';
 
 export default function AuthCallback() {
   const router = useRouter();
-  const [ loading, setloading ] = useState(false);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;

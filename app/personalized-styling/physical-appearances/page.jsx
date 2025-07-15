@@ -24,7 +24,7 @@ export default function AIPhotoUpload() {
   const [aiAnalysis, setAiAnalysis] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [showRegisterPrompt, setShowRegisterPrompt] = useState(false);
-  const [error, setError] = useState(null);
+  const [, setError] = useState(null);
   const { user } = useAuth();
 
   const userEmail = user?.profile?.email;
@@ -55,12 +55,11 @@ export default function AIPhotoUpload() {
   //Check for register modal
   useEffect(() => {
     if (typeof window === 'undefined') return;
-
     const showRegister = localStorage.getItem('showRegister');
     if (showRegister === 'true') {
       setShowRegisterPrompt(true);
-    };
-  });
+    }
+  }, []);
 
   //Gender mapping
   const genderIconMap = {
@@ -355,9 +354,11 @@ export default function AIPhotoUpload() {
             >
               {photoPreview ? (
                 <div className="w-full h-full flex items-center justify-center px-6 py-4">
-                  <img
+                  <Image
                     src={photoPreview}
                     alt="Uploaded"
+                    width={200}
+                    height={200}
                     className="max-h-full max-w-full object-contain rounded-xl"
                     style={{ aspectRatio: '3/4' }}
                   />

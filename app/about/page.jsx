@@ -56,7 +56,7 @@ export default function AboutPage() {
               Make it simple to compare, save, and revisit looks whenever inspiration strikes.
             </li>
             <li>
-              Build your confidence and style over time — whether you're browsing, dressing up, or starting fresh.
+              Build your confidence and style over time — whether you&apos;re browsing, dressing up, or starting fresh.
             </li>
           </ul>
         </section>
@@ -81,7 +81,7 @@ export default function AboutPage() {
             </li>
             <li>
               <span className="font-semibold text-primary">Your style, your pace:</span>{' '}
-              Whether you're dressing up or discovering who you are, we're here for the journey.
+              Whether you&apos;re dressing up or discovering who you are, we&apos;re here for the journey.
             </li>
           </ul>
         </section>

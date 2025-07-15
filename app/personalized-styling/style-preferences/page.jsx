@@ -18,8 +18,6 @@ export default function StylePreferencesPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loading, setloading] = useState(false);
   const { user } = useAuth();
-  const userEmail = user?.profile?.email;
-  const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
 
   // Define clothing options with active and inactive icons
   const clothingOptions = [
@@ -146,10 +144,12 @@ export default function StylePreferencesPage() {
                     : 'bg-white border-gray-200 hover:shadow-md'}
                 `}
               >
-                <img
+                <Image
                   src={image}
                   alt={style}
-                  className="w-full h-52 object-cover group-hover:scale-[1.01] transition-transform duration-300"
+                  width={300}
+                  height={300}
+                  className="w-full h-80 object-cover group-hover:scale-[1.01] transition-transform duration-300"
                 />
                 <div className="p-4">
                   <h4 className={`font-bold text-lg ${fashionType === style ? 'text-white' : 'text-primary'}`}>

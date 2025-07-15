@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from 'react-oidc-context';
 import axios from 'axios';
+import Image from 'next/image';
 import toast, { Toaster } from 'react-hot-toast';
 
 import PricingPlans from '@/components/PricingPlanCard';
@@ -26,11 +27,9 @@ export default function AutoTryOnRecommendationPage() {
   const cleanupRef = useRef(null);
 
   const [loading, setLoading] = useState(true);
-  const [isPolling, setIsPolling] = useState(false);
+  const [, setIsPolling] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [showPricingPlans, setShowPricingPlans] = useState(false);
-  const [subscriptionPlan, setSubscriptionPlan] = useState(null);
-  const [tryOnCount, setTryOnCount] = useState(0);
   const [product, setProduct] = useState(null);
   const [resultImageUrl, setResultImageUrl] = useState(null);
   const [error, setError] = useState(null);
@@ -45,22 +44,20 @@ export default function AutoTryOnRecommendationPage() {
     sessionStorage.removeItem('recommendedProduct');
   };
 
-  const fetchUserPlan = async () => {
+  const fetchUserPlan = useCallback(async () => {
     try {
       const res = await axios.get('/api/subscription-status', {
         headers: { Authorization: `Bearer ${token}` },
       });
       const { plan, successful_stylings } = res.data;
-      setSubscriptionPlan(plan);
-      setTryOnCount(successful_stylings);
       return { plan, tryOnCount: successful_stylings };
     } catch (err) {
       console.error('Failed to fetch subscription plan:', err);
       return { plan: 'basic', tryOnCount: 0 };
     }
-  };
+  }, [token]);
 
-  const fetchRecommendation = async () => {
+  const fetchRecommendation = useCallback(async () => {
     const res = await fetch('/api/recommend-product', {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}` },
@@ -68,13 +65,12 @@ export default function AutoTryOnRecommendationPage() {
 
     const data = await res.json();
     if (!data?.productId) throw new Error('No recommendation found.');
-
     setProduct(data);
     sessionStorage.setItem('recommendedProduct', JSON.stringify(data));
     return data;
-  };
+  }, [token]);
 
-  const initiateTryOn = async () => {
+  const initiateTryOn = useCallback(async () => {
     const res = await fetch('/api/tryon', {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}` },
@@ -87,12 +83,11 @@ export default function AutoTryOnRecommendationPage() {
 
     const { task_id } = await res.json();
     if (!task_id) throw new Error('Missing task ID.');
-
     sessionStorage.setItem('currentTaskId', task_id);
     return task_id;
-  };
+  }, [token]);
 
-  const pollStylingHistory = (taskId, controller) => {
+  const pollStylingHistory = useCallback((taskId, controller) => {
     setIsPolling(true);
     let attempts = 0;
     const maxAttempts = 15;
@@ -141,7 +136,7 @@ export default function AutoTryOnRecommendationPage() {
     }
 
     return () => clearInterval(interval);
-  };
+  }, [token]);
 
   const track = async (action, metadata = {}) => {
     if (!userEmail) return;
@@ -176,7 +171,7 @@ export default function AutoTryOnRecommendationPage() {
     }
   };
 
-  const handleFlow = async () => {
+  const handleFlow = useCallback(async () => {
     try {
       controllerRef.current = new AbortController();
       const { plan, tryOnCount } = await fetchUserPlan();
@@ -196,7 +191,7 @@ export default function AutoTryOnRecommendationPage() {
       setError(err.message || 'Unexpected error');
       setLoading(false);
     }
-  };
+  }, [fetchUserPlan, fetchRecommendation, initiateTryOn, pollStylingHistory]);
 
   useEffect(() => {
     if (isLoading || !token) return;
@@ -218,7 +213,7 @@ export default function AutoTryOnRecommendationPage() {
       controllerRef.current?.abort();
       cleanupRef.current?.();
     };
-  }, [isLoading, token]);
+  }, [isLoading, token, handleFlow, pollStylingHistory, resultImageUrl]);
 
   // UI Rendering
   if (isLoading || loading)
@@ -257,10 +252,14 @@ export default function AutoTryOnRecommendationPage() {
           <div className="md:w-1/2 w-full">
             <div className="relative rounded-2xl shadow-2xl overflow-hidden">
               {resultImageUrl ? (
-                <img
+                <Image
                   src={resultImageUrl}
                   alt="Try-On Result"
+                  width={800}
+                  height={600}
                   className="w-full object-cover max-h-[600px]"
+                  priority
+                  unoptimized
                 />
               ) : (
                 <div className="w-full h-96 flex justify-center items-center bg-gray-100 text-sm text-gray-500">
@@ -277,10 +276,13 @@ export default function AutoTryOnRecommendationPage() {
             <div className="md:w-1/2 w-full">
               <h2 className="text-xl font-semibold text-primary mb-4 text-center md:text-left">Original Product</h2>
               <div className="bg-white rounded-2xl p-6 shadow-2xl">
-                <img
+                <Image
                   src={product.imageS3Url}
                   alt={product.productName}
+                  width={800}
+                  height={600}
                   className="w-full max-h-[400px] object-contain rounded-xl mb-4"
+                  unoptimized
                 />
                 <div className="text-center md:text-left">
                   <h3 className="text-lg font-bold">{product.productName}</h3>

@@ -1,3 +1,5 @@
+// app/dashboard/paeg.jsx
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -11,7 +13,7 @@ import ReferralModal from "@/components/ReferralModal";
 import { User, ChevronRight, Shirt, MapPin, Sparkles, BriefcaseBusiness, CreditCard } from "lucide-react";
 import axios from "axios";
 
-export default function dashboard() {
+export default function DashboardPage() {
   const router = useRouter();
   const { user, isLoading, signinRedirect } = useAuth();
   const userEmail = user?.profile?.email;
@@ -265,7 +267,7 @@ export default function dashboard() {
           <h1 className="text-3xl font-bold mb-1">
             {nickname ? `Hi ${nickname}!` : "Hi there!"}
           </h1>
-          <p className="text-sm text-primary/70">Let's find your next favorite look.</p>
+          <p className="text-sm text-primary/70">Let&apos;s find your next favorite look.</p>
 
           {showRegisterPrompt && (
             <div className="mt-4 p-4 rounded-2xl bg-white/5 border border-primary/20">

@@ -15,7 +15,7 @@ export async function PATCH(req: NextRequest) {
   try {
     const decoded = jwtDecode<{ sub: string }>(token);
     user_id = decoded.sub;
-  } catch (err) {
+  } catch {
     return NextResponse.json({ error: "Invalid token" }, { status: 401 });
   }
 
@@ -43,8 +43,7 @@ export async function PATCH(req: NextRequest) {
     }
 
     return NextResponse.json({ message: "Item removed from wardrobe." });
-  } catch (error) {
-    console.error("Error removing wardrobe item:", error);
+  } catch {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

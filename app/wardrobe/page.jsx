@@ -1,4 +1,4 @@
-// /app/wardrobe/route.jsx
+// /app/wardrobe/page.jsx
 
 "use client";
 import { useEffect, useState } from "react";
@@ -9,7 +9,6 @@ import "react-toastify/dist/ReactToastify.css";
 import LoadingModalSpinner from "@/components/ui/LoadingState";
 import Navbar from "@/components/Navbar";
 import { ChevronRight, ShirtIcon } from "lucide-react";
-import axios from "axios";
 
 export default function WardrobePage() {
   const { user } = useAuth();
@@ -18,7 +17,6 @@ export default function WardrobePage() {
   const [nickname, setNickname] = useState("");
   const [userImage, setuserImage] = useState("");
   const [loading, setLoading] = useState(false);
-  const [lastUpdated, setLastUpdated] = useState("");
 
   // Set last updated date when component mounts and fetches user plan
   useEffect(() => {

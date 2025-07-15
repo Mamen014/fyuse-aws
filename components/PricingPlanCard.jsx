@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import LoadingModalSpinner from "@/components/ui/LoadingState";
 
-export default function PricingPlans({ isOpen, onClose, sourcePage = "Unknown" }) {
+export default function PricingPlans({ onClose, sourcePage = "Unknown" }) {
   const router = useRouter();
   const { user } = useAuth();
   const [isRedirecting, setIsRedirecting] = useState(false);

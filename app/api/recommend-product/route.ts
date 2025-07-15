@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
   try {
     const decoded = jwtDecode<{ sub: string }>(token);
     user_id = decoded.sub;
-  } catch (err) {
+  } catch {
     return NextResponse.json({ error: "Invalid token" }, { status: 401 });
   }
 
@@ -155,8 +155,7 @@ export async function POST(req: NextRequest) {
       imageS3Url: product.product_image_url,
       productLink: product.product_link,
     });
-  } catch (err) {
-    console.error("❌ Error fetching recommendation:", err);
+  } catch {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
