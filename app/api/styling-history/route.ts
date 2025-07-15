@@ -53,7 +53,7 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    const itemIds = logs.map(log => log.item_id);
+    const itemIds = logs.map((log: { item_id: string }) => log.item_id);
 
     // Fetch corresponding product info (image + category)
     const products = await prisma.product_data.findMany({
