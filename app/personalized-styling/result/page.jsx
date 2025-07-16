@@ -27,6 +27,7 @@ export default function AutoTryOnRecommendationPage() {
 
   const controllerRef = useRef(null);
   const cleanupRef = useRef(null);
+  const pollingTaskId = useRef(null);
 
   const [loading, setLoading] = useState(true);
   const [, setIsPolling] = useState(false);
@@ -209,15 +210,18 @@ export default function AutoTryOnRecommendationPage() {
 
         const recommendation = await fetchRecommendation();
         const taskId = await initiateTryOn(recommendation.imageS3Url);
+        const delay = ms => new Promise(res => setTimeout(res, ms));
 
         // ✅ Delay before polling to let callback update DB
-        await new Promise((res) => setTimeout(res, 1000));
+        await delay(1000);
 
         cleanupRef.current = pollTaskStatus(taskId, controllerRef.current);
       } catch (err) {
         if (controllerRef.current?.signal.aborted) return;
         setError(err.message || 'Unexpected error');
         setLoading(false);
+      } finally {
+        setIsPolling(false);
       }
   }, [fetchUserPlan, fetchRecommendation, initiateTryOn, pollTaskStatus]);
 
@@ -225,7 +229,6 @@ export default function AutoTryOnRecommendationPage() {
     if (isLoading || !token) return;
 
     controllerRef.current = new AbortController();
-    let pollingTaskId = useRef(null);
     const savedTaskId = sessionStorage.getItem('currentTaskId');
     const savedProduct = sessionStorage.getItem('recommendedProduct');
 
