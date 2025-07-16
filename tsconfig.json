@@ -1,34 +1,36 @@
 {
   "compilerOptions": {
-    /* Core Setup */
+    /* ✅ Target modern JS features */
     "target": "ESNext",
-    "module": "CommonJS",
-    "strict": true,
+    "module": "ESNext",
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    /* ✅ Module resolution for Next.js */
+    "moduleResolution": "Node",
+    "jsx": "preserve",
+    "allowJs": true,
+    "checkJs": false,
     "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    /* ✅ Strict typing and hygiene */
+    "strict": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
-    /* JavaScript + TypeScript Hybrid Support */
-    "allowJs": true, // Allow .js files
-    "noEmit": true,
-    "checkJs": false, // You can set this to true to get type-checking in JS too
-    "isolatedModules": true,
-    /* Module Resolution & Paths */
-    "moduleResolution": "Node",
-    "resolveJsonModule": true,
+    /* ✅ Path aliases (used by @/*) */
     "baseUrl": ".",
     "paths": {
       "@/*": [
         "./*"
       ]
     },
-    /* JSX support (optional, if using .tsx or .jsx) */
-    "jsx": "preserve",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
+    /* ✅ Enable incremental builds */
     "incremental": true,
+    /* ✅ For Next.js plugin support */
     "plugins": [
       {
         "name": "next"
@@ -36,20 +38,23 @@
     ]
   },
   "include": [
-    "app/**/*.ts",
-    "app/**/*.tsx",
-    "app/**/*.js",
-    "components/**/*.ts",
-    "components/**/*.tsx",
-    "components/**/*.js",
-    "lib/**/*.ts",
-    "pages/**/*.ts",
-    "pages/**/*.js",
-    "utils/**/*.ts",
-    "utils/**/*.js",
+    "app",
+    "components",
+    "context",
+    "hooks",
+    "lib",
+    "pages",
+    "types",
     ".next/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    ".next",
+    "dist",
+    "coverage",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx"
   ]
 }
