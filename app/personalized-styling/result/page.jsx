@@ -98,6 +98,12 @@ export default function AutoTryOnRecommendationPage() {
     const signal = controller.signal;
 
     const poll = async () => {
+
+      if (taskId !== sessionStorage.getItem('currentTaskId')) {
+        console.warn('Stale task result, ignoring');
+        return;
+      }
+
       try {
         const res = await fetch(`/api/tryon/status?task_id=${taskId}`, {
           headers: { Authorization: `Bearer ${token}` },
@@ -118,10 +124,12 @@ export default function AutoTryOnRecommendationPage() {
         const { status, styling_image_url } = data;
 
         if (status === "succeed" && styling_image_url) {
-          setResultImageUrl(styling_image_url);
+          if (!resultImageUrl) {
+            setResultImageUrl(styling_image_url);
+            toast.success("Style added to wardrobe!");
+          };
           setIsPolling(false);
-          setLoading(false);
-          toast.success("Style added to wardrobe!");
+          setLoading(false);          
           return;
         }
 
@@ -177,45 +185,56 @@ export default function AutoTryOnRecommendationPage() {
     }
   };
 
-  const handleFlow = useCallback(async () => {
-    try {
-      controllerRef.current = new AbortController();
-      const { plan, tryOnCount } = await fetchUserPlan();
+  const handleFlow = useCallback(async (isManual = false) => {
+    const lastStart = Number(sessionStorage.getItem("lastTryonStart") || "0");
+    const now = Date.now();  
 
-      if (tryOnCount >= PLAN_LIMITS[plan].tryOn) {
-        toast('Monthly try-on limit reached. Please upgrade.', { icon: '⚠️' });
-        setShowPricingPlans(true);
-        setLoading(false);
-        return;
-      }
-
-      const recommendation = await fetchRecommendation();
-      const taskId = await initiateTryOn(recommendation.imageS3Url);
-
-      // ✅ Delay before polling to let callback update DB
-      await new Promise((res) => setTimeout(res, 1000));
-
-      cleanupRef.current = pollTaskStatus(taskId, controllerRef.current);
-    } catch (err) {
-      if (controllerRef.current?.signal.aborted) return;
-      setError(err.message || 'Unexpected error');
-      setLoading(false);
+    if (!isManual && now - lastStart < 60_000) {
+      console.log("Skipping re-trigger: recently started");
+      return;
     }
+
+    sessionStorage.setItem("lastTryonStart", String(now));
+
+      try {
+        controllerRef.current = new AbortController();
+        const { plan, tryOnCount } = await fetchUserPlan();
+
+        if (tryOnCount >= PLAN_LIMITS[plan].tryOn) {
+          toast('Monthly try-on limit reached. Please upgrade.', { icon: '⚠️' });
+          setShowPricingPlans(true);
+          setLoading(false);
+          return;
+        }
+
+        const recommendation = await fetchRecommendation();
+        const taskId = await initiateTryOn(recommendation.imageS3Url);
+
+        // ✅ Delay before polling to let callback update DB
+        await new Promise((res) => setTimeout(res, 1000));
+
+        cleanupRef.current = pollTaskStatus(taskId, controllerRef.current);
+      } catch (err) {
+        if (controllerRef.current?.signal.aborted) return;
+        setError(err.message || 'Unexpected error');
+        setLoading(false);
+      }
   }, [fetchUserPlan, fetchRecommendation, initiateTryOn, pollTaskStatus]);
 
   useEffect(() => {
     if (isLoading || !token) return;
 
     controllerRef.current = new AbortController();
-
+    let pollingTaskId = useRef(null);
     const savedTaskId = sessionStorage.getItem('currentTaskId');
     const savedProduct = sessionStorage.getItem('recommendedProduct');
 
     if (savedProduct) setProduct(JSON.parse(savedProduct));
 
-    if (savedTaskId && !resultImageUrl) {
+    if (savedTaskId && pollingTaskId.current !== savedTaskId) {
+      pollingTaskId.current = savedTaskId;
       cleanupRef.current = pollTaskStatus(savedTaskId, controllerRef.current);
-    } else {
+    } else if (!savedTaskId && !resultImageUrl){
       handleFlow();
     }
 
@@ -365,7 +384,7 @@ export default function AutoTryOnRecommendationPage() {
               });
               setLoading(true);
               resetState();
-              await handleFlow();
+              await handleFlow(true);
             }}
             className={`w-full py-3 rounded-full font-semibold border-2 ${
               loading
