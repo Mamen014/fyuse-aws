@@ -10,11 +10,24 @@ type Props = {
   token: string;
 };
 
+type Profile = {
+  skin_tone?: string;
+  body_shape?: string;
+  gender?: string;
+  user_image_url?: string;
+};
+
+type StyledItem = {
+  product_image_url?: string;
+  fashType?: string;
+  category?: string;
+};
+
 export default function ConfirmationModal({ isOpen, onClose, token }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
-  const [profile, setProfile] = useState<any>(null);
-  const [latestItem, setLatestItem] = useState<any>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [latestItem, setLatestItem] = useState<StyledItem | null>(null);
 
   const handleClose = () => onClose?.();
 
@@ -74,7 +87,7 @@ export default function ConfirmationModal({ isOpen, onClose, token }: Props) {
             {/* Modal Title */}
             <div>
             <h2 className="text-2xl font-bold text-primary mb-2 text-center md:text-left">
-                Ready to Discover Your Personalized Style?
+                Ready to Discover Your Style?
             </h2>
             </div>
 
