@@ -1,4 +1,4 @@
-// app/dashboard/paeg.jsx
+// app/dashboard/page.jsx
 
 "use client";
 
@@ -10,6 +10,7 @@ import { useAuth } from "react-oidc-context";
 import Navbar from "@/components/Navbar";
 import LoadingModalSpinner from "@/components/ui/LoadingState";
 import ReferralModal from "@/components/ReferralModal";
+import ConfirmationModal from "@/components/ConfirmationModal";
 import { User, ChevronRight, Shirt, MapPin, Sparkles, BriefcaseBusiness, CreditCard } from "lucide-react";
 import axios from "axios";
 
@@ -569,139 +570,11 @@ export default function DashboardPage() {
       </div>
     </div>
 
-    {/* Confirmation Modal */}
-    {showConfirmationModal && (
-      <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center overflow-y-auto">
-        <div className="modal-content w-full max-w-5xl rounded-2xl p-8 bg-white shadow-xl flex flex-col gap-10 md:flex-row md:gap-12">
-          {/* Left Column: Profile Summary */}
-          <div className="w-full md:w-[60%] space-y-6">
-
-            {/* Physical Attributes */}
-            <div className="border rounded-xl p-5 bg-muted">
-              <h3 className="font-bold text-xl text-primary mb-4">Physical Attributes</h3>
-              <div className="flex justify-between items-center gap-4">
-
-                {/* Skin Tone */}
-                <div className="flex flex-col items-center bg-white p-4 rounded-xl shadow w-full">
-                  {profileRaw?.skin_tone && skinToneImageMap[profileRaw.skin_tone.toLowerCase()] ? (
-                    <Image
-                      src={skinToneImageMap[profileRaw.skin_tone.toLowerCase()]}
-                      alt="Skin Tone"
-                      width={64}
-                      height={64}
-                      className="rounded-md object-contain"
-                    />
-                  ) : (
-                    <span className="text-gray-400">-</span>
-                  )}
-
-                  <p className="text-sm font-medium text-gray-700 mt-2">
-                    {capitalizeWords(profileRaw?.skin_tone || "Not Set")}
-                  </p>
-                </div>
-
-                {/* Body Shape */}
-                <div className="flex flex-col items-center bg-white p-4 rounded-xl shadow w-full">
-                  {profileRaw?.gender && profileRaw?.body_shape &&
-                  bodyShapeImageMap[profileRaw.gender.toLowerCase()]?.[profileRaw.body_shape.toLowerCase()] ? (
-                    <Image
-                      src={
-                        bodyShapeImageMap[profileRaw.gender.toLowerCase()][profileRaw.body_shape.toLowerCase()]
-                      }
-                      alt="Body Shape"
-                      width={64}
-                      height={64}
-                      className="rounded-md object-contain"
-                    />
-                  ) : (
-                    <span className="text-gray-400">-</span>
-                  )}
-
-                  <p className="text-sm font-medium text-gray-700 mt-2">
-                    {capitalizeWords(profileRaw?.body_shape || "Not Set")}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Liked Item Summary */}
-            <div className="border rounded-xl p-5 bg-muted">
-              <h3 className="font-bold text-xl text-primary mb-4">Latest Preference</h3>
-              {tryonItems.length > 0 ? (
-                <div className="flex items-center gap-5">
-                  <div className="rounded-xl overflow-hidden shadow-sm bg-white border border-gray-200 aspect-[3/4] w-[100px] h-[130px]">
-                    <Image
-                      src={tryonItems[0].product_image_url || "/placeholder.svg"}
-                      alt="Liked item"
-                      width={100}
-                      height={130}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div className="flex flex-col text-sm text-primary">
-                    <p>
-                      <span className="font-semibold">Fashion Type:</span>{" "}
-                      {capitalizeWords(fashType || "Not Set")}
-                    </p>
-                    <p>
-                      <span className="font-semibold">Category:</span>{" "}
-                      {capitalizeWords(clothCategory || "Not Set")}
-                    </p>
-                  </div>
-                </div>
-              ) : (
-                <p className="text-gray-500 text-sm">No style pick found.</p>
-              )}
-            </div>
-
-            {/* Buttons */}
-            <div className="flex flex-wrap gap-3 pt-2 py-2">
-              <button
-                onClick={() => {
-                  setShowConfirmationModal(false);
-                  setLoading(true);
-                  router.push("/personalized-styling/result");
-                }}
-                className="bg-primary text-white px-5 py-2.5 rounded-lg w-full md:w-auto"
-              >
-                Continue
-              </button>
-              <button
-                onClick={() => {
-                  setShowConfirmationModal(false);
-                  setLoading(true);
-                  router.push("/personalized-styling/physical-appearances");
-                }}
-                className="bg-gray-100 text-gray-800 px-5 py-2.5 rounded-lg w-full md:w-auto"
-              >
-                Re-upload Photo
-              </button>
-              <button
-                onClick={() => {
-                  setShowConfirmationModal(false);
-                  setLoading(true);
-                  router.push("/personalized-styling/style-preferences");
-                }}
-                className="bg-gray-100 text-gray-800 px-5 py-2.5 rounded-lg w-full md:w-auto"
-              >
-                Change Preferences
-              </button>
-            </div>
-          </div>
-
-          {/* Right Column: User Image */}
-          <div className="w-full md:w-[40%] flex justify-center md:justify-end">
-            <Image
-              src={profileRaw?.user_image_url || "/placeholder.svg"}
-              width={40}
-              height={120}
-              alt="User Upload"
-              className="md:w-full md:max-w-xs object-cover rounded-xl border"
-            />
-          </div>
-        </div>
-      </div>
-    )}
+    <ConfirmationModal
+      isOpen={showConfirmationModal}
+      onClose={() => setShowConfirmationModal(false)}
+      token={user?.id_token || user?.access_token}
+    />
 
     {/* Referral Modal */}
     {showReferralModal && (

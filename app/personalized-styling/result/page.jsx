@@ -229,12 +229,12 @@ export default function AutoTryOnRecommendationPage() {
   if (isLoading || loading)
     return <LoadingModalSpinner message="Styling..." subMessage="This process only takes 30 seconds." />;
 
-  if (error)
+  if (error && !product && !resultImageUrl)
     return (
       <div className="min-h-screen flex flex-col justify-center items-center text-center px-4">
         <h1 className="text-2xl font-bold text-red-600 mb-4">Error</h1>
         <p className="mb-6">{error}</p>
-        <button onClick={() => router.push('/dashboard')} className="bg-primary text-white">
+        <button onClick={() => router.push('/dashboard')} className="bg-primary text-white rounded-md">
           Back to Dashboard
         </button>
       </div>

@@ -41,7 +41,8 @@ export async function middleware(req: NextRequest) {
   }
 
   // 3. Rate limit by user ID
-  const { success, limit, remaining, reset } = await ratelimit.limit(userId);
+  const key = `${userId}:${req.nextUrl.pathname}`;
+  const { success, limit, remaining, reset } = await ratelimit.limit(key);
   if (!success) {
     return NextResponse.json(
       { error: "Rate limit exceeded" },
