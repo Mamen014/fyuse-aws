@@ -1,4 +1,4 @@
-// app/api/status/route.ts
+// app/api/tryon/status/route.ts
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";

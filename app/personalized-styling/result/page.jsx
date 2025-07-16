@@ -1,3 +1,5 @@
+// app/personalized-styling/result/page.jsx
+
 'use client';
 
 import { useEffect, useState, useRef, useCallback } from 'react';
@@ -87,60 +89,60 @@ export default function AutoTryOnRecommendationPage() {
     return task_id;
   }, [token]);
 
-const pollTaskStatus = useCallback((taskId, controller) => {
-  setIsPolling(true);
-  let attempts = 0;
-  const maxAttempts = 20;
-  const max404Retries = 3; // ✅ Soft retry for 404
-  const interval = 5000;
-  const signal = controller.signal;
+  const pollTaskStatus = useCallback((taskId, controller) => {
+    setIsPolling(true);
+    let attempts = 0;
+    const maxAttempts = 20;
+    const max404Retries = 3; // ✅ Soft retry for 404
+    const interval = 5000;
+    const signal = controller.signal;
 
-  const poll = async () => {
-    try {
-      const res = await fetch(`/api/tryon/status?task_id=${taskId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-        signal,
-      });
+    const poll = async () => {
+      try {
+        const res = await fetch(`/api/tryon/status?task_id=${taskId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+          signal,
+        });
 
-      if (res.status === 404 && attempts < max404Retries) {
-        console.warn("🔁 Got 404, retrying...");
-        attempts++;
-        return setTimeout(poll, interval);
-      }
+        if (res.status === 404 && attempts < max404Retries) {
+          console.warn("🔁 Got 404, retrying...");
+          attempts++;
+          return setTimeout(poll, interval);
+        }
 
-      if (!res.ok) {
-        throw new Error(`Polling failed: ${res.status}`);
-      }
+        if (!res.ok) {
+          throw new Error(`Polling failed: ${res.status}`);
+        }
 
-      const data = await res.json();
-      const { status, styling_image_url } = data;
+        const data = await res.json();
+        const { status, styling_image_url } = data;
 
-      if (status === "succeed" && styling_image_url) {
-        setResultImageUrl(styling_image_url);
+        if (status === "succeed" && styling_image_url) {
+          setResultImageUrl(styling_image_url);
+          setIsPolling(false);
+          setLoading(false);
+          toast.success("Style added to wardrobe!");
+          return;
+        }
+
+        if (++attempts < maxAttempts) {
+          setTimeout(poll, interval);
+        } else {
+          setIsPolling(false);
+          setLoading(false);
+          toast.error("Try-on timed out.");
+        }
+      } catch (err) {
+        if (err.name === "AbortError") return;
+        console.error("Polling error:", err);
         setIsPolling(false);
         setLoading(false);
-        toast.success("Style added to wardrobe!");
-        return;
+        toast.error("Polling failed.");
       }
+    };
 
-      if (++attempts < maxAttempts) {
-        setTimeout(poll, interval);
-      } else {
-        setIsPolling(false);
-        setLoading(false);
-        toast.error("Try-on timed out.");
-      }
-    } catch (err) {
-      if (err.name === "AbortError") return;
-      console.error("Polling error:", err);
-      setIsPolling(false);
-      setLoading(false);
-      toast.error("Polling failed.");
-    }
-  };
-
-  poll();
-}, [token]);
+    poll();
+  }, [token]);
 
   const track = async (action, metadata = {}) => {
     if (!userEmail) return;
