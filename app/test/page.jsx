@@ -1,4 +1,4 @@
-// app/personalized-styling/result/page.jsx
+// app/test/page.jsx
 
 'use client';
 
@@ -8,6 +8,7 @@ import { useAuth } from 'react-oidc-context';
 import axios from 'axios';
 import Image from 'next/image';
 import toast, { Toaster } from 'react-hot-toast';
+import html2canvas from "html2canvas";
 
 import PricingPlans from '@/components/PricingPlanCard';
 import LoadingModalSpinner from '@/components/ui/LoadingState';
@@ -29,6 +30,7 @@ export default function AutoTryOnRecommendationPage() {
   const cleanupRef = useRef(null);
   const pollingTaskId = useRef(null);
   const hasShownToast = useRef(false);
+  const shareRef = useRef(null);
 
   const [loading, setLoading] = useState(true);
   const [, setIsPolling] = useState(false);
@@ -63,7 +65,7 @@ export default function AutoTryOnRecommendationPage() {
   }, [token]);
 
   const fetchRecommendation = useCallback(async () => {
-    const res = await fetch('/api/recommend-product', {
+    const res = await fetch('/api/test/recommend-product', {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -76,7 +78,7 @@ export default function AutoTryOnRecommendationPage() {
   }, [token]);
 
   const initiateTryOn = useCallback(async () => {
-    const res = await fetch('/api/tryon', {
+    const res = await fetch('/api/test/tryon', {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -160,40 +162,8 @@ export default function AutoTryOnRecommendationPage() {
     poll();
   }, [token]);
 
-  const track = async (action, metadata = {}) => {
-    if (!userEmail) return;
-    try {
-      await axios.post(`${API_BASE_URL}/trackevent`, {
-        userEmail,
-        action,
-        page: 'resultPage',
-        timestamp: new Date().toISOString(),
-        ...metadata,
-      });
-    } catch (err) {
-      console.warn('Tracking failed:', err.message);
-    }
-  };
-
-  const trackPersonalizeEvent = async ({ userId, itemId, eventType, liked }) => {
-    try {
-      await fetch(`${API_BASE_URL}/stylingRecTrack`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId,
-          sessionId: `session-${Date.now()}`,
-          itemId,
-          eventType,
-          liked,
-        }),
-      });
-    } catch (err) {
-      console.warn('Event track failed:', err);
-    }
-  };
-
   const handleFlow = useCallback(async (isManual = false) => {
+    
       try {
         controllerRef.current = new AbortController();
         const { plan, tryOnCount } = await fetchUserPlan();
@@ -207,6 +177,7 @@ export default function AutoTryOnRecommendationPage() {
         const now = Date.now();  
 
         if (!isManual && now - lastStart < 60_000) {
+          console.log("Skipping re-trigger: recently started");
           toast("Too frequent. Please try again later", { duration: 3000, icon: '⚠️' });
           setLoading(false);
           setTimeout(() => {
@@ -223,7 +194,7 @@ export default function AutoTryOnRecommendationPage() {
         const delay = ms => new Promise(res => setTimeout(res, ms));
 
         // ✅ Delay before polling to let callback update DB
-        await delay(1000);
+        await delay(10000);
 
         cleanupRef.current = pollTaskStatus(taskId, controllerRef.current);
       } catch (err) {
@@ -283,81 +254,83 @@ export default function AutoTryOnRecommendationPage() {
 
   return (
     <div className="min-h-screen px-4 py-8 bg-gradient-to-b from-blue-50 to-white flex flex-col items-center">
-      <Toaster position="top-center" />
+      <Toaster
+        position="top-center"
+        toastOptions={{
+          style: { zIndex: 9999 },
+        }}
+      />
 
       <div className="max-w-6xl w-full">
         <h1 className="text-3xl font-bold text-primary text-center mb-2">Your Perfect Look</h1>
         <p className="text-gray-600 text-center mb-8">This style has been added to your wardrobe</p>
 
         {/* Images */}
-        <div className="flex flex-col md:flex-row gap-8 mb-12 items-stretch">
-          {/* Left: Try-On Result */}
-          <div className="md:w-1/2 w-full flex">
-            <div className="relative rounded-2xl shadow-2xl overflow-hidden w-full aspect-[3/4]">
-              {resultImageUrl ? (
-                <Image
-                  src={resultImageUrl}
-                  alt="Try-On Result"
-                  fill
-                  className="object-cover"
-                  priority
-                  unoptimized
-                />
-              ) : (
-                <div className="w-full h-full flex justify-center items-center bg-gray-100 text-sm text-gray-500">
-                  Not available
+        <div ref={shareRef} id="share-content" className="bg-white p-4 rounded-xl">
+          <div className="flex flex-col md:flex-row gap-8 mb-12 items-stretch">
+            {/* Left: Try-On Result */}
+            <div className="md:w-1/2 w-full flex">
+              <div className="relative rounded-2xl shadow-2xl overflow-hidden w-full aspect-[3/4]">
+                {resultImageUrl ? (
+                  <Image
+                    src={resultImageUrl}
+                    alt="Try-On Result"
+                    fill
+                    className="object-cover"
+                    priority
+                    unoptimized
+                  />
+                ) : (
+                  <div className="w-full h-full flex justify-center items-center bg-gray-100 text-sm text-gray-500">
+                    Not available
+                  </div>
+                )}
+                <div className="absolute top-4 right-4 bg-white/90 text-primary px-3 py-1 rounded-full text-sm font-medium">
+                  Perfect Match
                 </div>
-              )}
-              <div className="absolute top-4 right-4 bg-white/90 text-primary px-3 py-1 rounded-full text-sm font-medium">
-                Perfect Match
               </div>
             </div>
-          </div>
 
-          {/* Right: Product Info */}
-          <div className="md:w-1/2 w-full flex">
-            <div className="bg-white rounded-2xl p-6 shadow-2xl w-full flex flex-col">
-              <div className="relative w-full aspect-[3/4]">
-                <Image
-                  src={product.imageS3Url}
-                  alt={product.productName}
-                  fill
-                  className="object-contain rounded-xl"
-                  priority
-                  unoptimized
-                />
-              </div>
-              <div className="mt-4 text-center md:text-left">
-                <h3 className="text-lg font-bold">{product.productName}</h3>
-                <p className="text-gray-600">{product.brand}</p>
-                {product.productLink && (
-                  <a
-                    href={product.productLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-block mt-3 text-white bg-primary hover:bg-primary/80 px-4 py-2 rounded-full"
-                  >
-                    View Product
-                  </a>
-                )}
+            {/* Right: Product Info */}
+            <div className="md:w-1/2 w-full flex">
+              <div className="bg-white rounded-2xl p-6 shadow-2xl w-full flex flex-col">
+                <div className="relative w-full aspect-[3/4]">
+                  <Image
+                    src={product.imageS3Url}
+                    alt={product.productName}
+                    fill
+                    className="object-contain rounded-xl"
+                    priority
+                    unoptimized
+                  />
+                </div>
+                <div className="mt-4 text-center md:text-left">
+                  <h3 className="text-lg font-bold">{product.productName}</h3>
+                  <p className="text-gray-600">{product.brand}</p>
+                  {product.productLink && (
+                    <a
+                      href={product.productLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-block mt-3 text-white bg-primary hover:bg-primary/80 px-4 py-2 rounded-full"
+                    >
+                      View Product
+                    </a>
+                  )}
+                </div>
               </div>
             </div>
           </div>
         </div>
 
+
         {/* Button */}
         <div className="w-full max-w-6xl mx-auto space-y-4">
+          {/* Download Button */}
           {resultImageUrl && (
             <button
-              onClick={async () => {
+              onClick={ async () => {
                 setIsDownloading(true);
-                track('download_look', { selection: resultImageUrl });
-                trackPersonalizeEvent({
-                  userId: userEmail,
-                  itemId: product?.productId,
-                  eventType: 'download',
-                  liked: true,
-                });
                 try {
                   const res = await fetch(resultImageUrl);
                   const blob = await res.blob();
@@ -378,16 +351,41 @@ export default function AutoTryOnRecommendationPage() {
               {isDownloading ? 'Downloading...' : 'Download Your Look'}
             </button>
           )}
+          {/* Share Button */}
+          {resultImageUrl && (
+            <button
+              onClick={async () => {
+                const node = shareRef.current;
+                if (!node) return;
 
+                try {
+                  const canvas = await html2canvas(node);
+                  const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg'));
+                  const file = new File([blob], 'your-look.jpg', { type: 'image/jpeg' });
+
+                  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    await navigator.share({
+                      title: 'Your Perfect Look ✨',
+                      text: 'Check out my try-on style from FYUSE!',
+                      files: [file],
+                    });
+                  } else {
+                    toast.error("Sharing not supported on this device");
+                  }
+                } catch (err) {
+                  console.error("Share error:", err);
+                  toast.error("Failed to share image");
+                }
+              }}
+              className="w-full py-3 rounded-full text-white font-semibold bg-gradient-to-r from-[#f58529] via-[#dd2a7b] to-[#8134af] hover:opacity-90 transition-all duration-300"
+            >
+              Share to My Friends
+            </button>
+          )}
+          {/* Try Another Style Button */}
           <button
             disabled={loading}
             onClick={async () => {
-              trackPersonalizeEvent({
-                userId: userEmail,
-                itemId: product?.productId,
-                eventType: 'retry',
-                liked: false,
-              });
               setLoading(true);
               resetState();
               await handleFlow(true);
@@ -400,15 +398,9 @@ export default function AutoTryOnRecommendationPage() {
           >
             {loading ? 'Loading...' : 'Try Another Style'}
           </button>
-
+          {/* Back to Dashboard Button */}
           <button
             onClick={() => {
-              trackPersonalizeEvent({
-                userId: userEmail,
-                itemId: product?.productId,
-                eventType: 'back_dashboard',
-                liked: false,
-              });
               resetState();
               setLoading(true);
               router.push('/dashboard');
