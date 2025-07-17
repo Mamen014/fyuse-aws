@@ -40,7 +40,6 @@ function Step2Content() {
   };
 
   const handleSubmit = () => {
-    localStorage.setItem('body-shape', bodyShape);
     window.location.href = '/personalized-styling/style-preferences';
   };
 

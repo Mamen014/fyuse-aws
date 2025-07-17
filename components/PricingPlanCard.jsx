@@ -103,8 +103,8 @@ export default function PricingPlans({ onClose, sourcePage = "Unknown" }) {
           }}
         >
           <div className="bg-background text-primary rounded-3xl p-8 max-w-7xl w-full mx-4 shadow-2xl relative overflow-y-auto max-h-[90vh]">
-            <h2 className="text-3xl md:text-4xl font-bold text-center mb-8">
-              Choose Your Plan
+            <h2 className="text-xl md:text-4xl font-semibold text-center mb-8">
+              You've Reached Monthly Limit<br />Please Upgrade
             </h2>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">

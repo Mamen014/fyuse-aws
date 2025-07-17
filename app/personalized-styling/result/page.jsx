@@ -28,6 +28,7 @@ export default function AutoTryOnRecommendationPage() {
   const controllerRef = useRef(null);
   const cleanupRef = useRef(null);
   const pollingTaskId = useRef(null);
+  const hasShownToast = useRef(false);
 
   const [loading, setLoading] = useState(true);
   const [, setIsPolling] = useState(false);
@@ -43,6 +44,7 @@ export default function AutoTryOnRecommendationPage() {
     setError(null);
     setShowPricingPlans(false);
     setIsPolling(false);
+    hasShownToast.current = false;
     sessionStorage.removeItem('currentTaskId');
     sessionStorage.removeItem('recommendedProduct');
   };
@@ -127,10 +129,15 @@ export default function AutoTryOnRecommendationPage() {
         if (status === "succeed" && styling_image_url) {
           if (!resultImageUrl) {
             setResultImageUrl(styling_image_url);
-            toast.success("Style added to wardrobe!");
           };
+
+          if (!hasShownToast.current) {
+            toast.success("Style added to wardrobe!");
+            hasShownToast.current = true;
+          };
+
           setIsPolling(false);
-          setLoading(false);          
+          setLoading(false);        
           return;
         }
 
@@ -187,26 +194,29 @@ export default function AutoTryOnRecommendationPage() {
   };
 
   const handleFlow = useCallback(async (isManual = false) => {
-    const lastStart = Number(sessionStorage.getItem("lastTryonStart") || "0");
-    const now = Date.now();  
-
-    if (!isManual && now - lastStart < 60_000) {
-      console.log("Skipping re-trigger: recently started");
-      return;
-    }
-
-    sessionStorage.setItem("lastTryonStart", String(now));
-
       try {
         controllerRef.current = new AbortController();
         const { plan, tryOnCount } = await fetchUserPlan();
 
         if (tryOnCount >= PLAN_LIMITS[plan].tryOn) {
-          toast('Monthly try-on limit reached. Please upgrade.', { icon: '⚠️' });
           setShowPricingPlans(true);
           setLoading(false);
           return;
         }
+        const lastStart = Number(sessionStorage.getItem("lastTryonStart") || "0");
+        const now = Date.now();  
+
+        if (!isManual && now - lastStart < 60_000) {
+          toast("Too frequent. Please try again later", { duration: 3000, icon: '⚠️' });
+          setLoading(false);
+          setTimeout(() => {
+            setLoading(true);
+            router.push('/dashboard');
+          }, 3000);          
+          return;
+        }
+
+        sessionStorage.setItem("lastTryonStart", String(now));
 
         const recommendation = await fetchRecommendation();
         const taskId = await initiateTryOn(recommendation.imageS3Url);
@@ -267,7 +277,6 @@ export default function AutoTryOnRecommendationPage() {
       <PricingPlans
         isOpen
         onClose={() => setShowPricingPlans(false)}
-        onSelect={(plan) => console.log('Plan selected:', plan)}
         sourcePage="resultPage"
       />
     );
@@ -314,6 +323,7 @@ export default function AutoTryOnRecommendationPage() {
                   width={800}
                   height={600}
                   className="w-full max-h-[400px] object-contain rounded-xl mb-4"
+                  priority
                   unoptimized
                 />
                 <div className="text-center md:text-left">
@@ -332,7 +342,7 @@ export default function AutoTryOnRecommendationPage() {
                           liked: true,
                         })
                       }
-                      className="inline-block mt-3 text-white bg-primary hover:bg-[#0a1a57] px-4 py-2 rounded-full"
+                      className="inline-block mt-3 text-white bg-primary hover:bg-primary/80 px-4 py-2 rounded-full"
                     >
                       View Product
                     </a>
@@ -389,10 +399,10 @@ export default function AutoTryOnRecommendationPage() {
               resetState();
               await handleFlow(true);
             }}
-            className={`w-full py-3 rounded-full font-semibold border-2 ${
+            className={`text-white bg-primary w-full py-3 rounded-full font-semibold ${
               loading
                 ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                : 'text-primary border-primary hover:bg-primary/10'
+                : 'text-primary border-primary hover:bg-primary/80'
             }`}
           >
             {loading ? 'Loading...' : 'Try Another Style'}
@@ -410,7 +420,11 @@ export default function AutoTryOnRecommendationPage() {
               setLoading(true);
               router.push('/dashboard');
             }}
-            className="w-full py-3 rounded-full font-semibold bg-white border text-primary"
+            className={`w-full py-3 rounded-full font-semibold bg-white border text-primary ${
+              loading
+                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                : 'text-primary border-primary hover:bg-primary/10'
+            }`}
           >
             Back to Dashboard
           </button>

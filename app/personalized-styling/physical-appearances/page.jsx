@@ -171,31 +171,31 @@ export default function AIPhotoUpload() {
         fileName: fileToUpload.name,
         fileDataBase64: base64Data,
         contentType: fileToUpload.type,
-        userEmail: userEmail,
       };
 
       // Upload to S3 bucket with Lambda
-      const uploadResponse = await fetch(`${API_BASE_URL}/upload-user-image`, {
+      const uploadResponse = await fetch(`/api/upload-image`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          Authorization: `Bearer ${user.id_token}`,
+          'Content-Type': 'application/json' 
+        },
         body: JSON.stringify(payload),
       });
       const uploadData = await uploadResponse.json();
       
-      if (!uploadData.imageUrl) {
+      if (!uploadData.user_image_url) {
         throw new Error('Upload failed: No image URL returned');
       }
 
-      // Store the image URL
-      localStorage.setItem('user_image', uploadData.imageUrl);
-      track('upload_photo', { selection: uploadData.imageUrl })
+      track('upload_photo', { selection: uploadData.user_image_url })
 
       // Analyze the uploaded image
       const analyzerResponse = await fetch(`${API_BASE_URL}/userAnalyzer`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userImage: uploadData.imageUrl,
+          userImage: uploadData.user_image_url,
           userEmail: userEmail
         }),
       });
@@ -205,9 +205,7 @@ export default function AIPhotoUpload() {
       const aiAnalysisResults = {
         gender: analyzerData.gender,
         skin_tone: analyzerData.skinTone,
-        body_shape: analyzerData.bodyShape,
-        user_image_url: uploadData.imageUrl
-        
+        body_shape: analyzerData.bodyShape,        
       };
       
       // Save to state for the modal
