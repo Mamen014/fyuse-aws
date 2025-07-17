@@ -47,8 +47,7 @@ export default function PricingPlans() {
       name: "Basic",
       price: "Free",
       features: [
-        "10 Virtual Fitting",
-        "20 Personalized Styling",
+        "10 Personalized Styling",
         "20 Change Preferences",
         "15 Saved Items in Wardrobe",
       ],
@@ -59,8 +58,7 @@ export default function PricingPlans() {
       name: "Elegant",
       price: "Rp. 29.999/Month",
       features: [
-        "20 Virtual Fitting",
-        "40 Personalized Styling Recommendations",
+        "20 Personalized Styling",
         "30 Change Preferences",
         "50 Saved Items in Wardrobe",
       ],
@@ -71,8 +69,7 @@ export default function PricingPlans() {
       name: "Glamour",
       price: "Rp. 59.999/Month",
       features: [
-        "40 Virtual Fitting",
-        "60 Personalized Styling",
+        "40 Personalized Styling",
         "Unlimited Change Preferences",
         "Unlimited Saved Items in Wardrobe",
       ],

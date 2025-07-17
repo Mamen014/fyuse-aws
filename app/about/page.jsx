@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import CTAstyling from '@/components/ui/CTAstyling';
 
 export default function AboutPage() {
   return (
@@ -23,8 +24,8 @@ export default function AboutPage() {
             FYUSE is here to make trying on clothes easy, fun, and truly about
             <em> you</em> — no fitting rooms, no second guessing, just effortless style discovery.
           </p>
+          <CTAstyling />
         </motion.div>
-
         {/* Vision */}
         <section>
           <h2 className="text-3xl font-heading font-semibold text-primary mb-4 tracking-tight">

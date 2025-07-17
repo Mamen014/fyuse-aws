@@ -5,6 +5,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import CTAstyling from "@/components/ui/CTAstyling";
 
 const features = [
   {
@@ -88,8 +89,9 @@ export default function Features() {
               FYUSE is where technology meets personal style. We go beyond tools
               — we help you feel confident, expressive, and effortlessly you.
             </p>
+            <CTAstyling />
           </div>
-
+          
           {/* Feature Grid */}
           <div className="font-body grid gap-8 sm:grid-cols-2 lg:grid-cols-3 px-4">
             {sortedFeatures.map((feature, index) => (
@@ -102,7 +104,7 @@ export default function Features() {
             ))}
           </div>
         </div>
-      </section>
+      </section>      
       <Footer />
     </div>
   );

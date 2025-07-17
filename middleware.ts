@@ -23,7 +23,9 @@ export async function middleware(req: NextRequest) {
   if (pathname === "/api/tryon/callback") {
     return NextResponse.next();
   }
-
+  if (pathname === "/api/contact") {
+    return NextResponse.next();
+  }
   // 2. Require Bearer token
   const authHeader = req.headers.get("authorization");
   if (!authHeader || !authHeader.startsWith("Bearer ")) {

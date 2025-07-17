@@ -6,6 +6,7 @@ import React from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import CTAstyling from '@/components/ui/CTAstyling';
 
 export default function FitOverTrendBlogPage() {
   return (
@@ -89,15 +90,10 @@ export default function FitOverTrendBlogPage() {
 
         {/* CTA Section */}
         <div className="mt-20 text-center">
-          <p className="text-base sm:text-lg mb-6 text-muted-foreground">
+          <p className="text-base sm:text-lg mb-2 text-muted-foreground">
             At FYUSE, we believe the best outfits are the ones that work <em>with</em> you, not against you.
           </p>
-          <Link
-            href="/"
-            className="inline-block bg-primary text-primary-foreground px-6 py-3 rounded-full text-sm sm:text-base hover:bg-[#004799] transition font-heading"
-          >
-            Explore Your Personal Fit →
-          </Link>
+          <CTAstyling />
         </div>
       </main>
       <Footer />
