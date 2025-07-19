@@ -17,7 +17,7 @@ export default function ShareCanvas() {
           />
         </div>
         <h1 className="text-[54px] text-primary font-bold leading-tight mb-2">
-          Ryan's Perfect Look
+          Ryan&apos;s Perfect Look
         </h1>
       </div>
 
