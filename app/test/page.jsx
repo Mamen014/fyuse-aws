@@ -10,7 +10,7 @@ import Image from 'next/image';
 import toast, { Toaster } from 'react-hot-toast';
 import html2canvas from 'html2canvas';
 
-import ShareCanvas from '@/components/ui/shareCanvas';
+import ShareCanvas from '@/components/ui/ShareCanvas';
 import PricingPlans from '@/components/PricingPlanCard';
 import LoadingModalSpinner from '@/components/ui/LoadingState';
 
