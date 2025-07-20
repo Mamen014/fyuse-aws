@@ -36,7 +36,7 @@ export default function ShareCanvas({
         {/* 👕 Left: Try-On Image */}
         <div className="w-1/2 justify-center">
           <img
-            src={resultImageUrl}
+            src={`${resultImageUrl}?cb=${Date.now()}`}
             alt="Try-On"
             crossOrigin="anonymous"
             className="w-full h-full object-cover shadow-2xl rounded-2xl"
@@ -49,7 +49,7 @@ export default function ShareCanvas({
           <div className="flex justify-between border border-primary-light rounded-xl px-[16px] py-8 mb-6">
             <div className="text-center flex-1">
               <p className="text-primary font-medium text-[24px] mb-2">Skin Tone</p>
-              <div className="aspect-square w-[96px] relative mx-auto mb-4 mt-4">
+              <div className="aspect-square w-[96px] items-center justify-center relative mx-auto mb-4 mt-4">
                 <Image
                   src={`/images/skin-tone/${skinToneLabel}.png`}
                   alt={`${skinToneLabel}`}
@@ -62,7 +62,7 @@ export default function ShareCanvas({
 
             <div className="text-center flex-1">
               <p className="text-primary font-medium text-[24px] mb-2">Body Shape</p>
-              <div className="aspect-square w-[96px] relative mx-auto mb-4 mt-4">
+              <div className="aspect-square w-[96px] items-center justify-center relative mx-auto mb-4 mt-4">
                 <Image
                   src={`/images/body-shape/${gender}/${bodyShape}.png`}
                   alt={`${bodyShape}`}
@@ -79,7 +79,7 @@ export default function ShareCanvas({
             {/* 🖼️ Product Image */}
             <div className="rounded-xl p-[24px] mb-2 flex items-center justify-center">
               <img
-                src={productImageUrl}
+                src={`${productImageUrl}?cb=${Date.now()}`}
                 alt="Product"
                 crossOrigin="anonymous"
                 className="w-80 h-80 object-cover rounded-xl"
@@ -119,7 +119,7 @@ export default function ShareCanvas({
           <span className="font-bold text-[32px] text-primary">Personalized Style?</span>
         </p>
         <p className="text-[18px] text-primary mt-[8px]">
-          Visit: <span className="font-bold">fyuse.org</span>
+          Visit: <span className="text-[18px] text-primary font-bold">fyuse.org</span>
         </p>
       </div>
     </div>

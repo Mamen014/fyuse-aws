@@ -52,7 +52,23 @@ export default function AutoTryOnRecommendationPage() {
 
     setIsSharing(true);
 
+    // ✅ Preload result and product images
+    const preloadImage = (src) =>
+      new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.onload = resolve;
+        img.onerror = reject;
+        img.src = `${src}?cb=${Date.now()}`; // 👈 cache-busting
+      });
+
     try {
+      await Promise.all([
+        preloadImage(resultImageUrl),
+        preloadImage(product.imageS3Url),
+      ]);
+
+      // ✅ After both images are fully loaded, proceed to render canvas
       const canvas = await html2canvas(canvasEl, {
         useCORS: true,
         scale: 2,
@@ -380,7 +396,7 @@ export default function AutoTryOnRecommendationPage() {
               <div className="relative rounded-2xl shadow-2xl overflow-hidden w-full aspect-[3/4]">
                 {resultImageUrl ? (
                   <img
-                    src={resultImageUrl}
+                    src={`${resultImageUrl}?cb=${Date.now()}`}
                     crossOrigin="anonymous"
                     alt="Try-On Result"
                     className="w-full h-auto object-cover"
@@ -401,7 +417,7 @@ export default function AutoTryOnRecommendationPage() {
               <div className="bg-white rounded-2xl p-6 shadow-2xl w-full flex flex-col">
                 <div className="relative w-full aspect-[3/4]">
                   <img
-                    src={product.imageS3Url}
+                    src={`${product.imageS3Url}?cb=${Date.now()}`}
                     crossOrigin="anonymous"
                     alt={product.productName}
                     className="w-full h-auto object-cover"
