@@ -6,11 +6,16 @@ import { jwtDecode } from "jwt-decode";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
-  const taskId = searchParams.get("task_id");
-
-  if (!taskId) {
-    return NextResponse.json({ error: "Missing task_id" }, { status: 400 });
+  const logId = searchParams.get("log_id");
+  if (!logId) {
+    return NextResponse.json({ error: "Missing log_id" }, { status: 400 });
   }
+
+  const log = await prisma.styling_log.findUnique({
+    where: {
+      id: logId,
+    },
+  });
 
   const authHeader = req.headers.get("authorization");
   if (!authHeader?.startsWith("Bearer ")) {
@@ -30,7 +35,7 @@ export async function GET(req: NextRequest) {
   try {
     const log = await prisma.styling_log.findFirst({
       where: {
-        kling_task_id: taskId,
+        id: logId,
         user_id,
       },
       select: {

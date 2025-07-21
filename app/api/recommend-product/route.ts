@@ -139,7 +139,7 @@ export async function POST(req: NextRequest) {
     // 6. Log recommendation to styling_log
     await prisma.styling_log.create({
       data: {
-        task_id: uuidv4(),
+        id: uuidv4(),
         user_id,
         item_id: product.item_id,
         created_at: new Date(),

@@ -25,11 +25,11 @@ model style_preference {
 }
 
 model styling_log {
-  task_id           String   @id
+  id                String   @id @default(uuid()) // Internal primary key
   user_id           String
   item_id           String
-  kling_task_id     String?  @unique
-  created_at        DateTime?
+  kling_task_id     String?  @unique              // External Kolors ID
+  created_at        DateTime? @default(now())
   updated_at        DateTime?
   styling_image_url String?
   user_image_url    String?

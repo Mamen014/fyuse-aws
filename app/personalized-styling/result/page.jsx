@@ -27,7 +27,7 @@ export default function AutoTryOnRecommendationPage() {
 
   const controllerRef = useRef(null);
   const cleanupRef = useRef(null);
-  const pollingTaskId = useRef(null);
+  const pollingLogId = useRef(null);
   const hasShownToast = useRef(false);
 
   const [loading, setLoading] = useState(true);
@@ -45,7 +45,7 @@ export default function AutoTryOnRecommendationPage() {
     setShowPricingPlans(false);
     setIsPolling(false);
     hasShownToast.current = false;
-    sessionStorage.removeItem('currentTaskId');
+    sessionStorage.removeItem('currentLogId');
     sessionStorage.removeItem('recommendedProduct');
   };
 
@@ -75,10 +75,14 @@ export default function AutoTryOnRecommendationPage() {
     return data;
   }, [token]);
 
-  const initiateTryOn = useCallback(async () => {
+  const initiateTryOn = useCallback(async (item_id) => {
     const res = await fetch('/api/tryon', {
       method: 'POST',
-      headers: { Authorization: `Bearer ${token}` },
+      headers: { 
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json', 
+      },
+      body: JSON.stringify({ item_id }),
     });
 
     if (!res.ok) {
@@ -86,13 +90,13 @@ export default function AutoTryOnRecommendationPage() {
       throw new Error(errorData.error || 'Try-on failed.');
     }
 
-    const { task_id } = await res.json();
-    if (!task_id) throw new Error('Missing task ID.');
-    sessionStorage.setItem('currentTaskId', task_id);
-    return task_id;
+    const { log_id } = await res.json();
+    if (!log_id) throw new Error('Missing log ID.');
+    sessionStorage.setItem('currentLogId', log_id);
+    return log_id;
   }, [token]);
 
-  const pollTaskStatus = useCallback((taskId, controller) => {
+  const pollTaskStatus = useCallback((logId, controller) => {
     setIsPolling(true);
     let attempts = 0;
     const maxAttempts = 20;
@@ -102,13 +106,13 @@ export default function AutoTryOnRecommendationPage() {
 
     const poll = async () => {
 
-      if (taskId !== sessionStorage.getItem('currentTaskId')) {
+      if (logId !== sessionStorage.getItem('currentLogId')) {
         console.warn('Stale task result, ignoring');
         return;
       }
 
       try {
-        const res = await fetch(`/api/tryon/status?task_id=${taskId}`, {
+        const res = await fetch(`/api/tryon/status?log_id=${logId}`, {
           headers: { Authorization: `Bearer ${token}` },
           signal,
         });
@@ -219,13 +223,13 @@ export default function AutoTryOnRecommendationPage() {
         sessionStorage.setItem("lastTryonStart", String(now));
 
         const recommendation = await fetchRecommendation();
-        const taskId = await initiateTryOn(recommendation.imageS3Url);
+        const logId = await initiateTryOn(recommendation.productId);
         const delay = ms => new Promise(res => setTimeout(res, ms));
 
         // ✅ Delay before polling to let callback update DB
         await delay(1000);
 
-        cleanupRef.current = pollTaskStatus(taskId, controllerRef.current);
+        cleanupRef.current = pollTaskStatus(logId, controllerRef.current);
       } catch (err) {
         if (controllerRef.current?.signal.aborted) return;
         setError(err.message || 'Unexpected error');
@@ -239,15 +243,15 @@ export default function AutoTryOnRecommendationPage() {
     if (isLoading || !token) return;
 
     controllerRef.current = new AbortController();
-    const savedTaskId = sessionStorage.getItem('currentTaskId');
+    const savedLogId = sessionStorage.getItem('currentLogId');
     const savedProduct = sessionStorage.getItem('recommendedProduct');
 
     if (savedProduct) setProduct(JSON.parse(savedProduct));
 
-    if (savedTaskId && pollingTaskId.current !== savedTaskId) {
-      pollingTaskId.current = savedTaskId;
-      cleanupRef.current = pollTaskStatus(savedTaskId, controllerRef.current);
-    } else if (!savedTaskId && !resultImageUrl){
+    if (savedLogId && pollingLogId.current !== savedLogId) {
+      pollingLogId.current = savedLogId;
+      cleanupRef.current = pollTaskStatus(savedLogId, controllerRef.current);
+    } else if (!savedLogId && !resultImageUrl){
       handleFlow();
     }
 
@@ -316,30 +320,94 @@ export default function AutoTryOnRecommendationPage() {
 
           {/* Right: Product Info */}
           <div className="md:w-1/2 w-full flex">
-            <div className="bg-white rounded-2xl p-6 shadow-2xl w-full flex flex-col">
+            <div className="rounded-2xl p-6 shadow-2xl w-full flex flex-col">
+
+              {/* Product Image */}
               <div className="relative w-full aspect-[3/4]">
                 <Image
                   src={product.imageS3Url}
                   alt={product.productName}
                   fill
-                  className="object-contain rounded-xl"
+                  className="object-cover rounded-xl"
                   priority
                   unoptimized
                 />
               </div>
-              <div className="mt-4 text-center md:text-left">
-                <h3 className="text-lg font-bold">{product.productName}</h3>
-                <p className="text-gray-600">{product.brand}</p>
-                {product.productLink && (
-                  <a
-                    href={product.productLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-block mt-3 text-white bg-primary hover:bg-primary/80 px-4 py-2 rounded-full"
-                  >
-                    View Product
-                  </a>
-                )}
+
+              {/* Product Detail */}
+              <div className="flex flex-col md:flex md:flex-row justify-between mt-4">
+
+                {/* Detail Info */}
+                <div className="flex flex-col text-left">
+                  <div className="font-bold mb-4">
+                    <h3>{product.productName}</h3>
+                  </div>
+                  <div>
+                    <Image
+                      src={`/images/brand-logo/${product.brand}.png`}
+                      alt="Brand Icon"
+                      width={64}
+                      height={64}
+                      className='inline-block mr-2 mb-4'
+                    />
+                  </div>
+                </div>
+
+                {/* Product Links */}
+                <div className="flex flex-row md:flex md:flex-col text-left md:justify-center md:text-center gap-3">
+                  
+                  {/* Preview Button */}                
+                  {product.imageS3Url && (
+                    <a
+                      href={product.imageS3Url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary bg-white border border-primary hover:bg-primary/10 px-4 py-2 rounded-full"
+                    >
+                      Preview
+                    </a>
+                  )}                  
+
+                  {/* Download Button */}
+                  {resultImageUrl && (
+                    <button
+                      onClick={ async () => {
+                        setIsDownloading(true);
+                        try {
+                          const res = await fetch(resultImageUrl);
+                          const blob = await res.blob();
+                          const url = URL.createObjectURL(blob);
+                          const a = document.createElement('a');
+                          a.href = url;
+                          a.download = 'your-look.jpg';
+                          a.click();
+                          URL.revokeObjectURL(url);
+                        } catch {
+                          toast.error('Download failed');
+                        } finally {
+                          setIsDownloading(false);
+                        }
+                      }}
+                      className="w-full py-2 rounded-full text-primary bg-background hover:bg-primary/10 border border-primary"
+                    >
+                      {isDownloading ? 'Downloading...' : 'Download'}
+                    </button>
+                  )}
+
+                  {/* Purchase Button */}
+                  {product.productLink && (
+                    <a
+                      href={product.productLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-white bg-primary hover:bg-primary/80 px-4 py-2 rounded-full"
+                    >
+                      Purchase
+                    </a>
+                  )}
+                 
+                </div>
+              
               </div>
             </div>
           </div>
@@ -347,47 +415,11 @@ export default function AutoTryOnRecommendationPage() {
 
         {/* Button */}
         <div className="w-full max-w-6xl mx-auto space-y-4">
-          {resultImageUrl && (
-            <button
-              onClick={async () => {
-                setIsDownloading(true);
-                track('download_look', { selection: resultImageUrl });
-                trackPersonalizeEvent({
-                  userId: userEmail,
-                  itemId: product?.productId,
-                  eventType: 'download',
-                  liked: true,
-                });
-                try {
-                  const res = await fetch(resultImageUrl);
-                  const blob = await res.blob();
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement('a');
-                  a.href = url;
-                  a.download = 'your-look.jpg';
-                  a.click();
-                  URL.revokeObjectURL(url);
-                } catch {
-                  toast.error('Download failed');
-                } finally {
-                  setIsDownloading(false);
-                }
-              }}
-              className="w-full py-3 rounded-full text-white font-semibold bg-green-600 hover:bg-green-700"
-            >
-              {isDownloading ? 'Downloading...' : 'Download Your Look'}
-            </button>
-          )}
-
+          
+          {/* Try Another Style Button */}
           <button
             disabled={loading}
             onClick={async () => {
-              trackPersonalizeEvent({
-                userId: userEmail,
-                itemId: product?.productId,
-                eventType: 'retry',
-                liked: false,
-              });
               setLoading(true);
               resetState();
               await handleFlow(true);
@@ -400,15 +432,10 @@ export default function AutoTryOnRecommendationPage() {
           >
             {loading ? 'Loading...' : 'Try Another Style'}
           </button>
-
+          
+          {/* Back to Dashboard Button */}
           <button
             onClick={() => {
-              trackPersonalizeEvent({
-                userId: userEmail,
-                itemId: product?.productId,
-                eventType: 'back_dashboard',
-                liked: false,
-              });
               resetState();
               setLoading(true);
               router.push('/dashboard');
@@ -421,6 +448,7 @@ export default function AutoTryOnRecommendationPage() {
           >
             Back to Dashboard
           </button>
+        
         </div>
       </div>
     </div>
