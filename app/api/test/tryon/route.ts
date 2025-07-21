@@ -2,7 +2,9 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { jwtDecode } from "jwt-decode";
-
+import { prisma } from "@/lib/prisma";
+import { getSecrets } from "@/lib/secrets";
+import jwt from "jsonwebtoken";
 
 export async function POST(req: NextRequest) {
 

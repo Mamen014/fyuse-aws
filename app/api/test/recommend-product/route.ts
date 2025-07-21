@@ -22,10 +22,9 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       productId: "product.item_id",
-      productName: "LONG SLEEVE T-SHIRT",
-      brand: "Adidas",
+      productName: "product.product_name",
+      brand: "product.brand",
       imageS3Url: "https://fyuse-images.s3.ap-southeast-2.amazonaws.com/productData/Adidas/jy2218_1_apparel_photography_front_center_view_grey.jpg",
       productLink: "https://www.adidas.co.id/en/train-essentials-boxy-workout-t-shirt-1032798.html",
-      fashionType: "SPORTY",
     });
 }

@@ -8,9 +8,8 @@ import { useAuth } from 'react-oidc-context';
 import axios from 'axios';
 import Image from 'next/image';
 import toast, { Toaster } from 'react-hot-toast';
-import html2canvas from 'html2canvas';
+import html2canvas from "html2canvas";
 
-import ShareCanvas from '@/components/ui/ShareCanvas';
 import PricingPlans from '@/components/PricingPlanCard';
 import LoadingModalSpinner from '@/components/ui/LoadingState';
 
@@ -34,73 +33,12 @@ export default function AutoTryOnRecommendationPage() {
   const shareRef = useRef(null);
 
   const [loading, setLoading] = useState(true);
-  const [profileRaw, setProfileRaw] = useState([]);
   const [, setIsPolling] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [showPricingPlans, setShowPricingPlans] = useState(false);
   const [product, setProduct] = useState(null);
   const [resultImageUrl, setResultImageUrl] = useState(null);
   const [error, setError] = useState(null);
-  const [isSharing, setIsSharing] = useState(false);
-
-  const handleShare = async () => {
-    const canvasEl = document.getElementById('share-canvas');
-    if (!canvasEl) {
-      toast.error("Share canvas not found");
-      return;
-    }
-
-    setIsSharing(true);
-
-    // ✅ Preload result and product images
-    const preloadImage = (src) =>
-      new Promise((resolve, reject) => {
-        const img = new Image();
-        img.crossOrigin = "anonymous";
-        img.onload = resolve;
-        img.onerror = reject;
-        img.src = `${src}?cb=${Date.now()}`; // 👈 cache-busting
-      });
-
-    try {
-      await Promise.all([
-        preloadImage(resultImageUrl),
-        preloadImage(product.imageS3Url),
-      ]);
-
-      // ✅ After both images are fully loaded, proceed to render canvas
-      const canvas = await html2canvas(canvasEl, {
-        useCORS: true,
-        scale: 2,
-        backgroundColor: '#fff',
-      });
-
-      canvas.toBlob(async (blob) => {
-        if (!blob) {
-          toast.error("Failed to generate image");
-          setIsSharing(false);
-          return;
-        }
-
-        const file = new File([blob], 'fyuse-look.png', { type: 'image/png' });
-
-        if (navigator.share && navigator.canShare({ files: [file] })) {
-          await navigator.share({
-            title: 'My Style from FYUSE',
-            text: 'Check out my style from fyuse.org!',
-            files: [file],
-          });
-        } else {
-          toast("Sharing not supported on this device", { icon: "⚠️" });
-        }
-      });
-    } catch (err) {
-      console.error("Share failed", err);
-      toast.error("Failed to share.");
-    } finally {
-      setIsSharing(false);
-    }
-  };
 
   const resetState = () => {
     setProduct(null);
@@ -290,52 +228,6 @@ export default function AutoTryOnRecommendationPage() {
     };
   }, [isLoading, token, handleFlow, pollTaskStatus, resultImageUrl]);
 
-  useEffect(() => {
-    if (!shareRef.current || !resultImageUrl || !product) return;
-
-    (async () => {
-      const canvas = await html2canvas(shareRef.current, {
-        useCORS: true,
-        allowTaint: false,
-        backgroundColor: '#fff',
-        scale: 2,
-      });
-
-      canvas.toBlob((blob) => {
-        if (!blob) return;
-        const file = new File([blob], 'fyuse-look.png', { type: 'image/png' });
-        setShareFile(file);
-      });
-    })();
-  }, [resultImageUrl, product]);
-
-  // Load profile display data
-  useEffect(() => {
-    const fetchUserProfile = async () => {
-      try {
-        const token = user?.id_token || user?.access_token;
-        if (!token) return;
-
-        const res = await axios.get("/api/user-profile", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        const { skin_tone, body_shape, gender, nickname } = res.data;
-        setProfileRaw({ skin_tone, body_shape, gender, nickname });
-
-      } catch (err) {
-        console.error('Error loading profile data:', err);
-        setProfileRaw([]);
-      }
-    }
-    
-    if (user) {
-      fetchUserProfile();
-    }    
-  }, [user]);
-
   // UI Rendering
   if (isLoading || loading)
     return <LoadingModalSpinner message="Styling..." subMessage="This process only takes 30 seconds." />;
@@ -369,37 +261,24 @@ export default function AutoTryOnRecommendationPage() {
         }}
       />
 
-      <div className="absolute left-[-9999px] top-0">
-        <ShareCanvas
-          resultImageUrl={resultImageUrl}
-          productImageUrl={product.imageS3Url}
-          productName={product.productName}
-          brand={product.brand}
-          fashionType={product.fashionType}
-          nickname={profileRaw.nickname}
-          skinToneLabel={profileRaw.skin_tone}
-          bodyShape={profileRaw.body_shape}
-          gender={profileRaw.gender}
-        />
-      </div>
-
       <div className="max-w-6xl w-full">
         <h1 className="text-3xl font-bold text-primary text-center mb-2">Your Perfect Look</h1>
         <p className="text-gray-600 text-center mb-8">This style has been added to your wardrobe</p>
 
         {/* Images */}
-        <div className="bg-white p-4 rounded-xl">        
+        <div ref={shareRef} id="share-content" className="bg-white p-4 rounded-xl">
           <div className="flex flex-col md:flex-row gap-8 mb-12 items-stretch">
-            
             {/* Left: Try-On Result */}
             <div className="md:w-1/2 w-full flex">
               <div className="relative rounded-2xl shadow-2xl overflow-hidden w-full aspect-[3/4]">
                 {resultImageUrl ? (
-                  <img
-                    src={`${resultImageUrl}?cb=${Date.now()}`}
-                    crossOrigin="anonymous"
+                  <Image
+                    src={resultImageUrl}
                     alt="Try-On Result"
-                    className="w-full h-auto object-cover"
+                    fill
+                    className="object-cover"
+                    priority
+                    unoptimized
                   />
                 ) : (
                   <div className="w-full h-full flex justify-center items-center bg-gray-100 text-sm text-gray-500">
@@ -416,11 +295,13 @@ export default function AutoTryOnRecommendationPage() {
             <div className="md:w-1/2 w-full flex">
               <div className="bg-white rounded-2xl p-6 shadow-2xl w-full flex flex-col">
                 <div className="relative w-full aspect-[3/4]">
-                  <img
-                    src={`${product.imageS3Url}?cb=${Date.now()}`}
-                    crossOrigin="anonymous"
+                  <Image
+                    src={product.imageS3Url}
                     alt={product.productName}
-                    className="w-full h-auto object-cover"
+                    fill
+                    className="object-contain rounded-xl"
+                    priority
+                    unoptimized
                   />
                 </div>
                 <div className="mt-4 text-center md:text-left">
@@ -473,13 +354,32 @@ export default function AutoTryOnRecommendationPage() {
           {/* Share Button */}
           {resultImageUrl && (
             <button
-              onClick={handleShare}
-              disabled={isSharing}
-              className={`w-full py-3 rounded-full font-semibold text-white bg-gradient-to-r from-[#f58529] via-[#dd2a7b] to-[#8134af] hover:opacity-90 transition-all duration-300 ${
-                isSharing ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
+              onClick={async () => {
+                const node = shareRef.current;
+                if (!node) return;
+
+                try {
+                  const canvas = await html2canvas(node);
+                  const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg'));
+                  const file = new File([blob], 'your-look.jpg', { type: 'image/jpeg' });
+
+                  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    await navigator.share({
+                      title: 'Your Perfect Look ✨',
+                      text: 'Check out my try-on style from FYUSE!',
+                      files: [file],
+                    });
+                  } else {
+                    toast.error("Sharing not supported on this device");
+                  }
+                } catch (err) {
+                  console.error("Share error:", err);
+                  toast.error("Failed to share image");
+                }
+              }}
+              className="w-full py-3 rounded-full text-white font-semibold bg-gradient-to-r from-[#f58529] via-[#dd2a7b] to-[#8134af] hover:opacity-90 transition-all duration-300"
             >
-              {isSharing ? 'Preparing Share...' : 'Share to My Friends'}
+              Share to My Friends
             </button>
           )}
           {/* Try Another Style Button */}
