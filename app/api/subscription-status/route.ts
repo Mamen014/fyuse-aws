@@ -1,3 +1,5 @@
+// app/api/subscription-status/route.ts
+
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getUserIdFromRequest } from "@/lib/get_user_id";
@@ -59,25 +61,25 @@ export async function GET(req: NextRequest) {
     }
 
     const successfulTasks = await prisma.styling_log.findMany({
-    where: {
+      where: {
         user_id,
         status: "succeed",
         created_at: {
-        gte: subs_date,
+          gte: subs_date,
         },
-    },
-    distinct: ["task_id"],
-    select: {
-        task_id: true,
-    },
+      },
+      distinct: ["id"], // ✅ use internal ID
+      select: {
+        id: true, // ✅ log ID
+      },
     });
 
     return NextResponse.json({
-    subs_date: subs_date.toISOString(),
-    plan,
-    status,
-    successful_stylings: successfulTasks.length,
-});
+      subs_date: subs_date.toISOString(),
+      plan,
+      status,
+      successful_stylings: successfulTasks.length,
+    });
 
   } catch (err) {
     console.error("Error retrieving subscription:", err);
