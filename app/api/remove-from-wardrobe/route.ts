@@ -1,3 +1,5 @@
+// app/api/remove-from-wardrobe/route.ts
+
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { jwtDecode } from "jwt-decode";
@@ -20,17 +22,16 @@ export async function PATCH(req: NextRequest) {
   }
 
   try {
-    const { task_id } = await req.json();
+    const { log_id } = await req.json();
 
-    if (!task_id) {
-      return NextResponse.json({ error: "task_id is required" }, { status: 400 });
+    if (!log_id) {
+      return NextResponse.json({ error: "log_id is required" }, { status: 400 });
     }
 
-    // Update wardrobe to false
     const updatedLog = await prisma.styling_log.updateMany({
       where: {
+        id: log_id,
         user_id,
-        task_id,
         wardrobe: true,
       },
       data: {

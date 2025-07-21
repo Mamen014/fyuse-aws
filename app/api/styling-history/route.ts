@@ -33,19 +33,16 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    // 1. Get styling logs
     const logs = await prisma.styling_log.findMany({
       where: {
         user_id,
         status: "succeed",
         wardrobe: true,
       },
-      orderBy: {
-        updated_at: "desc",
-      },
+      orderBy: { updated_at: "desc" },
       select: {
+        id: true,
         item_id: true,
-        task_id: true,
         styling_image_url: true,
         user_image_url: true,
         updated_at: true,
@@ -53,15 +50,10 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    const itemIds = logs.map((log: {
-      item_id: string;
-    }) => log.item_id);
+    const itemIds = logs.map(log => log.item_id);
 
-    // 2. Fetch products
     const products = await prisma.product_data.findMany({
-      where: {
-        item_id: { in: itemIds },
-      },
+      where: { item_id: { in: itemIds } },
       select: {
         item_id: true,
         product_image_url: true,
@@ -75,19 +67,8 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    // 3. Map product data
     const productMap: Record<string, ProductMeta> = Object.fromEntries(
-      products.map((p: {
-        item_id: string;
-        product_image_url: string;
-        color: string;
-        product_link: string;
-        fashion_type: string;
-        product_name: string;
-        brand: string;
-        clothing_category: string;
-        clothing_type: string;
-      }) => [
+      products.map(p => [
         p.item_id,
         {
           image: p.product_image_url,
@@ -102,19 +83,11 @@ export async function GET(req: NextRequest) {
       ])
     );
 
-    // 4. Build response
-    const result = logs.map((log: {
-      item_id: string;
-      task_id: string;
-      styling_image_url: string | null;
-      user_image_url: string | null;
-      updated_at: Date | null;
-      status: string | null;
-    }) => {
+    const result = logs.map(log => {
       const product = productMap[log.item_id];
       return {
+        log_id: log.id,
         item_id: log.item_id,
-        task_id: log.task_id,
         styling_image_url: log.styling_image_url ?? null,
         user_image_url: log.user_image_url ?? null,
         product_image_url: product?.image ?? null,
