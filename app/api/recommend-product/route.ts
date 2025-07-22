@@ -127,6 +127,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Recommended item ID missing" }, { status: 400 });
     }
 
+    // ✅ Check for duplicate recommendation in the past 5 seconds
+    const fiveSecondsAgo = new Date(Date.now() - 5000);
+    const alreadyExists = await prisma.styling_log.findFirst({
+      where: {
+        user_id,
+        item_id: topRecommendedId,
+        created_at: { gte: fiveSecondsAgo },
+      },
+      orderBy: { created_at: 'desc' },
+    });
+
+    if (alreadyExists) {
+      return NextResponse.json({ message: "Already recommended recently" }, { status: 200 });
+    }
+
     // 5. Fetch product detail
     const product = await prisma.product_data.findUnique({
       where: { item_id: topRecommendedId },

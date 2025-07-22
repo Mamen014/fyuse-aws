@@ -1,4 +1,4 @@
-// app/personalized-styling/result/page.jsx
+// app/test/page.jsx
 
 'use client';
 
@@ -27,14 +27,11 @@ export default function AutoTryOnRecommendationPage() {
 
   const controllerRef = useRef(null);
   const cleanupRef = useRef(null);
-  const pollingLogId = useRef(null);
+  const pollingTaskId = useRef(null);
   const hasShownToast = useRef(false);
-  const isHandlingFlow = useRef(false);
-  const debounceTimeout = useRef(null);
-  const initialRun = useRef(false);
+  const shareRef = useRef(null);
 
   const [loading, setLoading] = useState(true);
-  const [, setIsPolling] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [showPricingPlans, setShowPricingPlans] = useState(false);
   const [product, setProduct] = useState(null);
@@ -48,7 +45,7 @@ export default function AutoTryOnRecommendationPage() {
     setShowPricingPlans(false);
     setIsPolling(false);
     hasShownToast.current = false;
-    sessionStorage.removeItem('currentLogId');
+    sessionStorage.removeItem('currentTaskId');
     sessionStorage.removeItem('recommendedProduct');
   };
 
@@ -66,7 +63,7 @@ export default function AutoTryOnRecommendationPage() {
   }, [token]);
 
   const fetchRecommendation = useCallback(async () => {
-    const res = await fetch('/api/recommend-product', {
+    const res = await fetch('/api/test/recommend-product', {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -78,14 +75,10 @@ export default function AutoTryOnRecommendationPage() {
     return data;
   }, [token]);
 
-  const initiateTryOn = useCallback(async (item_id) => {
-    const res = await fetch('/api/tryon', {
+  const initiateTryOn = useCallback(async () => {
+    const res = await fetch('/api/test/tryon', {
       method: 'POST',
-      headers: { 
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json', 
-      },
-      body: JSON.stringify({ item_id }),
+      headers: { Authorization: `Bearer ${token}` },
     });
 
     if (!res.ok) {
@@ -93,29 +86,29 @@ export default function AutoTryOnRecommendationPage() {
       throw new Error(errorData.error || 'Try-on failed.');
     }
 
-    const { log_id } = await res.json();
-    if (!log_id) throw new Error('Missing log ID.');
-    sessionStorage.setItem('currentLogId', log_id);
-    return log_id;
+    const { task_id } = await res.json();
+    if (!task_id) throw new Error('Missing task ID.');
+    sessionStorage.setItem('currentTaskId', task_id);
+    return task_id;
   }, [token]);
 
-  const pollTaskStatus = useCallback((logId, controller) => {
+  const pollTaskStatus = useCallback((taskId, controller) => {
     setIsPolling(true);
     let attempts = 0;
     const maxAttempts = 20;
-    const max404Retries = 3;
+    const max404Retries = 3; // ✅ Soft retry for 404
     const interval = 5000;
     const signal = controller.signal;
 
     const poll = async () => {
 
-      if (logId !== sessionStorage.getItem('currentLogId')) {
+      if (taskId !== sessionStorage.getItem('currentTaskId')) {
         console.warn('Stale task result, ignoring');
         return;
       }
 
       try {
-        const res = await fetch(`/api/tryon/status?log_id=${logId}`, {
+        const res = await fetch(`/api/tryon/status?task_id=${taskId}`, {
           headers: { Authorization: `Bearer ${token}` },
           signal,
         });
@@ -167,45 +160,8 @@ export default function AutoTryOnRecommendationPage() {
     poll();
   }, [token]);
 
-  const track = async (action, metadata = {}) => {
-    if (!userEmail) return;
-    try {
-      await axios.post(`${API_BASE_URL}/trackevent`, {
-        userEmail,
-        action,
-        page: 'resultPage',
-        timestamp: new Date().toISOString(),
-        ...metadata,
-      });
-    } catch (err) {
-      console.warn('Tracking failed:', err.message);
-    }
-  };
-
-  const trackPersonalizeEvent = async ({ userId, itemId, eventType, liked }) => {
-    try {
-      await fetch(`${API_BASE_URL}/stylingRecTrack`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId,
-          sessionId: `session-${Date.now()}`,
-          itemId,
-          eventType,
-          liked,
-        }),
-      });
-    } catch (err) {
-      console.warn('Event track failed:', err);
-    }
-  };
-
   const handleFlow = useCallback(async (isManual = false) => {
-    if (isHandlingFlow.current || loading) return;
-    isHandlingFlow.current = true;
-    setLoading(true);
-    clearTimeout(debounceTimeout.current);
-
+    
       try {
         controllerRef.current = new AbortController();
         const { plan, tryOnCount } = await fetchUserPlan();
@@ -215,14 +171,19 @@ export default function AutoTryOnRecommendationPage() {
           setLoading(false);
           return;
         }
+        const lastStart = Number(sessionStorage.getItem("lastTryonStart") || "0");
+        const now = Date.now();  
+
+        sessionStorage.setItem("lastTryonStart", String(now));
 
         const recommendation = await fetchRecommendation();
-        const logId = await initiateTryOn(recommendation.productId);
-        if (!logId) throw new Error("Try-on initiation failed");
-        
-        await new Promise(res => setTimeout(res, 1000));
+        const taskId = await initiateTryOn(recommendation.imageS3Url);
+        const delay = ms => new Promise(res => setTimeout(res, ms));
 
-        cleanupRef.current = pollTaskStatus(logId, controllerRef.current);
+        // ✅ Delay before polling to let callback update DB
+        await delay(10000);
+
+        cleanupRef.current = pollTaskStatus(taskId, controllerRef.current);
       } catch (err) {
         if (controllerRef.current?.signal.aborted) return;
         setError(err.message || 'Unexpected error');
@@ -233,19 +194,18 @@ export default function AutoTryOnRecommendationPage() {
   }, [fetchUserPlan, fetchRecommendation, initiateTryOn, pollTaskStatus]);
 
   useEffect(() => {
-    if (isLoading || !token || initialRun.current) return;
-    initialRun.current = true;
+    if (isLoading || !token) return;
 
     controllerRef.current = new AbortController();
-    const savedLogId = sessionStorage.getItem("currentLogId");
-    const savedProduct = sessionStorage.getItem("recommendedProduct");
+    const savedTaskId = sessionStorage.getItem('currentTaskId');
+    const savedProduct = sessionStorage.getItem('recommendedProduct');
 
     if (savedProduct) setProduct(JSON.parse(savedProduct));
 
-    if (savedLogId && pollingLogId.current !== savedLogId && !resultImageUrl) {
-      pollingLogId.current = savedLogId;
-      cleanupRef.current = pollTaskStatus(savedLogId, controllerRef.current);
-    } else if (!savedLogId && !resultImageUrl) {
+    if (savedTaskId && pollingTaskId.current !== savedTaskId) {
+      pollingTaskId.current = savedTaskId;
+      cleanupRef.current = pollTaskStatus(savedTaskId, controllerRef.current);
+    } else if (!savedTaskId && !resultImageUrl){
       handleFlow();
     }
 
@@ -253,7 +213,7 @@ export default function AutoTryOnRecommendationPage() {
       controllerRef.current?.abort();
       cleanupRef.current?.();
     };
-  }, [isLoading, token, handleFlow, pollTaskStatus, resultImageUrl]);
+  }, [isLoading, token, handleFlow, pollTaskStatus]);
 
   // UI Rendering
   if (isLoading || loading)
@@ -262,7 +222,7 @@ export default function AutoTryOnRecommendationPage() {
   if (error && !product && !resultImageUrl)
     return (
       <div className="min-h-screen flex flex-col justify-center items-center text-center px-4">
-        <h1 className="text-2xl font-bold text-red-600 mb-4">Error</h1>
+        <h1 className="text-2xl font-bold text-red-600 mb-4">Styling Failed, Please Try Again Later</h1>
         <p className="mb-6">{error}</p>
         <button onClick={() => router.push('/dashboard')} className="bg-primary text-white rounded-md">
           Back to Dashboard
@@ -281,7 +241,12 @@ export default function AutoTryOnRecommendationPage() {
 
   return (
     <div className="min-h-screen px-4 py-8 bg-gradient-to-b from-blue-50 to-white flex flex-col items-center">
-      <Toaster position="top-center" />
+      <Toaster
+        position="top-center"
+        toastOptions={{
+          style: { zIndex: 9999 },
+        }}
+      />
 
       <div className="max-w-6xl w-full">
         <h1 className="text-3xl font-bold text-primary text-center mb-2">Your Perfect Look</h1>
@@ -289,7 +254,7 @@ export default function AutoTryOnRecommendationPage() {
 
         {/* Images */}
         <div className="flex flex-col md:flex-row gap-8 mb-12 items-stretch">
-          {/* Left: Try-On Result */}
+            {/* Left: Try-On Result */}
           <div className="md:w-1/2 w-full flex">
             <div className="relative rounded-2xl shadow-2xl overflow-hidden w-full aspect-[3/4]">
               {resultImageUrl ? (
@@ -413,13 +378,10 @@ export default function AutoTryOnRecommendationPage() {
           {/* Try Another Style Button */}
           <button
             disabled={loading}
-            onClick={() => {
-              if (loading) return;
+            onClick={async () => {
+              setLoading(true);
               resetState();
-              cleanupRef.current?.();
-              debounceTimeout.current = setTimeout(() => {
-                handleFlow(true);
-              }, 300);
+              await handleFlow(true);
             }}
             className={`text-white bg-primary w-full py-3 rounded-full font-semibold ${
               loading

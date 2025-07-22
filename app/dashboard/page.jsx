@@ -36,18 +36,18 @@ export default function DashboardPage() {
   // Body shape image mapping
   const bodyShapeImageMap = {
     male: {
-      'rectangle': '/images/body-shape/male/rectangle.png',
-      'inverted triangle': '/images/body-shape/male/inverted-triangle.png',
-      'round': '/images/body-shape/male/round.png',
-      'trapezoid': '/images/body-shape/male/trapezoid.png',
-      'triangle': '/images/body-shape/male/triangle.png',
+      'rectangle': '/images/body-shape/male/rectangle.svg',
+      'inverted triangle': '/images/body-shape/male/inverted-triangle.svg',
+      'round': '/images/body-shape/male/round.svg',
+      'trapezoid': '/images/body-shape/male/trapezoid.svg',
+      'triangle': '/images/body-shape/male/triangle.svg',
     },
     female: {
-      'hourglass': '/images/body-shape/female/hourglass.png',
-      'pear': '/images/body-shape/female/pear.png',
-      'apple': '/images/body-shape/female/apple.png',
-      'rectangle': '/images/body-shape/female/rectangle.png',
-      'inverted triangle': '/images/body-shape/female/inverted-triangle.png',
+      'hourglass': '/images/body-shape/female/hourglass.svg',
+      'pear': '/images/body-shape/female/pear.svg',
+      'apple': '/images/body-shape/female/apple.svg',
+      'rectangle': '/images/body-shape/female/rectangle.svg',
+      'inverted triangle': '/images/body-shape/female/inverted-triangle.svg',
     }
   };
 
