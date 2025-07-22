@@ -28,19 +28,41 @@ export default function Navbar() {
   const [userName, setUserName] = useState("Guest");
 
   const router = useRouter();
-  const auth = useAuth();
-  const userEmail = auth?.user?.profile?.email;
+  const { user, isLoading } = useAuth();
+  const userEmail = user?.profile?.email;
 
+  // Load profile display data
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    try {
-      const stored = JSON.parse(localStorage.getItem("profile") || "{}");
-      const fallback = userEmail?.split("@")[0] || "Guest";
-      setUserName(stored.nickname || fallback);
-    } catch (err) {
-      console.warn("Failed to load user profile from localStorage", err);
+    const fetchUserProfile = async () => {
+      try {
+        const token = user?.id_token || user?.access_token;
+        if (!token) {
+          console.warn("No token found, user may not be authenticated");
+          return};
+
+        const res = await fetch("/api/user-profile", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        const data = await res.json();
+        const nickname = data.nickname;
+        
+        setUserName(nickname || "");
+      } catch (err) {
+        console.error('Error loading profile data:', err);
+        setUserName([]);
+      }
     }
-  }, [userEmail]);
+    
+    if (user) {
+      fetchUserProfile();
+    }    
+  }, [user]);
 
   const handleSignOut = () => {
     sessionStorage.clear();
@@ -53,7 +75,7 @@ export default function Navbar() {
   };
 
   const SignOutButton = ({ isInMobileMenu = false }) => {
-    if (auth.isLoading || !auth.isAuthenticated) return null;
+    if (isLoading || !user) return null;
     const className = isInMobileMenu
       ? "block text-sm font-medium text-red-500 cursor-pointer"
       : "text-sm text-gray-600 hover:text-red-500 font-medium px-4 py-2";
@@ -79,7 +101,7 @@ export default function Navbar() {
     { label: "Wardrobe", icon: Shirt, path: "/wardrobe" },
   ];
 
-  const menuItems = auth.isAuthenticated
+  const menuItems = user
     ? [...authOnlyMenuItems, ...baseMenuItems]
     : baseMenuItems;
 
@@ -132,7 +154,7 @@ export default function Navbar() {
           isMenuOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        {auth.isAuthenticated && (
+        {user && (
           <div className="px-6 py-6 bg-gray-50 border-b border-gray-200">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">

@@ -179,13 +179,6 @@ export default function DashboardPage() {
           const sortedTryonItems = data
           setTryonItems(sortedTryonItems.slice(0, 3));
 
-          // OPTIONAL: Keep this if you still plan to support likedRecommendations from response
-          // if (Array.isArray(data.likedRecommendations)) {
-          //   setLikedRecommendations(data.likedRecommendations);
-          // } else {
-          //   setLikedRecommendations([]);
-          // }
-
         } catch (err) {
           console.error("Error fetching history:", err);
           setTryonItems([]);
@@ -209,7 +202,9 @@ export default function DashboardPage() {
             Authorization: `Bearer ${token}`,
           },
         });
-
+        if (res.data) {
+          setShowRegisterPrompt(false);
+        };
         const { skin_tone, body_shape, occupation, city, gender, nickname, user_image_url } = res.data;
         setProfileRaw({ skin_tone, body_shape, occupation, city, gender, nickname, user_image_url });
         setNickname(nickname || "");
@@ -352,7 +347,7 @@ export default function DashboardPage() {
                   <div className="flex gap-2">
                     {[itemMap["Location"], itemMap["Occupation"]].map((item, i) =>
                       item && (
-                        <div key={i} className="bg-gray-50 rounded-xl p-3 flex items-start gap-2 flex-1">
+                        <div key={i} className="bg-gray-50 rounded-xl p-3 flex items-center justify-center gap-2 flex-1">
                           <item.icon className="w-6 h-6 text-primary" />
                           <div>
                             <p className="text-sm font-medium text-gray-700">{item.value}</p>
