@@ -233,11 +233,13 @@ export default function AutoTryOnRecommendationPage() {
   }, [fetchUserPlan, fetchRecommendation, initiateTryOn, pollTaskStatus]);
 
   useEffect(() => {
-    if (isLoading || !token) return;
+    if (isLoading) return;
+    if (!token) return;
     if (initialRun.current) return;
+    
     initialRun.current = true;
-
     controllerRef.current = new AbortController();
+    
     const savedLogId = sessionStorage.getItem("currentLogId");
     const savedProduct = sessionStorage.getItem("recommendedProduct");
 
