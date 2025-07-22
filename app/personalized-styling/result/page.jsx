@@ -100,7 +100,7 @@ export default function AutoTryOnRecommendationPage() {
     setIsPolling(true);
     let attempts = 0;
     const maxAttempts = 20;
-    const max404Retries = 3; // ✅ Soft retry for 404
+    const max404Retries = 3;
     const interval = 5000;
     const signal = controller.signal;
 
@@ -207,23 +207,11 @@ export default function AutoTryOnRecommendationPage() {
           setLoading(false);
           return;
         }
-        const lastStart = Number(sessionStorage.getItem("lastTryonStart") || "0");
-        const now = Date.now();  
-
-        if (!isManual && now - lastStart < 60_000) {
-          toast("Too frequent. Please try again later", { duration: 3000, icon: '⚠️' });
-          setLoading(false);
-          setTimeout(() => {
-            setLoading(true);
-            router.push('/dashboard');
-          }, 3000);          
-          return;
-        }
-
-        sessionStorage.setItem("lastTryonStart", String(now));
 
         const recommendation = await fetchRecommendation();
         const logId = await initiateTryOn(recommendation.productId);
+        if (!logId) throw new Error("Try-on initiation failed");
+        
         const delay = ms => new Promise(res => setTimeout(res, ms));
 
         // ✅ Delay before polling to let callback update DB
@@ -248,7 +236,7 @@ export default function AutoTryOnRecommendationPage() {
 
     if (savedProduct) setProduct(JSON.parse(savedProduct));
 
-    if (savedLogId && pollingLogId.current !== savedLogId) {
+    if (savedLogId && pollingLogId.current !== savedLogId && !resultImageUrl) {
       pollingLogId.current = savedLogId;
       cleanupRef.current = pollTaskStatus(savedLogId, controllerRef.current);
     } else if (!savedLogId && !resultImageUrl){
@@ -422,6 +410,7 @@ export default function AutoTryOnRecommendationPage() {
             onClick={async () => {
               setLoading(true);
               resetState();
+              cleanupRef.current?.();
               await handleFlow(true);
             }}
             className={`text-white bg-primary w-full py-3 rounded-full font-semibold ${
