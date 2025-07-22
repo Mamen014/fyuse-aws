@@ -233,7 +233,8 @@ export default function AutoTryOnRecommendationPage() {
   }, [fetchUserPlan, fetchRecommendation, initiateTryOn, pollTaskStatus]);
 
   useEffect(() => {
-    if (isLoading || !token || initialRun.current) return;
+    if (isLoading || !token) return;
+    if (initialRun.current) return;
     initialRun.current = true;
 
     controllerRef.current = new AbortController();
