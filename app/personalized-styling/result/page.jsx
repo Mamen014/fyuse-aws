@@ -266,7 +266,9 @@ useEffect(() => {
     pollingLogId.current = savedLogId;
     cleanupRef.current = pollTaskStatus(savedLogId, controllerRef.current);
   } else if (!savedLogId && !resultImageUrl) {
-    handleFlow();
+    setTimeout(() => {
+      handleFlow();
+    }, 300);
   }
 
   return () => {
