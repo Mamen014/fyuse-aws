@@ -20,8 +20,8 @@ const PLAN_LIMITS = {
 
 export default function AutoTryOnRecommendationPage() {
   const router = useRouter();
-  const { user, isLoading } = useAuth();
-  const token = user?.id_token || user?.access_token;
+  const { user, isLoading, signinRedirect } = useAuth();
+  const token = user?.access_token || user?.id_token || '';
   const userEmail = user?.profile?.email;
   const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
 
@@ -72,13 +72,56 @@ export default function AutoTryOnRecommendationPage() {
     });
 
     const data = await res.json();
-    if (!res.ok || !data?.productId) {
-      throw new Error(data?.error || "No recommendation found.");
+
+    if (res.status === 400) {
+      if (data?.error?.includes("Style preference")) {
+        toast.error("Please select your style preferences first.");
+        setTimeout(() => router.push('/personalized-styling/style-preferences'), 2000);
+      } else if (data?.error?.includes("gender")) {
+        toast.error("Incomplete profile. Please update your gender.");
+        setTimeout(() => router.push('/personalized-styling/physical-appearances'), 2000);
+      }
+      throw new Error(data?.error || "Bad request.");
     }
+
+    if (res.status === 401) {
+      toast.error("Session expired. Please log in again.");
+      setTimeout(() => {
+        try {
+          signinRedirect();
+        } catch (err) {
+          console.error("Sign-in redirect failed:", err);
+        }
+      }, 2000);
+      throw new Error("Unauthorized");
+    }
+
+    if (res.status === 404) {
+      toast.error("Recommended product is unavailable.");
+      throw new Error("Product not found");
+    }
+
+    if (res.status === 200 && data?.message === "No recommendations found") {
+      toast.error("No matching styles found. Please update your style preferences.");
+      setTimeout(() => router.push('/personalized-styling/style-preferences'), 2000);
+      throw new Error("No recommendations found");
+    }
+
+    if (res.status === 200 && data?.message === "No new recommendations available") {
+      toast.error("You've seen all styles. Try changing your preferences.");
+      setTimeout(() => router.push('/personalized-styling/style-preferences'), 2000);
+      throw new Error("No new recommendations available");
+    }
+
+    if (!res.ok || !data?.productId) {
+      toast.error("Something went wrong while recommending a product.");
+      throw new Error(data?.error || "Unexpected recommendation failure");
+    }
+
     setProduct(data);
     sessionStorage.setItem('recommendedProduct', JSON.stringify(data));
     return data;
-  }, [token]);
+  }, [token, router, signinRedirect]);
 
   const initiateTryOn = useCallback(async (item_id) => {
     const res = await fetch('/api/tryon', {
@@ -360,7 +403,6 @@ export default function AutoTryOnRecommendationPage() {
 
           {product ? (
             <>
-              {/* Product JSX block here */}
               {/* Right: Product Info */}
               <div className="md:w-1/2 w-full flex">
                 <div className="rounded-2xl p-6 shadow-2xl w-full flex flex-col">

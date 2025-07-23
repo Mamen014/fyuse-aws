@@ -78,7 +78,7 @@ export async function POST(req: NextRequest) {
           clothingCategory: `"${clothingCategory}"`,
           fashionType: `"${fashionType}"`,
         },
-        numResults: 10,
+        numResults: 1,
       })
     );
 
@@ -100,16 +100,19 @@ export async function POST(req: NextRequest) {
       },
       select: { 
         item_id: true,
+        created_at: true,
         updated_at: true,
         wardrobe: true,
      },
     });
+    const recentFiveSeconds = new Date(Date.now() - 5000);
     const excludedIds = new Set(
       previousLogs
-        .filter((log: { updated_at: Date | null; wardrobe: boolean | null; item_id: string }) => {
+        .filter((log: { created_at: Date | null; updated_at: Date | null; wardrobe: boolean | null; item_id: string }) => {
         const isRecent = log.updated_at && log.updated_at > thirtyDaysAgo;
+        const isRecentDup = log.created_at && log.created_at > recentFiveSeconds;
         const isStillInWardrobe = log.wardrobe === true;
-        return isRecent || isStillInWardrobe;
+        return isRecent || isStillInWardrobe || isRecentDup;
         })
         .map((log: { item_id: string }) => log.item_id)
       );
@@ -124,21 +127,6 @@ export async function POST(req: NextRequest) {
 
     if (!topRecommendedId) {
       return NextResponse.json({ error: "Recommended item ID missing" }, { status: 400 });
-    }
-
-    // ✅ Check for duplicate recommendation in the past 5 seconds
-    const fiveSecondsAgo = new Date(Date.now() - 5000);
-    const alreadyExists = await prisma.styling_log.findFirst({
-      where: {
-        user_id,
-        item_id: topRecommendedId,
-        created_at: { gte: fiveSecondsAgo },
-      },
-      orderBy: { created_at: 'desc' },
-    });
-
-    if (alreadyExists) {
-      return NextResponse.json({ message: "Already recommended recently" }, { status: 200 });
     }
 
     // 5. Fetch product detail
