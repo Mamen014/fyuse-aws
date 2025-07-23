@@ -200,82 +200,83 @@ export default function AutoTryOnRecommendationPage() {
     }
   };
 
-const handleFlow = useCallback(async (isManual = false) => {
-  if (isHandlingFlow.current || loading) {
-    console.log("⛔ Blocked: already handling or loading");
-    return;
-  }
-
-  console.log("⚙️ Starting handleFlow");
-  isHandlingFlow.current = true;
-  setLoading(true);
-  clearTimeout(debounceTimeout.current);
-
-  try {
-    controllerRef.current = new AbortController();
-    const { plan, tryOnCount } = await fetchUserPlan();
-    console.log("📦 Plan:", plan, "Try-on count:", tryOnCount);
-
-    if (tryOnCount >= PLAN_LIMITS[plan].tryOn) {
-      console.log("🚫 Plan limit reached");
-      setShowPricingPlans(true);
-      setLoading(false);
+  const handleFlow = useCallback(async (isManual = false) => {
+    if (isHandlingFlow.current) {
+      console.log("⛔ Blocked: already handling");
       return;
     }
 
-    const recommendation = await fetchRecommendation();
-    console.log("🧠 Recommendation received:", recommendation);
+    console.log("⚙️ Starting handleFlow");
+    isHandlingFlow.current = true;
+    setLoading(true);
+    clearTimeout(debounceTimeout.current);
 
-    const logId = await initiateTryOn(recommendation.productId);
-    console.log("🪪 Try-on task started with logId:", logId);
+    try {
+      controllerRef.current = new AbortController();
+      const { plan, tryOnCount } = await fetchUserPlan();
+      console.log("📦 Plan:", plan, "Try-on count:", tryOnCount);
 
-    if (!logId) throw new Error("Try-on initiation failed");
+      if (tryOnCount >= PLAN_LIMITS[plan].tryOn) {
+        console.log("🚫 Plan limit reached");
+        setShowPricingPlans(true);
+        setLoading(false);
+        return;
+      }
 
-    await new Promise(res => setTimeout(res, 1000));
-    cleanupRef.current = pollTaskStatus(logId, controllerRef.current);
-  } catch (err) {
-    if (controllerRef.current?.signal.aborted) return;
-    console.error("❌ handleFlow error:", err);
-    setError(err.message || 'Unexpected error');
-    setLoading(false);
-  } finally {
-    setIsPolling(false);
-    isHandlingFlow.current = false; // ✅ CRUCIAL
-  }
-}, [fetchUserPlan, fetchRecommendation, initiateTryOn, pollTaskStatus]);
+      const recommendation = await fetchRecommendation();
+      console.log("🧠 Recommendation received:", recommendation);
 
-useEffect(() => {
-  console.log("isLoading:", isLoading);
-  console.log("token:", token);
-  console.log("initialRun:", initialRun.current);
+      const logId = await initiateTryOn(recommendation.productId);
+      console.log("🪪 Try-on task started with logId:", logId);
 
-  if (isLoading) return;
-  if (!token) return;
-  if (initialRun.current) return;
+      if (!logId) throw new Error("Try-on initiation failed");
 
-  console.log("✅ Running handleFlow...");
-  initialRun.current = true;
+      await new Promise(res => setTimeout(res, 1000));
+      cleanupRef.current = pollTaskStatus(logId, controllerRef.current);
+    } catch (err) {
+      if (controllerRef.current?.signal.aborted) return;
+      console.error("❌ handleFlow error:", err);
+      setError(err.message || 'Unexpected error');
+      setLoading(false);
+    } finally {
+      setIsPolling(false);
+      isHandlingFlow.current = false; // ✅ CRUCIAL
+    }
+  }, [fetchUserPlan, fetchRecommendation, initiateTryOn, pollTaskStatus]);
 
-  controllerRef.current = new AbortController();
-  const savedLogId = sessionStorage.getItem("currentLogId");
-  const savedProduct = sessionStorage.getItem("recommendedProduct");
+  useEffect(() => {
+    console.log("isLoading:", isLoading);
+    console.log("token:", token);
+    console.log("initialRun:", initialRun.current);
 
-  if (savedProduct) setProduct(JSON.parse(savedProduct));
+    if (isLoading) return;
+    if (!token) return;
+    if (initialRun.current) return;
 
-  if (savedLogId && pollingLogId.current !== savedLogId && !resultImageUrl) {
-    pollingLogId.current = savedLogId;
-    cleanupRef.current = pollTaskStatus(savedLogId, controllerRef.current);
-  } else if (!savedLogId && !resultImageUrl) {
-    setTimeout(() => {
-      handleFlow();
-    }, 300);
-  }
+    console.log("✅ Running handleFlow...");
+    initialRun.current = true;
 
-  return () => {
-    controllerRef.current?.abort();
-    cleanupRef.current?.();
-  };
-}, [isLoading, token, handleFlow, pollTaskStatus, resultImageUrl]);
+    controllerRef.current = new AbortController();
+    const savedLogId = sessionStorage.getItem("currentLogId");
+    const savedProduct = sessionStorage.getItem("recommendedProduct");
+
+    if (savedProduct) setProduct(JSON.parse(savedProduct));
+
+    if (savedLogId && pollingLogId.current !== savedLogId && !resultImageUrl) {
+      pollingLogId.current = savedLogId;
+      cleanupRef.current = pollTaskStatus(savedLogId, controllerRef.current);
+    } else if (!savedLogId && !resultImageUrl) {
+      debounceTimeout.current = setTimeout(() => {
+        handleFlow();
+      }, 300);
+    }
+
+    return () => {
+      controllerRef.current?.abort();
+      cleanupRef.current?.();
+      clearTimeout(debounceTimeout.current);
+    };
+  }, [isLoading, token, handleFlow, pollTaskStatus, resultImageUrl]);
 
   // UI Rendering
   if (isLoading || loading)
