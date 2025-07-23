@@ -200,37 +200,49 @@ export default function AutoTryOnRecommendationPage() {
     }
   };
 
-  const handleFlow = useCallback(async (isManual = false) => {
-    if (isHandlingFlow.current || loading) return;
-    isHandlingFlow.current = true;
-    setLoading(true);
-    clearTimeout(debounceTimeout.current);
+const handleFlow = useCallback(async (isManual = false) => {
+  if (isHandlingFlow.current || loading) {
+    console.log("⛔ Blocked: already handling or loading");
+    return;
+  }
 
-      try {
-        controllerRef.current = new AbortController();
-        const { plan, tryOnCount } = await fetchUserPlan();
+  console.log("⚙️ Starting handleFlow");
+  isHandlingFlow.current = true;
+  setLoading(true);
+  clearTimeout(debounceTimeout.current);
 
-        if (tryOnCount >= PLAN_LIMITS[plan].tryOn) {
-          setShowPricingPlans(true);
-          setLoading(false);
-          return;
-        }
+  try {
+    controllerRef.current = new AbortController();
+    const { plan, tryOnCount } = await fetchUserPlan();
+    console.log("📦 Plan:", plan, "Try-on count:", tryOnCount);
 
-        const recommendation = await fetchRecommendation();
-        const logId = await initiateTryOn(recommendation.productId);
-        if (!logId) throw new Error("Try-on initiation failed");
-        
-        await new Promise(res => setTimeout(res, 1000));
+    if (tryOnCount >= PLAN_LIMITS[plan].tryOn) {
+      console.log("🚫 Plan limit reached");
+      setShowPricingPlans(true);
+      setLoading(false);
+      return;
+    }
 
-        cleanupRef.current = pollTaskStatus(logId, controllerRef.current);
-      } catch (err) {
-        if (controllerRef.current?.signal.aborted) return;
-        setError(err.message || 'Unexpected error');
-        setLoading(false);
-      } finally {
-        setIsPolling(false);
-      }
-  }, [fetchUserPlan, fetchRecommendation, initiateTryOn, pollTaskStatus]);
+    const recommendation = await fetchRecommendation();
+    console.log("🧠 Recommendation received:", recommendation);
+
+    const logId = await initiateTryOn(recommendation.productId);
+    console.log("🪪 Try-on task started with logId:", logId);
+
+    if (!logId) throw new Error("Try-on initiation failed");
+
+    await new Promise(res => setTimeout(res, 1000));
+    cleanupRef.current = pollTaskStatus(logId, controllerRef.current);
+  } catch (err) {
+    if (controllerRef.current?.signal.aborted) return;
+    console.error("❌ handleFlow error:", err);
+    setError(err.message || 'Unexpected error');
+    setLoading(false);
+  } finally {
+    setIsPolling(false);
+    isHandlingFlow.current = false; // ✅ CRUCIAL
+  }
+}, [fetchUserPlan, fetchRecommendation, initiateTryOn, pollTaskStatus]);
 
 useEffect(() => {
   console.log("isLoading:", isLoading);
