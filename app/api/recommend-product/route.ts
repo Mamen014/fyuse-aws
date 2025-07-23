@@ -78,7 +78,7 @@ export async function POST(req: NextRequest) {
           clothingCategory: `"${clothingCategory}"`,
           fashionType: `"${fashionType}"`,
         },
-        numResults: 1,
+        numResults: 15,
       })
     );
 
@@ -101,15 +101,14 @@ export async function POST(req: NextRequest) {
       select: { 
         item_id: true,
         created_at: true,
-        updated_at: true,
         wardrobe: true,
      },
     });
     const recentFiveSeconds = new Date(Date.now() - 5000);
     const excludedIds = new Set(
       previousLogs
-        .filter((log: { created_at: Date | null; updated_at: Date | null; wardrobe: boolean | null; item_id: string }) => {
-        const isRecent = log.updated_at && log.updated_at > thirtyDaysAgo;
+        .filter((log: { created_at: Date | null; wardrobe: boolean | null; item_id: string }) => {
+        const isRecent = log.created_at && log.created_at > thirtyDaysAgo;
         const isRecentDup = log.created_at && log.created_at > recentFiveSeconds;
         const isStillInWardrobe = log.wardrobe === true;
         return isRecent || isStillInWardrobe || isRecentDup;

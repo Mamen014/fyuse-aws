@@ -111,7 +111,7 @@ export default function WardrobePage() {
   };
 
   // Remove item from wardrobe
-  const handleRemoveFromWardrobe = async (itemId, taskId) => {
+  const handleRemoveFromWardrobe = async (itemId, logId) => {
     try {
       const token = user.id_token || user.access_token;
       const res = await fetch("/api/remove-from-wardrobe", {
@@ -120,7 +120,7 @@ export default function WardrobePage() {
           "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ item_id: itemId, task_id: taskId }),
+        body: JSON.stringify({ item_id: itemId, log_id: logId }),
       });
 
       if (!res.ok) throw new Error("Failed to remove item");
@@ -233,7 +233,7 @@ function WardrobeSection({ title, items, onRemove }) {
                   </a>
                 )}
                 <button
-                  onClick={() => onRemove(item.item_id, item.task_id)}
+                  onClick={() => onRemove(item.item_id, item.log_id)}
                   className="text-red-500 text-sm mt-2 hover:underline"
                 >
                   Remove
