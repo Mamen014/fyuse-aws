@@ -255,10 +255,10 @@ export default function DashboardPage() {
     <Navbar />
 
     {/* Main Content */}
-    <div className="flex-1 overflow-y-auto pb-20 pt-16">
+    <div className="flex flex-col pb-20 pt-16">
     
       {/* Greeting Section */}
-      <div className="px-6 pt-8 pb-6">
+      <div className="flex flex-col px-6 pt-8 pb-6">
         <div className="mb-6">
           <h1 className="text-3xl font-bold mb-1">
             {nickname ? `Hi ${nickname}!` : "Hi there!"}
@@ -278,7 +278,7 @@ export default function DashboardPage() {
                     setLoading(true);
                     router.push("/register");
                   }}
-                  className="bg-primary text-white px-4 py-2 rounded-xl text-sm shadow-sm"
+                  className="bg-primary text-white px-4 py-2 rounded-xl text-sm shadow-md"
                 >
                   Setup
                 </button>
@@ -288,8 +288,8 @@ export default function DashboardPage() {
         </div>
 
         {/* Profile + Monthly Status Combined Section */}
-        <div className="px-6 mb-8">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
+        <div className="gap-6 px-6 mb-8">
+          <div className="flex flex-col md:flex-row gap-6">
 
             {/* Profile Card */}
             {(() => {
@@ -302,21 +302,21 @@ export default function DashboardPage() {
               });
 
               return (
-                <div className="bg-white rounded-2xl p-6 shadow-md col-span-1 lg:col-span-2 flex flex-col justify-between">
+                <div className="bg-white basis-1/2 rounded-2xl p-6 shadow-md flex flex-col justify-between">
                   <h3 className="text-xl sm:text-2xl font-bold tracking-tight text-primary mb-4">
                     {section.label}
                   </h3>
                   <div className="flex gap-2 mb-4">
 
                     {/* Skin Tone */}
-                    <div className="flex-1 flex flex-col items-center bg-gray-50 rounded-xl p-3">
+                    <div className="flex-1 flex flex-col items-center justify-center bg-gray-50 rounded-xl p-3">
                       {skinToneImageMap[(itemMap["Skin Tone"]?.value || "").toLowerCase()] ? (
                         <Image
                           src={skinToneImageMap[(itemMap["Skin Tone"]?.value || "").toLowerCase()]}
                           alt="Skin Tone"
                           width={64}
                           height={64}
-                          className="rounded-md object-contain"
+                          className="rounded-md object-contain mt-4"
                         />
                       ) : <span className="text-gray-400">-</span>}
                       <span className="text-sm font-medium text-gray-900 mt-5">
@@ -331,8 +331,8 @@ export default function DashboardPage() {
                         <Image
                           src={bodyShapeImageMap[itemMap["Gender"].value.toLowerCase()][itemMap["Body Shape"].value.toLowerCase()]}
                           alt="Body Shape"
-                          width={80}
-                          height={80}
+                          width={56}
+                          height={56}
                           priority
                           className="rounded-md object-contain"
                         />
@@ -372,7 +372,7 @@ export default function DashboardPage() {
               const PlanIcon = planItem.icon;
 
               return (
-                <div className="bg-white rounded-2xl p-6 border border-primary/20 shadow-md backdrop-blur-sm flex flex-col justify-between">
+                <div className="bg-white basis-1/2 rounded-2xl p-6 shadow-md flex flex-col justify-between">
                   <h3 className="text-lg sm:text-xl font-bold mb-4">Monthly Status</h3>
                   <div className="flex flex-row flex-wrap gap-3 sm:flex-col">
                     {/* Styling */}
@@ -404,7 +404,7 @@ export default function DashboardPage() {
         <div className="mb-6">
           <button
             onClick={() => setShowConfirmationModal(true)}
-            className="bg-primary text-white font-bold text-lg py-4 w-full rounded-3xl shadow-lg hover:bg-primary/90"
+            className="bg-primary text-white font-bold text-lg py-4 w-full rounded-3xl shadow-md hover:bg-primary/90"
           >
             Start Style Discovery
           </button>
@@ -412,10 +412,10 @@ export default function DashboardPage() {
       </div>
 
       {/* Styling History & Wardrobe Collection Side by Side on Desktop */}
-      <div className="px-6 mb-8 flex flex-col gap-6 lg:grid lg:grid-cols-2 lg:gap-6">
+      <div className="px-6 mb-8 flex flex-col gap-6 md:flex-row md:items-stretch">
 
         {/* Styling History Section */}
-        <div className="flex flex-col mb-6">
+        <div className="basis-1/2 flex flex-col bg-white shadow-md rounded-3xl border border-gray-100 p-3 h-full min-h-[300px]">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-primary mb-4">Styling History</h2>
             <Link href="/history" className="flex items-center text-sm text-primary font-medium">
@@ -444,15 +444,6 @@ export default function DashboardPage() {
                         <Shirt className="w-10 h-10 text-gray-400" />
                       </div>
                     )}
-                    <div className="absolute bottom-3 left-3 right-3 space-y-1">
-                      <div className="bg-white/90 backdrop-blur-sm rounded-xl px-3 py-1.5">
-                        {item.timestamp && (
-                          <p className="text-xs text-gray-500">
-                            {new Date(item.timestamp).toLocaleDateString()}
-                          </p>
-                        )}
-                      </div>
-                    </div>
                   </Link>
                 ))
               : [1, 2, 3].map((item) => (
@@ -472,7 +463,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Wardrobe Collection Section */}
-        <div className="flex flex-col">
+        <div className="basis-1/2 flex flex-col bg-white shadow-md rounded-3xl border border-gray-100 p-3 h-full min-h-[300px]">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-primary mb-4">My Wardrobe</h2>
             <Link href="/wardrobe" className="flex items-center text-sm text-primary font-medium">
@@ -481,10 +472,10 @@ export default function DashboardPage() {
           </div>
 
           {/* Wardrobe Grid */}
-          <div className="flex flex-col lg:flex-row gap-6">
+          <div className="flex flex-col lg:flex-row gap-5 justify-between">
 
             {/* Tops Section */}
-            <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 max-h-80 lg:max-h-72 overflow-hidden flex-1 flex flex-col">
+            <div className="bg-white rounded-3xl p-4 border border-primary/10 max-h-80 lg:max-h-72 overflow-hidden flex-1 flex flex-col">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-bold text-primary">Top</h3>
               </div>
@@ -494,7 +485,7 @@ export default function DashboardPage() {
                       <Link
                         key={recommendation.item_id}
                         href="/wardrobe"
-                        className="flex-1 max-w-[120px] aspect-[3/4] rounded-2xl overflow-hidden bg-white shadow-sm border border-gray-100 relative group"
+                        className="flex-1 max-w-[120px] aspect-[3/4] rounded-2xl overflow-hidden bg-white shadow-md border border-gray-100 relative group"
                       >
                         {recommendation.product_image_url ? (
                           <Image
@@ -511,7 +502,7 @@ export default function DashboardPage() {
                         )}
                       </Link>
                     ))
-                  : [1, 2].map((item) => (
+                  : [0, 1, 2].map((item) => (
                       <div
                         key={item}
                         className="flex-1 max-w-[120px] aspect-[3/4] rounded-2xl overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center"
@@ -523,7 +514,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Bottoms Section */}
-            <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 max-h-80 lg:max-h-72 overflow-hidden flex-1 flex flex-col">
+            <div className="bg-white rounded-3xl p-4 border border-primary/10 max-h-80 lg:max-h-72 overflow-hidden flex-1 flex flex-col">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-bold text-primary">Bottom</h3>
               </div>
@@ -533,7 +524,7 @@ export default function DashboardPage() {
                       <Link
                         key={recommendation.item_id}
                         href="/wardrobe"
-                        className="flex-1 max-w-[120px] aspect-[3/4] rounded-2xl overflow-hidden bg-white shadow-sm border border-gray-100 relative group"
+                        className="flex-1 max-w-[120px] aspect-[3/4] rounded-2xl overflow-hidden bg-white shadow-md border border-gray-100 relative group"
                       >
                         {recommendation.product_image_url ? (
                           <Image
@@ -550,7 +541,7 @@ export default function DashboardPage() {
                         )}
                       </Link>
                     ))
-                  : [1, 2].map((item) => (
+                  : [0, 1, 2].map((item) => (
                       <div
                         key={item}
                         className="flex-1 max-w-[120px] aspect-[3/4] rounded-2xl overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center"

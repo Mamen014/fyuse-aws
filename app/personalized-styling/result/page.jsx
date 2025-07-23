@@ -427,7 +427,7 @@ export default function AutoTryOnRecommendationPage() {
                   </div>
 
                   {/* Product Detail */}
-                  <div className="flex flex-col md:flex md:flex-row justify-between mt-4">
+                  <div className="flex flex-col justify-between mt-4">
 
                     {/* Detail Info */}
                     <div className="flex flex-col text-left">
@@ -441,7 +441,7 @@ export default function AutoTryOnRecommendationPage() {
                             alt="Brand Icon"
                             width={64}
                             height={64}
-                            className='inline-block mr-2 mb-4'
+                            className='inline-block ml-4 mb-4'
                           />
                         ) : (
                           <div className="text-sm text-gray-400">Loading...</div>
@@ -451,53 +451,18 @@ export default function AutoTryOnRecommendationPage() {
                     </div>
 
                     {/* Product Links */}
-                    <div className="flex flex-row md:flex md:flex-col text-left md:justify-center md:text-center gap-3">
-                      
-                      {/* Preview Button */}                
-                      {product?.imageS3Url && (
-                        <a
-                          href={product.imageS3Url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-primary bg-white border border-primary hover:bg-primary/10 px-4 py-2 rounded-full"
-                        >
-                          Preview
-                        </a>
-                      )}                  
-
-                      {/* Download Button */}
-                      {resultImageUrl && (
-                        <button
-                          onClick={ async () => {
-                            setIsDownloading(true);
-                            try {
-                              const res = await fetch(resultImageUrl);
-                              const blob = await res.blob();
-                              const url = URL.createObjectURL(blob);
-                              const a = document.createElement('a');
-                              a.href = url;
-                              a.download = 'your-look.jpg';
-                              a.click();
-                              URL.revokeObjectURL(url);
-                            } catch {
-                              toast.error('Download failed');
-                            } finally {
-                              setIsDownloading(false);
-                            }
-                          }}
-                          className="w-full py-2 rounded-full text-primary bg-background hover:bg-primary/10 border border-primary"
-                        >
-                          {isDownloading ? 'Downloading...' : 'Download'}
-                        </button>
-                      )}
+                    <div className="flex flex-row text-center gap-3">                 
 
                       {/* Purchase Button */}
-                      {product?.productLink && (
+                      {product?.productLink && product?.productId && (
                         <a
                           href={product.productLink}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-white bg-primary hover:bg-primary/80 px-4 py-2 rounded-full"
+                          onClick={() => {
+                            track('click_purchase', { item_id: product.productId });
+                          }}                          
+                          className="w-full text-white bg-primary hover:bg-primary/80 px-4 py-2 rounded-full"
                         >
                           Purchase
                         </a>
@@ -517,28 +482,8 @@ export default function AutoTryOnRecommendationPage() {
         </div>
 
         {/* Button */}
-        <div className="w-full max-w-6xl mx-auto space-y-4">
-          
-          {/* Try Another Style Button */}
-          <button
-            disabled={loading}
-            onClick={() => {
-              if (loading) return;
-              resetState();
-              cleanupRef.current?.();
-              debounceTimeout.current = setTimeout(() => {
-                handleFlow(true);
-              }, 300);
-            }}
-            className={`text-white bg-primary w-full py-3 rounded-full font-semibold ${
-              loading
-                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                : 'text-primary border-primary hover:bg-primary/80'
-            }`}
-          >
-            {loading ? 'Loading...' : 'Try Another Style'}
-          </button>
-          
+        <div className="flex flex col lg:flex-row w-full max-w-6xl mx-auto gap-4">
+
           {/* Back to Dashboard Button */}
           <button
             onClick={() => {
@@ -552,8 +497,56 @@ export default function AutoTryOnRecommendationPage() {
                 : 'text-primary border-primary hover:bg-primary/10'
             }`}
           >
-            Back to Dashboard
+            Dashboard
           </button>
+
+          {/* Try Another Style Button */}
+          <button
+            disabled={loading}
+            onClick={() => {
+              if (loading) return;
+              resetState();
+              cleanupRef.current?.();
+              debounceTimeout.current = setTimeout(() => {
+                handleFlow(true);
+              }, 300);
+            }}
+            className={`w-full py-3 rounded-full text-background font-semibold bg-primary hover:bg-primary/10 border border-primary ${
+              loading
+                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                : 'text-primary border-primary hover:bg-primary/80'
+            }`}
+          >
+            {loading ? 'Loading...' : 'Another Style'}
+          </button>
+
+          {/* Download Button */}
+          {resultImageUrl && (
+            <button
+              onClick={ async () => {
+                setIsDownloading(true);
+                try {
+                  const res = await fetch(resultImageUrl);
+                  const blob = await res.blob();
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = 'your-look.jpg';
+                  a.click();
+                  URL.revokeObjectURL(url);
+                } catch {
+                  toast.error('Download failed');
+                } finally {
+                  setIsDownloading(false);
+                }
+              }}
+              className="w-full py-3 rounded-full text-primary font-semibold bg-background hover:bg-primary/10 border border-primary"
+            >
+              {isDownloading ? 'Downloading...' : 'Download'}
+            </button>
+          )}
+
+
         
         </div>
       </div>
