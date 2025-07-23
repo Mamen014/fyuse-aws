@@ -232,31 +232,36 @@ export default function AutoTryOnRecommendationPage() {
       }
   }, [fetchUserPlan, fetchRecommendation, initiateTryOn, pollTaskStatus]);
 
-  useEffect(() => {
-    if (isLoading) return;
-    if (!token) return;
-    if (initialRun.current) return;
-    
-    initialRun.current = true;
-    controllerRef.current = new AbortController();
-    
-    const savedLogId = sessionStorage.getItem("currentLogId");
-    const savedProduct = sessionStorage.getItem("recommendedProduct");
+useEffect(() => {
+  console.log("isLoading:", isLoading);
+  console.log("token:", token);
+  console.log("initialRun:", initialRun.current);
 
-    if (savedProduct) setProduct(JSON.parse(savedProduct));
+  if (isLoading) return;
+  if (!token) return;
+  if (initialRun.current) return;
 
-    if (savedLogId && pollingLogId.current !== savedLogId && !resultImageUrl) {
-      pollingLogId.current = savedLogId;
-      cleanupRef.current = pollTaskStatus(savedLogId, controllerRef.current);
-    } else if (!savedLogId && !resultImageUrl) {
-      handleFlow();
-    }
+  console.log("✅ Running handleFlow...");
+  initialRun.current = true;
 
-    return () => {
-      controllerRef.current?.abort();
-      cleanupRef.current?.();
-    };
-  }, [isLoading, token, handleFlow, pollTaskStatus, resultImageUrl]);
+  controllerRef.current = new AbortController();
+  const savedLogId = sessionStorage.getItem("currentLogId");
+  const savedProduct = sessionStorage.getItem("recommendedProduct");
+
+  if (savedProduct) setProduct(JSON.parse(savedProduct));
+
+  if (savedLogId && pollingLogId.current !== savedLogId && !resultImageUrl) {
+    pollingLogId.current = savedLogId;
+    cleanupRef.current = pollTaskStatus(savedLogId, controllerRef.current);
+  } else if (!savedLogId && !resultImageUrl) {
+    handleFlow();
+  }
+
+  return () => {
+    controllerRef.current?.abort();
+    cleanupRef.current?.();
+  };
+}, [isLoading, token, handleFlow, pollTaskStatus, resultImageUrl]);
 
   // UI Rendering
   if (isLoading || loading)
