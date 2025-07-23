@@ -72,7 +72,9 @@ export default function AutoTryOnRecommendationPage() {
     });
 
     const data = await res.json();
-    if (!data?.productId) throw new Error('No recommendation found.');
+    if (!res.ok || !data?.productId) {
+      throw new Error(data?.error || "No recommendation found.");
+    }
     setProduct(data);
     sessionStorage.setItem('recommendedProduct', JSON.stringify(data));
     return data;
@@ -235,12 +237,29 @@ export default function AutoTryOnRecommendationPage() {
       cleanupRef.current = pollTaskStatus(logId, controllerRef.current);
     } catch (err) {
       if (controllerRef.current?.signal.aborted) return;
-      console.error("❌ handleFlow error:", err);
-      setError(err.message || 'Unexpected error');
+
+      const errorMessage = err.message || 'Unexpected error';
+      console.error("❌ handleFlow error:", errorMessage);
+
+      // ✅ Handle recommendation not found error
+      if (errorMessage.includes('No recommendation')) {
+        toast.error("No recommendations available. Please update your style preferences.", {
+          duration: 4000,
+        });
+
+        setTimeout(() => {
+          setLoading(false);
+          router.push('/personalized-styling/style-preferences');
+        }, 2000);
+
+        return;
+      }
+
+      setError(errorMessage);
       setLoading(false);
     } finally {
       setIsPolling(false);
-      isHandlingFlow.current = false; // ✅ CRUCIAL
+      isHandlingFlow.current = false;
     }
   }, [fetchUserPlan, fetchRecommendation, initiateTryOn, pollTaskStatus]);
 
