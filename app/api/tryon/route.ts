@@ -5,6 +5,7 @@ import { jwtDecode } from "jwt-decode";
 import { prisma } from "@/lib/prisma";
 import { getSecrets } from "@/lib/secrets";
 import jwt from "jsonwebtoken";
+import { v4 as uuidv4 } from "uuid";
 
 export async function POST(req: NextRequest) {
   let secrets;
@@ -114,11 +115,14 @@ export async function POST(req: NextRequest) {
 
   const createdLog = await prisma.styling_log.create({
     data: {
+      id: uuidv4(),
       user_id,
       item_id,
       kling_task_id: taskId,
       user_image_url: profile.user_image_url,
       status: "processing",
+      wardrobe: true,
+      created_at: new Date(),
     },
   });
 

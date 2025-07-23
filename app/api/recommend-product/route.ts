@@ -7,7 +7,6 @@ import {
   PersonalizeRuntimeClient,
   GetRecommendationsCommand,
 } from "@aws-sdk/client-personalize-runtime";
-import { v4 as uuidv4 } from "uuid";
 
 const personalizeClient = new PersonalizeRuntimeClient({ region: "ap-southeast-2" });
 const CAMPAIGN_ARN = "arn:aws:personalize:ap-southeast-2:586794474562:campaign/StyleRec";
@@ -151,18 +150,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Recommended product not found" }, { status: 404 });
     }
 
-    // 6. Log recommendation to styling_log
-    await prisma.styling_log.create({
-      data: {
-        id: uuidv4(),
-        user_id,
-        item_id: product.item_id,
-        created_at: new Date(),
-        wardrobe: true,
-      },
-    });
-
-    // 7. Return product
+    // 6. Return product
     return NextResponse.json({
       productId: product.item_id,
       productName: product.product_name,

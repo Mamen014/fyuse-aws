@@ -320,7 +320,7 @@ export default function DashboardPage() {
                         />
                       ) : <span className="text-gray-400">-</span>}
                       <span className="text-sm font-medium text-gray-900 mt-5">
-                        {capitalizeWords(itemMap["Skin Tone"]?.value)}
+                        {capitalizeWords(itemMap["Skin Tone"]?.value || "Loading...")}
                       </span>
                     </div>
 
@@ -338,7 +338,7 @@ export default function DashboardPage() {
                         />
                       ) : <span className="text-gray-400">-</span>}
                       <span className="text-sm font-medium text-gray-900 mt-1">
-                        {capitalizeWords(itemMap["Body Shape"]?.value)}
+                        {capitalizeWords(itemMap["Body Shape"]?.value || "Loading...")}
                       </span>
                     </div>
                   </div>
@@ -350,7 +350,7 @@ export default function DashboardPage() {
                         <div key={i} className="bg-gray-50 rounded-xl p-3 flex items-center justify-center gap-2 flex-1">
                           <item.icon className="w-6 h-6 text-primary" />
                           <div>
-                            <p className="text-sm font-medium text-gray-700">{item.value}</p>
+                            <p className="text-sm font-medium text-gray-700">{item?.value || "Loading..."}</p>
                           </div>
                         </div>
                       )
@@ -380,7 +380,7 @@ export default function DashboardPage() {
                       <IconComponent className="w-10 h-10 text-primary" />
                       <div>
                         <p className="text-sm text-primary/60 mb-1">Styling</p>
-                        <p className="text-xl font-bold text-primary">{stylingItem.value}</p>
+                        <p className="text-xl font-bold text-primary">{stylingItem?.value || "Loading..."}</p>
                       </div>
                     </div>
 
@@ -389,7 +389,7 @@ export default function DashboardPage() {
                       <PlanIcon className="w-10 h-10 text-primary" />
                       <div>
                         <p className="text-sm text-primary/60 mb-1">Current Plan</p>
-                        <p className="text-xl font-bold text-primary">{planItem.value}</p>
+                        <p className="text-xl font-bold text-primary">{planItem?.value || "Loading..."}</p>
                       </div>
                     </div>
                   </div>

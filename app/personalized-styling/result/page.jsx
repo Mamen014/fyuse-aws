@@ -281,6 +281,10 @@ export default function AutoTryOnRecommendationPage() {
   // UI Rendering
   if (isLoading || loading)
     return <LoadingModalSpinner message="Styling..." subMessage="This process only takes 30 seconds." />;
+  if (!product || !resultImageUrl) {
+    return <LoadingModalSpinner message="Styling..." subMessage="Please wait..." />;
+  }
+
 
   if (error && !product && !resultImageUrl)
     return (
@@ -335,99 +339,120 @@ export default function AutoTryOnRecommendationPage() {
             </div>
           </div>
 
-          {/* Right: Product Info */}
-          <div className="md:w-1/2 w-full flex">
-            <div className="rounded-2xl p-6 shadow-2xl w-full flex flex-col">
+          {product ? (
+            <>
+              {/* Product JSX block here */}
+              {/* Right: Product Info */}
+              <div className="md:w-1/2 w-full flex">
+                <div className="rounded-2xl p-6 shadow-2xl w-full flex flex-col">
 
-              {/* Product Image */}
-              <div className="relative w-full aspect-[3/4]">
-                <Image
-                  src={product.imageS3Url}
-                  alt={product.productName}
-                  fill
-                  className="object-cover rounded-xl"
-                  priority
-                  unoptimized
-                />
-              </div>
+                  {/* Product Image */}
+                  <div className="relative w-full aspect-[3/4]">
+                    {product?.imageS3Url ? (
+                      <Image
+                        src={product.imageS3Url}
+                        alt={product.productName || 'Product'}
+                        fill
+                        className="object-cover rounded-xl"
+                        priority
+                        unoptimized
+                      />
+                    ) : (
+                      <div className="w-full h-full flex justify-center items-center bg-gray-100 text-sm text-gray-500">
+                        Loading product...
+                      </div>
+                    )}
 
-              {/* Product Detail */}
-              <div className="flex flex-col md:flex md:flex-row justify-between mt-4">
-
-                {/* Detail Info */}
-                <div className="flex flex-col text-left">
-                  <div className="font-bold mb-4">
-                    <h3>{product.productName}</h3>
                   </div>
-                  <div>
-                    <Image
-                      src={`/images/brand-logo/${product.brand}.png`}
-                      alt="Brand Icon"
-                      width={64}
-                      height={64}
-                      className='inline-block mr-2 mb-4'
-                    />
-                  </div>
-                </div>
 
-                {/* Product Links */}
-                <div className="flex flex-row md:flex md:flex-col text-left md:justify-center md:text-center gap-3">
+                  {/* Product Detail */}
+                  <div className="flex flex-col md:flex md:flex-row justify-between mt-4">
+
+                    {/* Detail Info */}
+                    <div className="flex flex-col text-left">
+                      <div className="font-bold mb-4">
+                        <h3>{product?.productName || "loading..."}</h3>
+                      </div>
+                      <div>
+                        {product?.brand ? (
+                          <Image
+                            src={`/images/brand-logo/${product?.brand}.png`}
+                            alt="Brand Icon"
+                            width={64}
+                            height={64}
+                            className='inline-block mr-2 mb-4'
+                          />
+                        ) : (
+                          <div className="text-sm text-gray-400">Loading...</div>
+                        )}
+
+                      </div>
+                    </div>
+
+                    {/* Product Links */}
+                    <div className="flex flex-row md:flex md:flex-col text-left md:justify-center md:text-center gap-3">
+                      
+                      {/* Preview Button */}                
+                      {product?.imageS3Url && (
+                        <a
+                          href={product.imageS3Url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary bg-white border border-primary hover:bg-primary/10 px-4 py-2 rounded-full"
+                        >
+                          Preview
+                        </a>
+                      )}                  
+
+                      {/* Download Button */}
+                      {resultImageUrl && (
+                        <button
+                          onClick={ async () => {
+                            setIsDownloading(true);
+                            try {
+                              const res = await fetch(resultImageUrl);
+                              const blob = await res.blob();
+                              const url = URL.createObjectURL(blob);
+                              const a = document.createElement('a');
+                              a.href = url;
+                              a.download = 'your-look.jpg';
+                              a.click();
+                              URL.revokeObjectURL(url);
+                            } catch {
+                              toast.error('Download failed');
+                            } finally {
+                              setIsDownloading(false);
+                            }
+                          }}
+                          className="w-full py-2 rounded-full text-primary bg-background hover:bg-primary/10 border border-primary"
+                        >
+                          {isDownloading ? 'Downloading...' : 'Download'}
+                        </button>
+                      )}
+
+                      {/* Purchase Button */}
+                      {product?.productLink && (
+                        <a
+                          href={product.productLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-white bg-primary hover:bg-primary/80 px-4 py-2 rounded-full"
+                        >
+                          Purchase
+                        </a>
+                      )}
+                    
+                    </div>
                   
-                  {/* Preview Button */}                
-                  {product.imageS3Url && (
-                    <a
-                      href={product.imageS3Url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-primary bg-white border border-primary hover:bg-primary/10 px-4 py-2 rounded-full"
-                    >
-                      Preview
-                    </a>
-                  )}                  
+                  </div>
 
-                  {/* Download Button */}
-                  {resultImageUrl && (
-                    <button
-                      onClick={ async () => {
-                        setIsDownloading(true);
-                        try {
-                          const res = await fetch(resultImageUrl);
-                          const blob = await res.blob();
-                          const url = URL.createObjectURL(blob);
-                          const a = document.createElement('a');
-                          a.href = url;
-                          a.download = 'your-look.jpg';
-                          a.click();
-                          URL.revokeObjectURL(url);
-                        } catch {
-                          toast.error('Download failed');
-                        } finally {
-                          setIsDownloading(false);
-                        }
-                      }}
-                      className="w-full py-2 rounded-full text-primary bg-background hover:bg-primary/10 border border-primary"
-                    >
-                      {isDownloading ? 'Downloading...' : 'Download'}
-                    </button>
-                  )}
-
-                  {/* Purchase Button */}
-                  {product.productLink && (
-                    <a
-                      href={product.productLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-white bg-primary hover:bg-primary/80 px-4 py-2 rounded-full"
-                    >
-                      Purchase
-                    </a>
-                  )}
-                 
                 </div>
-              
-              </div>
-            </div>
-          </div>
+              </div>              
+            </>
+          ) : (
+            <div className="w-full text-center py-12 text-gray-500">Preparing your product...</div>
+          )}
+
         </div>
 
         {/* Button */}
