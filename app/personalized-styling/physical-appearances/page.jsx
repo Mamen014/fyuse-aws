@@ -149,15 +149,14 @@ export default function AIPhotoUpload() {
     reader.readAsDataURL(file);
   };
 
-  // Upload user photo
+  // Handle upload and AI analysis
   const handleUpload = async () => {
     if (!fileToUpload || !userEmail) return;
 
     try {
-      setLoading(true);
       setIsAnalyzing(true);
       setShowAIModal(true);
-      
+
       // Convert file to base64
       const base64Data = await new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -166,74 +165,85 @@ export default function AIPhotoUpload() {
         reader.readAsDataURL(fileToUpload);
       });
 
-      // Prepare payload
+      // Shared payload
       const payload = {
         fileName: fileToUpload.name,
         fileDataBase64: base64Data,
         contentType: fileToUpload.type,
+        userEmail,
       };
 
-      // Upload to S3 bucket with Lambda
-      const uploadResponse = await fetch(`/api/upload-image`, {
+      // Fire off both requests, but wait for analyzerTest first
+      const analyzerPromise = fetch(`${API_BASE_URL}/analyzerTest`, {
         method: 'POST',
-        headers: { 
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const uploadPromise = fetch(`/api/upload-image`, {
+        method: 'POST',
+        headers: {
           Authorization: `Bearer ${user.id_token}`,
-          'Content-Type': 'application/json' 
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify(payload),
       });
+
+      // Wait for analyzerTest first
+      const analyzerResponse = await analyzerPromise;
+      const analyzerData = await analyzerResponse.json();
+
+      if (!analyzerResponse.ok) {
+        throw new Error(analyzerData.error || 'AI analysis failed.');
+      }
+
+      const aiAnalysisResults = {
+        gender: analyzerData.gender,
+        skin_tone: analyzerData.skinTone,
+        body_shape: analyzerData.bodyShape,
+      };
+
+      setAiAnalysis(aiAnalysisResults);
+      setIsAnalyzing(false);
+
+      // Wait for upload (if not done already), then track event
+      const uploadResponse = await uploadPromise;
       const uploadData = await uploadResponse.json();
-      
+
       if (!uploadData.user_image_url) {
         throw new Error('Upload failed: No image URL returned');
       }
 
-      track('upload_photo', { selection: uploadData.user_image_url })
+      track('upload_photo', { selection: uploadData.user_image_url });
 
-      // Analyze the uploaded image
-      const analyzerResponse = await fetch(`${API_BASE_URL}/userAnalyzer`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userImage: uploadData.user_image_url,
-          userEmail: userEmail
-        }),
-      });
-      const analyzerData = await analyzerResponse.json();
-      
-      // Format the AI analysis results
-      const aiAnalysisResults = {
-        gender: analyzerData.gender,
-        skin_tone: analyzerData.skinTone,
-        body_shape: analyzerData.bodyShape,        
-      };
-      
-      // Save to state for the modal
-      setAiAnalysis(aiAnalysisResults);
-      setIsAnalyzing(false);
-
-      // Save to backend API
+      // Save to backend
       try {
-        await fetch("/api/register-profile", {
+        await fetch('/api/register-profile', {
           method: 'POST',
           headers: {
             Authorization: `Bearer ${user.id_token}`,
-            "Content-Type": "application/json",
+            'Content-Type': 'application/json',
           },
           body: JSON.stringify(aiAnalysisResults),
         });
       } catch (error) {
         console.error('Error saving to backend:', error);
-      };
+      }
 
-    } catch (err) {
-      console.error('Upload error:', err);
-      setError(err);
+    } catch (error) {
+      const message = error.message || '';
+      if (message.includes('No face detected') ||
+          message.includes('Multiple faces detected') ||
+          message.includes('Face not clearly visible') ||
+          message.includes('Face too small in image')) {
+        toast.error(message, { autoClose: 5000 });
+      } else {
+        toast.error('An error occurred during upload.', { autoClose: 5000 });
+      }
+
+      setError(error);
       setShowAIModal(false);
       setIsAnalyzing(false);
-      toast.error('An error occurred during upload.');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -405,9 +415,8 @@ export default function AIPhotoUpload() {
             {/* Close Button */}
             <button
               onClick={() => setIsUserPhotoGuidanceOpen(false)}
-              className="absolute top-4 right-4 w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center"
+              className="absolute top-4 right-4 w-8 h-8 font-bold rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center"
             >
-              <div className="w-6 h-6 text-gray-600" />
               X
             </button>
 
@@ -484,7 +493,7 @@ export default function AIPhotoUpload() {
       {/* AI Analysis Modal */}
       {showAIModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl p-6 max-w-sm w-full">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full">
             {isAnalyzing ? (
               <div className="py-8 flex flex-col items-center justify-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mb-4"></div>
@@ -493,12 +502,12 @@ export default function AIPhotoUpload() {
               </div>
             ) : (
               <>
-              <h1 className="text-4xl font-bold text-primary mb-8">Analysis Results</h1>
+              <h1 className="text-4xl font-bold text-primary text-center mb-8">Analysis Results</h1>
               <div className="flex flex-row gap-6 items-start mb-4">
                 {/* Left: Gender & Skin Tone (stacked) */}
                 <div className="flex flex-col items-center gap-4">
                   {/* Gender */}
-                  <div className="flex flex-col items-center">
+                  <div className="flex flex-col border border-primary/30 rounded-xl shadow-lg items-center px-4">
                     <p className="text-2xl font-medium text-gray-600">Gender</p>
                     <div className="flex flex-col items-center">
                       {genderIconMap[aiAnalysis?.gender?.toLowerCase()] || 'Not detected'}
@@ -506,12 +515,12 @@ export default function AIPhotoUpload() {
                     </div>
                   </div>
                   {/* Skin Tone */}
-                  <div className="flex flex-col items-center mt-2">
+                  <div className="flex flex-col border border-primary/30 rounded-xl shadow-lg items-center mt-2 px-4">
                     <p className="text-2xl font-medium text-gray-600 whitespace-nowrap">Skin Tone</p>
                     <div className="flex flex-col items-center">
                       {aiAnalysis?.skin_tone && (
                         <Image
-                          src={skinToneImageMap[aiAnalysis.skin_tone?.toLowerCase()]}
+                          src={`/images/skin-tone/${aiAnalysis.skin_tone}.png`}
                           alt={aiAnalysis.skin_tone || 'Skin Tone'}
                           width={60}
                           height={60}
@@ -523,17 +532,15 @@ export default function AIPhotoUpload() {
                   </div>
                 </div>
                 {/* Right: Body Shape */}
-                <div className="flex flex-col items-center">
+                <div className="flex flex-col border border-primary/30 rounded-xl shadow-lg items-center px-1">
                   <p className="text-2xl font-medium text-gray-600">Body Shape</p>
                   {aiAnalysis?.gender && aiAnalysis?.body_shape && (
                     <Image
-                      src={
-                        bodyShapeImageMap[aiAnalysis.gender.toLowerCase()]?.[aiAnalysis.body_shape.toLowerCase()]
-                      }
+                      src={`/images/body-shape/${aiAnalysis.gender}/${aiAnalysis.body_shape}.svg`}
                       alt={aiAnalysis.body_shape || 'Body Shape'}
                       width={512}
                       height={512}
-                      className="w-64 h-64 rounded-lg object-contain mt-2 scale-125 transition-transform"
+                      className="w-64 h-64 rounded-lg object-contain mt-2 transition-transform"
                     />
                   )}
                   <span className="text-lg text-primary mt-2">{capitalizeWords(aiAnalysis?.body_shape || 'Not detected')}</span>
