@@ -13,11 +13,18 @@ export default function PhysicalAttributesStep1() {
   const [sliderPosition, setSliderPosition] = useState(0);
   const sliderRef = useRef(null);
   const sliderContainerRef = useRef(null);
-  const { user } = useAuth();
+  const { user, isLoading, signinRedirect } = useAuth();
 
   // Skin tone options
   const skinTones = ['fair', 'light', 'medium', 'deep'];
 
+  // Redirect to sign in if not authenticated
+  useEffect(() => {
+    if (!isLoading && !user) {
+      signinRedirect();
+    }
+  }, [isLoading, user, signinRedirect]);
+    
   function capitalizeWords(str) {
     if (!str) return '';
     return str

@@ -20,7 +20,7 @@ const DynamicSelect = dynamic(() => import('react-select'), {
 
 export default function RegisterAI() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, isLoading, signinRedirect } = useAuth();
   const userEmail = user?.profile?.email;
   const countrySelectId = useId();
   const citySelectId = useId();
@@ -43,7 +43,7 @@ export default function RegisterAI() {
   const [agreeToPrivacy, setAgreeToPrivacy] = useState(false);
   const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
   const [isClient, setIsClient] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [Loading, setLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCheckingRedirect, setIsCheckingRedirect] = useState(true);
 
@@ -77,6 +77,13 @@ export default function RegisterAI() {
     setIsCheckingRedirect(false);
   }, []);
 
+  // Redirect to sign in if not authenticated
+  useEffect(() => {
+    if (!isLoading && !user) {
+      signinRedirect();
+    }
+  }, [isLoading, user, signinRedirect]);
+    
   useEffect(() => {
     if (!isClient) return;
 
@@ -224,10 +231,10 @@ export default function RegisterAI() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (isLoading || isSubmitting) return;
+    if (Loading || isSubmitting) return;
 
     setIsCheckingRedirect(true);
-    setIsLoading(true);
+    setLoading(true);
     setIsSubmitting(true);
 
     // ✅ Require custom occupation if "Other" is selected
@@ -236,7 +243,7 @@ export default function RegisterAI() {
       !formData.customOccupation.trim()
     ) {
       alert("Please specify your occupation.");
-      setIsLoading(false);
+      setLoading(false);
       setIsSubmitting(false);
       return;
     }
@@ -292,7 +299,7 @@ export default function RegisterAI() {
     } catch (err) {
       console.error("Failed to save registration data:", err);
       setIsSubmitting(false);
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
@@ -476,9 +483,9 @@ export default function RegisterAI() {
 
           <button
             type="submit"
-            disabled={isLoading || isSubmitting || !isFormValid()}
+            disabled={Loading || isSubmitting || !isFormValid()}
             className={`bg-primary text-white px-5 py-2.5 rounded-lg w-full transition-opacity ${
-              !isFormValid() || isLoading || isSubmitting ? "opacity-50 cursor-not-allowed" : ""
+              !isFormValid() || Loading || isSubmitting ? "opacity-50 cursor-not-allowed" : ""
             }`}
           >
             Save & Continue

@@ -6,11 +6,13 @@ import { Shirt } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import LoadingModalSpinner from '@/components/ui/LoadingState';
 import Image from 'next/image';
+import ConfirmationModal from '@/components/ConfirmationModal';
 
 export default function TryOnHistoryPage() {
-  const { user } = useAuth();
+  const { user, isLoading, signinRedirect } = useAuth();
   const [tryonHistory, setTryonHistory] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     if (!loading && user) {
@@ -42,15 +44,36 @@ export default function TryOnHistoryPage() {
     }
   }, [loading, user]);
 
+  // Redirect to sign in if not authenticated
+  useEffect(() => {
+    if (!isLoading && !user) {
+      signinRedirect();
+    }
+  }, [isLoading, user, signinRedirect]);
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
       
       <main className="max-w-4xl mx-auto px-4 pt-20 pb-16">
         {/* Header */}
-        <div className="flex items-center mb-6 pt-4">
+        <div className="flex items-center justify-between mb-6 pt-4">
           <h1 className="text-2xl font-bold text-primary">Styling History</h1>
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="bg-primary text-white px-5 py-2.5 rounded-full text-sm font-semibold hover:bg-primary/90 transition"
+          >
+            Style Me
+          </button>
         </div>
+
+        {isModalOpen && (
+          <ConfirmationModal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            trackingPage="styling-history"
+          />
+        )}
 
         {loading ? (
           <LoadingModalSpinner/>

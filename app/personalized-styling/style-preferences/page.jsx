@@ -17,7 +17,7 @@ export default function StylePreferencesPage() {
   const [fashionType, setFashionType] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loading, setloading] = useState(false);
-  const { user } = useAuth();
+  const { user, isLoading, signinRedirect } = useAuth();
 
   // Define clothing options with active and inactive icons
   const clothingOptions = [
@@ -42,6 +42,13 @@ export default function StylePreferencesPage() {
     Streetwear: { desc: 'Graphic tees and oversized fits', image: '/styles/streetwear.png' },
   };
 
+  // Redirect to sign in if not authenticated
+  useEffect(() => {
+    if (!isLoading && !user) {
+      signinRedirect();
+    }
+  }, [isLoading, user, signinRedirect]);
+    
   // Handle form submission
   const handleSubmit = async () => {
     if (isSubmitting) return;

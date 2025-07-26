@@ -11,9 +11,17 @@ function Step2Content() {
   const [gender, setGender] = useState('');
   const [bodyShape, setBodyShape] = useState('');
   const [loading, setloading] = useState(false);
-  const { user } = useAuth();
+  const { user, isLoading, signinRedirect } = useAuth();
   const params = useSearchParams();
 
+  // Redirect to sign in if not authenticated
+  useEffect(() => {
+    if (!isLoading && !user) {
+      signinRedirect();
+    }
+  }, [isLoading, user, signinRedirect]);
+
+  // Check gender from URL parameters
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const storedGender = params.get('gender');
@@ -23,7 +31,7 @@ function Step2Content() {
         console.warn("Gender not found or invalid.");
       }
     }
-  }, []);
+  }, [params]);
 
 
   function capitalizeWords(str) {

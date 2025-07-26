@@ -3,11 +3,13 @@ import Image from "next/image";
 import LoadingModalSpinner from "./ui/LoadingState";
 import { useRouter } from "next/navigation";
 import { capitalizeWords } from "@/lib/utils";
+import { useAuth } from "react-oidc-context";
+
 
 type Props = {
   isOpen: boolean;
   onClose: () => void;
-  token: string;
+  trackingPage: string;
 };
 
 type Profile = {
@@ -23,17 +25,56 @@ type StyledItem = {
   category?: string;
 };
 
-export default function ConfirmationModal({ isOpen, onClose, token }: Props) {
+export default function ConfirmationModal({ isOpen, onClose, trackingPage }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
+  const [navigating, setNavigating] = useState(false);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [latestItem, setLatestItem] = useState<StyledItem | null>(null);
+  const { user } = useAuth();
+  const userEmail = user?.profile?.email;
+  const token = user?.access_token || user?.id_token;
+  const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
+  
 
+  
   const handleClose = () => onClose?.();
 
-  const handleNavigate = (path: string) => {
+  const handleNavigate = async (path: string) => {
+    const trackingMap: Record<string, string> = {
+      "/personalized-styling/result": "styling",
+      "/personalized-styling/physical-appearances": "reupload",
+      "/personalized-styling/style-preferences": "change_preferences",
+    };
+
+    const selection = trackingMap[path];
+    if (selection) {
+      track("confirmation_modal_navigate", { selection });
+    }
+
+    setNavigating(true); // Show loading state
     handleClose();
-    router.push(path);
+
+    // Slight delay to allow modal to visually close before route changes (optional but smoother UX)
+    setTimeout(() => {
+      router.push(path);
+    }, 100);
+  };
+
+  // Track user actions
+  const track = async (action: string, metadata = {}) => {
+    if (!userEmail) return;
+    await fetch(`${API_BASE_URL}/trackevent`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        userEmail,
+        action,
+        timestamp: new Date().toISOString(),
+        page: trackingPage,
+        ...metadata,
+      }),
+    }).catch(console.error);
   };
 
   useEffect(() => {
@@ -78,9 +119,22 @@ export default function ConfirmationModal({ isOpen, onClose, token }: Props) {
       </div>
     );
 
+  if (navigating)
     return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center overflow-y-auto">
-        <div className="modal-content w-full max-w-5xl rounded-2xl p-8 bg-white shadow-xl flex flex-col gap-10 md:flex-row md:gap-12">
+      <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+        <LoadingModalSpinner message="Redirecting..." subMessage="One moment..." />
+      </div>
+    );
+
+    return (
+    <div 
+      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center overflow-y-auto"
+      onClick={handleClose}
+    >
+        <div 
+        className="modal-content w-full max-w-5xl rounded-2xl p-8 bg-white shadow-xl flex flex-col gap-10 md:flex-row md:gap-12"
+        onClick={(e) => e.stopPropagation()}
+        >
         
         {/* Left column */}
         <div className="w-full md:w-[60%] space-y-6">

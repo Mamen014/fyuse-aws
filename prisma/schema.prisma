@@ -72,6 +72,10 @@ model Profile {
   subs_plan         subs_plan?
   style_preferences style_preference[]
   styling_logs      styling_log[]
+  survey_responses  survey_response[]
+
+  survey_prompt_dismissed Boolean? @default(false)
+  survey_prompt_stage     Int      @default(0)
 }
 
 model ContactMessage {
@@ -80,4 +84,26 @@ model ContactMessage {
   email     String
   message   String
   createdAt DateTime @default(now())
+}
+
+model survey_response {
+  id                 String   @id @default(uuid())
+  user_id            String
+  stylingSatisfaction String?
+  styleMatch          String?
+  bodyShape           String?
+  skinTone            String?
+  tryonRealism        String?
+  tryonEase           String?
+  appExperience       String?
+  device              String?
+  issues              String?
+  shareIntent         String?
+  purchaseIntent      String?
+  likeMost            String?
+  improveSuggestions  String?
+  email               String?
+  submittedAt         DateTime @default(now())
+
+  profile             Profile  @relation(fields: [user_id], references: [user_id])
 }

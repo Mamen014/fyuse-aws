@@ -2,8 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
-import { useAuth } from 'react-oidc-context';
 import { ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Navbar from '@/components/Navbar';
@@ -11,8 +9,6 @@ import Footer from '@/components/Footer';
 import CTAstyling from '@/components/ui/CTAstyling';
 
 export default function LandingPage() {
-  const router = useRouter();
-  const { user, signinRedirect } = useAuth();
   const [openFAQ, setOpenFAQ] = useState(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   

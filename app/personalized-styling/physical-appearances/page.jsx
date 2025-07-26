@@ -10,10 +10,13 @@ import Image from 'next/image';
 import axios from 'axios';
 import 'react-toastify/dist/ReactToastify.css';
 import LoadingModalSpinner from '@/components/ui/LoadingState';
+import PrivacyPolicyModal from '@/components/PrivacyPolicyModal';
 
 export default function AIPhotoUpload() {
   const router = useRouter();
   const [photoPreview, setPhotoPreview] = useState('');
+  const [agreeToPrivacy, setAgreeToPrivacy] = useState(false);
+  const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
   const [isUserPhotoGuidanceOpen, setIsUserPhotoGuidanceOpen] = useState(false);
   const [fileToUpload, setFileToUpload] = useState(null);
   const [isloading, setisLoading] = useState(false);
@@ -25,7 +28,7 @@ export default function AIPhotoUpload() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [showRegisterPrompt, setShowRegisterPrompt] = useState(false);
   const [, setError] = useState(null);
-  const { user } = useAuth();
+  const { user, isLoading, signinRedirect } = useAuth();
 
   const userEmail = user?.profile?.email;
   const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
@@ -61,38 +64,17 @@ export default function AIPhotoUpload() {
     }
   }, []);
 
+  // Redirect to sign in if not authenticated
+  useEffect(() => {
+    if (!isLoading && !user) {
+      signinRedirect();
+    }
+  }, [isLoading, user, signinRedirect]);
+
   //Gender mapping
   const genderIconMap = {
-    male: <Mars className="w-24 h-24 text-primary inline-block ml-4" />,
-    female: <Venus className="w-24 h-24 text-primary inline-block mr-2" />,
-  };
-
-  // Body shape mapping based on gender
-  const bodyShapeImageMap = {
-    male: {
-      'rectangle': '/images/body-shape/male/rectangle.png',
-      'inverted triangle': '/images/body-shape/male/inverted-triangle.png',
-      'round': '/images/body-shape/male/round.png',
-      'trapezoid': '/images/body-shape/male/trapezoid.png',
-      'triangle': '/images/body-shape/male/triangle.png',
-    },
-    female: {
-      'hourglass': '/images/body-shape/female/hourglass.png',
-      'pear': '/images/body-shape/female/pear.png',
-      'apple': '/images/body-shape/female/apple.png',
-      'rectangle': '/images/body-shape/female/rectangle.png',
-      'inverted triangle': '/images/body-shape/female/inverted-triangle.png',
-    }
-  };
-
-  // Skin tone mapping
-  const skinToneImageMap = {
-    'fair': '/images/skin-tone/fair.png',
-    'light': '/images/skin-tone/light.png',
-    'medium': '/images/skin-tone/medium.png',
-    'deep': '/images/skin-tone/deep.png',
-
-    // Add more as needed, keys should match aiAnalysis?.skinTone (case-insensitive)
+    male: <Mars className="w-20 h-20 text-primary inline-block ml-4" />,
+    female: <Venus className="w-20 h-20 text-primary inline-block mr-2" />,
   };
 
   // Capitalizing user' attribute first word
@@ -250,7 +232,7 @@ export default function AIPhotoUpload() {
   // Accept AI analysis
   const handleAcceptAnalysis = async () => {
     if (isSubmitting) return;
-    track('accept_analysis');
+    track('ai_analysis', { selection: "accept" });
     setIsSubmitting(true);
     setisLoading(true);   
     
@@ -283,7 +265,7 @@ export default function AIPhotoUpload() {
     try {
       
       // Navigate to the first step of manual physical attributes
-      track('customize_manually');
+      track('ai_analysis', { selection: "decline" });
       setisLoading(true);
       router.push('physical-appearances/manual/step-1');
     } catch (error) {
@@ -300,7 +282,7 @@ export default function AIPhotoUpload() {
         userEmail,
         action,
         timestamp: new Date().toISOString(),
-        page: 'physical_appearancePage',
+        page: 'physical_appearance',
         ...metadata,
       });
     } catch (err) {
@@ -358,7 +340,7 @@ export default function AIPhotoUpload() {
             />
             <label
               htmlFor="photo-upload"
-              className="flex items-center justify-center h-[340px] cursor-pointer text-center px-4"
+              className="h-[340px] px-4 py-6 cursor-pointer text-center flex flex-col justify-between items-center"
             >
               {photoPreview ? (
                 <div className="w-full h-full flex items-center justify-center px-6 py-4">
@@ -372,25 +354,62 @@ export default function AIPhotoUpload() {
                   />
                 </div>
               ) : (
-                <div className="flex flex-col items-center justify-center h-48 text-primary-300">
-                  Click to upload
-                  <p className="text-[10px] text-gray-400 mt-2 text-center px-4">
-                    Accepted formats: JPG or JPEG. Max size: 4.5MB. Min resolution: 300×300px
-                  </p>
-                </div>
+                <>
+                  {/* Middle: Upload Prompt */}
+                  <div className="flex-1 flex flex-col justify-center items-center text-primary-300">
+                    <p className="text-lg">Click to upload</p>
+                    <p className="text-[10px] text-gray-400 mt-2 text-center px-4">
+                      Accepted formats: JPG or JPEG. Max size: 4.5MB. Min resolution: 300×300px
+                    </p>
+                  </div>
+
+                  {/* Bottom: Guidance Link */}
+                  <div className="mt-auto">
+                    <button
+                      onClick={() => {
+                        track("button_click", {selection: "upload_guidence"});
+                        setIsUserPhotoGuidanceOpen(true)}}
+                      className="underline text-[16px] text-blue-400 cursor-pointer"
+                    >
+                      Upload Photo Guidance
+                    </button>
+                  </div>
+                </>
               )}
             </label>
           </div>
 
-          {/* Guidance Link */}
-          <p className="text-center">
-            <button
-              onClick={() => setIsUserPhotoGuidanceOpen(true)}
-              className="underline text-[16px] text-blue-400 cursor-pointer"
-            >
-              Upload Photo Guidance
-            </button>
-          </p>
+          {/* Privacy policy checkbox */}
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="privacyConsent"
+              checked={agreeToPrivacy}
+              onChange={(e) => {
+                const checked = e.target.checked;
+                setAgreeToPrivacy(checked);
+                if (userEmail) {
+                  localStorage.setItem(
+                    `privacyAgreement`,
+                    checked.toString()
+                  );
+                }
+              }}
+              className="w-4 h-4 accent-blue-500"
+            />
+            <label htmlFor="privacyConsent" className="text-sm text-gray-500">
+              I agree to the{" "}
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  setIsPrivacyModalOpen(true);
+                }}
+                className="text-blue-500 underline"
+              >
+                Privacy Policy Agreement
+              </button>
+            </label>
+          </div>
 
           {/* Upload Button */}
           <button
@@ -455,6 +474,13 @@ export default function AIPhotoUpload() {
         </div>
       )}
 
+      {isPrivacyModalOpen && (
+        <PrivacyPolicyModal
+          isOpen={isPrivacyModalOpen}
+          onClose={() => setIsPrivacyModalOpen(false)}
+        />
+      )}
+
       {showRegisterPrompt && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 px-4">
           <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl text-center">
@@ -467,7 +493,7 @@ export default function AIPhotoUpload() {
                 onClick={() => {
                   localStorage.setItem("registerFrom", "physical-appearances");
                   localStorage.setItem('showRegister', 'false');
-                  track('register', 'true');
+                  track('register', {selection: 'true'});
                   setShowRegisterPrompt(false);
                   setisLoading(true);
                   router.push('/register');
@@ -479,7 +505,7 @@ export default function AIPhotoUpload() {
               <button
                 onClick={() => {
                   localStorage.setItem('showRegister', 'false');
-                  track('register', 'false')
+                  track('register', {selection: 'false'})
                   setShowRegisterPrompt(false);
                 }}
                 className="px-5 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition"
@@ -507,11 +533,11 @@ export default function AIPhotoUpload() {
                 {/* Left: Gender & Skin Tone (stacked) */}
                 <div className="flex flex-col items-center gap-4">
                   {/* Gender */}
-                  <div className="flex flex-col border border-primary/30 rounded-xl shadow-lg items-center px-4">
+                  <div className="flex flex-col border border-primary/30 rounded-xl shadow-lg items-center px-7">
                     <p className="text-2xl font-medium text-gray-600">Gender</p>
                     <div className="flex flex-col items-center">
                       {genderIconMap[aiAnalysis?.gender?.toLowerCase()] || 'Not detected'}
-                      <span className="text-lg text-primary">{capitalizeWords(aiAnalysis?.gender || '')}</span>
+                      <span className="text-lg text-primary mb-2">{capitalizeWords(aiAnalysis?.gender || '')}</span>
                     </div>
                   </div>
                   {/* Skin Tone */}
@@ -527,7 +553,7 @@ export default function AIPhotoUpload() {
                           className="rounded-md object-contain mt-2"
                         />
                       )}
-                      <span className="text-lg text-primary mt-2">{capitalizeWords(aiAnalysis?.skin_tone || 'Not detected')}</span>
+                      <span className="text-lg text-primary mt-2 mb-2">{capitalizeWords(aiAnalysis?.skin_tone || 'Not detected')}</span>
                     </div>
                   </div>
                 </div>
@@ -536,14 +562,14 @@ export default function AIPhotoUpload() {
                   <p className="text-2xl font-medium text-gray-600">Body Shape</p>
                   {aiAnalysis?.gender && aiAnalysis?.body_shape && (
                     <Image
-                      src={`/images/body-shape/${aiAnalysis.gender}/${aiAnalysis.body_shape}.svg`}
+                      src={`/images/body-shape/${aiAnalysis.gender}/${aiAnalysis.body_shape}.png`}
                       alt={aiAnalysis.body_shape || 'Body Shape'}
                       width={512}
                       height={512}
                       className="w-64 h-64 rounded-lg object-contain mt-2 transition-transform"
                     />
                   )}
-                  <span className="text-lg text-primary mt-2">{capitalizeWords(aiAnalysis?.body_shape || 'Not detected')}</span>
+                  <span className="text-lg text-primary mb-2">{capitalizeWords(aiAnalysis?.body_shape || 'Not detected')}</span>
                 </div>
               </div>            
                 <div className="space-y-3">

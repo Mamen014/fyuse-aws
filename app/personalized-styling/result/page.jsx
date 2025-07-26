@@ -18,7 +18,7 @@ const PLAN_LIMITS = {
   glamour: { tryOn: 40 },
 };
 
-export default function AutoTryOnRecommendationPage() {
+export default function StylingPage() {
   const router = useRouter();
   const { user, isLoading, signinRedirect } = useAuth();
   const token = user?.access_token || user?.id_token || '';
@@ -210,7 +210,7 @@ export default function AutoTryOnRecommendationPage() {
     };
 
     poll();
-  }, [token]);
+  }, [token, resultImageUrl]);
 
   const track = async (action, metadata = {}) => {
     if (!userEmail) return;
@@ -218,7 +218,7 @@ export default function AutoTryOnRecommendationPage() {
       await axios.post(`${API_BASE_URL}/trackevent`, {
         userEmail,
         action,
-        page: 'resultPage',
+        page: 'result',
         timestamp: new Date().toISOString(),
         ...metadata,
       });
@@ -245,7 +245,7 @@ export default function AutoTryOnRecommendationPage() {
     }
   };
 
-  const handleFlow = useCallback(async (isManual = false) => {
+  const handleFlow = useCallback(async () => {
     if (isHandlingFlow.current) {
       console.log("⛔ Blocked: already handling");
       return;
@@ -304,8 +304,16 @@ export default function AutoTryOnRecommendationPage() {
       setIsPolling(false);
       isHandlingFlow.current = false;
     }
-  }, [fetchUserPlan, fetchRecommendation, initiateTryOn, pollTaskStatus]);
+  }, [fetchUserPlan, fetchRecommendation, initiateTryOn, pollTaskStatus, router]);
 
+  // Redirect to sign in if not authenticated
+  useEffect(() => {
+    if (!isLoading && !user) {
+      signinRedirect();
+    }
+  }, [isLoading, user, signinRedirect]);
+  
+  // Initial run to handle flow
   useEffect(() => {
     console.log("isLoading:", isLoading);
     console.log("token:", token);
@@ -460,7 +468,7 @@ export default function AutoTryOnRecommendationPage() {
                           target="_blank"
                           rel="noopener noreferrer"
                           onClick={() => {
-                            track('click_purchase', { item_id: product.productId });
+                            track('click_purchase', { selection: product.productId });
                           }}                          
                           className="w-full text-white bg-primary hover:bg-primary/80 px-4 py-2 rounded-full"
                         >
@@ -488,6 +496,7 @@ export default function AutoTryOnRecommendationPage() {
           <button
             onClick={() => {
               resetState();
+              track('button_click', { selection: 'back_to_dashboard' });
               setLoading(true);
               router.push('/dashboard');
             }}
@@ -505,13 +514,14 @@ export default function AutoTryOnRecommendationPage() {
             disabled={loading}
             onClick={() => {
               if (loading) return;
+              track('button_click', { selection: 'another_style' });
               resetState();
               cleanupRef.current?.();
               debounceTimeout.current = setTimeout(() => {
                 handleFlow(true);
               }, 300);
             }}
-            className={`w-full py-3 rounded-full text-background font-semibold bg-primary hover:bg-primary/10 border border-primary ${
+            className={`w-full py-3 rounded-full text-white font-semibold bg-primary hover:bg-primary/10 border border-primary ${
               loading
                 ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                 : 'text-primary border-primary hover:bg-primary/80'
@@ -524,6 +534,7 @@ export default function AutoTryOnRecommendationPage() {
           {resultImageUrl && (
             <button
               onClick={ async () => {
+                track('click_download', { item_id: product?.productId });
                 setIsDownloading(true);
                 try {
                   const res = await fetch(resultImageUrl);
@@ -545,9 +556,6 @@ export default function AutoTryOnRecommendationPage() {
               {isDownloading ? 'Downloading...' : 'Download'}
             </button>
           )}
-
-
-        
         </div>
       </div>
     </div>

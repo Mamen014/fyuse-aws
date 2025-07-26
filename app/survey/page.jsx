@@ -1,8 +1,17 @@
 'use client';
 
-import { useState } from 'react';
+import { use, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from 'react-oidc-context';
+import toast, { Toaster } from 'react-hot-toast';
+import LoadingModalSpinner from '@/components/ui/LoadingState';
+
 
 export default function SurveyPage() {
+  const { user, isLoading, signinRedirect } = useAuth();
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const token = user?.access_token || user?.id_token;
   const [formData, setFormData] = useState({
     stylingSatisfaction: '',
     styleMatch: '',
@@ -20,6 +29,28 @@ export default function SurveyPage() {
     email: '',
   });
 
+  const requiredFields = [
+    'stylingSatisfaction',
+    'styleMatch',
+    'bodyShape',
+    'skinTone',
+    'tryonRealism',
+    'tryonEase',
+    'appExperience',
+    'device',
+    'shareIntent',
+    'purchaseIntent',
+  ];
+
+  const isFormValid = requiredFields.every((field) => formData[field]);
+
+  // Redirect to sign in if not authenticated
+  useEffect(() => {
+    if (!isLoading && !user) {
+      signinRedirect();
+    }
+  }, [isLoading, user, signinRedirect]);
+    
   const handleChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
@@ -38,12 +69,36 @@ export default function SurveyPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await fetch('/api/submit-survey', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(formData),
-    });
-    alert('Thanks for your feedback!');
+
+    if (loading) return; // prevent double click
+    if (!isFormValid) {
+      toast.error("Please fill out all required fields.");
+      return;
+    }
+
+    setLoading(true); // show loading spinner
+
+    try {
+      const res = await fetch('/api/submit-survey', {
+        method: 'POST',
+        headers: {
+          authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!res.ok) throw new Error("Survey submission failed");
+
+      toast.success('Thanks for your feedback!');
+      setTimeout(() => {
+        router.push('/dashboard');
+      }, 2000);
+    } catch (err) {
+      console.error(err);
+      toast.error("Something went wrong. Please try again.");
+      setLoading(false); // allow retry
+    }
   };
 
   const renderRadioGroup = (label, field, options) => (
@@ -91,7 +146,10 @@ export default function SurveyPage() {
     ],
   };
 
+  if (loading) return <LoadingModalSpinner message="Submitting your feedback..." />;
   return (
+    <>
+    <Toaster position="top-center" />
     <form
       onSubmit={handleSubmit}
       className="max-w-3xl mx-auto px-4 py-10 space-y-10 text-gray-800"
@@ -205,11 +263,25 @@ export default function SurveyPage() {
       <div className="flex justify-center">
         <button
           type="submit"
-          className="bg-primary text-white text-lg font-semibold py-3 px-8 rounded-full hover:bg-primary/90 transition"
+          disabled={!isFormValid || loading}
+          className={`text-lg font-semibold py-3 px-8 rounded-full transition flex items-center justify-center gap-2 ${
+            !isFormValid || loading
+              ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+              : "bg-primary text-white hover:bg-primary/90"
+          }`}
         >
-          Submit Feedback
+          {loading ? (
+            <>
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              Submitting...
+            </>
+          ) : (
+            "Submit Feedback"
+          )}
         </button>
       </div>
-    </form>
+    </form>    
+    </>
+
   );
 }

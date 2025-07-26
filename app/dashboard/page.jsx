@@ -11,6 +11,7 @@ import Navbar from "@/components/Navbar";
 import LoadingModalSpinner from "@/components/ui/LoadingState";
 import ReferralModal from "@/components/ReferralModal";
 import ConfirmationModal from "@/components/ConfirmationModal";
+import SurveyPromptModal from "@/components/SurveyPromptModal";
 import { User, ChevronRight, Shirt, MapPin, Sparkles, BriefcaseBusiness, CreditCard } from "lucide-react";
 import axios from "axios";
 
@@ -19,6 +20,7 @@ export default function DashboardPage() {
   const { user, isLoading, signinRedirect } = useAuth();
   const userEmail = user?.profile?.email;
   const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
+  const token = user?.access_token || user?.id_token;
   
   const [tryOnCount, setTryOnCount] = useState(0);
   const [subscriptionPlan, setSubscriptionPlan] = useState(null);  
@@ -31,23 +33,24 @@ export default function DashboardPage() {
   const [Loading, setLoading] = useState(false);  
   const [showRegisterPrompt, setShowRegisterPrompt] = useState(false);
   const [showReferralModal, setShowReferralModal] = useState(false);
+  const [showSurveyPrompt, setShowSurveyPrompt] = useState(false);
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
 
   // Body shape image mapping
   const bodyShapeImageMap = {
     male: {
-      'rectangle': '/images/body-shape/male/rectangle.svg',
-      'inverted triangle': '/images/body-shape/male/inverted-triangle.svg',
-      'round': '/images/body-shape/male/round.svg',
-      'trapezoid': '/images/body-shape/male/trapezoid.svg',
-      'triangle': '/images/body-shape/male/triangle.svg',
+      'rectangle': '/images/body-shape/male/rectangle.png',
+      'inverted triangle': '/images/body-shape/male/inverted-triangle.png',
+      'round': '/images/body-shape/male/round.png',
+      'trapezoid': '/images/body-shape/male/trapezoid.png',
+      'triangle': '/images/body-shape/male/triangle.png',
     },
     female: {
-      'hourglass': '/images/body-shape/female/hourglass.svg',
-      'pear': '/images/body-shape/female/pear.svg',
-      'apple': '/images/body-shape/female/apple.svg',
-      'rectangle': '/images/body-shape/female/rectangle.svg',
-      'inverted triangle': '/images/body-shape/female/inverted-triangle.svg',
+      'hourglass': '/images/body-shape/female/hourglass.png',
+      'pear': '/images/body-shape/female/pear.png',
+      'apple': '/images/body-shape/female/apple.png',
+      'rectangle': '/images/body-shape/female/rectangle.png',
+      'inverted triangle': '/images/body-shape/female/inverted-triangle.png',
     }
   };
 
@@ -76,10 +79,39 @@ export default function DashboardPage() {
       userEmail,
       action,
       timestamp: new Date().toISOString(),
-      page: 'dashboardPage',
+      page: 'dashboard',
       ...metadata,
     }).catch(console.error);
   };
+
+  // Fetch survey prompt if user is authenticated
+  useEffect(() => {
+    try {
+      if (!token) return;
+
+      // Fetch survey prompt
+      const fetchSurveyPrompt = async () => {
+        const res = await fetch('/api/survey-prompt', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (!res.ok) throw new Error(`Failed to fetch survey prompt: ${res.status}`);
+        const data = await res.json();
+        if (data.dismissed === false && [3, 5, 9, 15].includes(data.stage) ) {
+          setShowSurveyPrompt(true);
+        }
+      };
+      if (user) {
+        fetchSurveyPrompt();
+      } 
+    }
+    catch (error) {
+      console.error("Error in fetching data:", error);
+    }
+  }, [user, token]);
 
   // Check if user has registered
   useEffect(() => {
@@ -107,36 +139,85 @@ export default function DashboardPage() {
     }
   }, [isLoading, user, signinRedirect]);
 
-  // Fetch user subscription plan and counts
+  // Fetch user profile and subscription plan
   useEffect(() => {
-    const fetchUserPlan = async () => {
+    const fetchData = async () => {
       try {
-        const token = user?.id_token || user?.access_token;
+        if (!user) return;
         if (!token) return;
 
-        const res = await axios.get("/api/subscription-status", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        const { plan, successful_stylings } = res.data;
+        const headers = {
+          Authorization: `Bearer ${token}`,
+        };
+
+        // Fetch both endpoints in parallel
+        const [resPlan, resProfile] = await Promise.all([
+          axios.get("/api/subscription-status", { headers }),
+          axios.get("/api/user-profile", { headers }),
+        ]);
+
+        // Plan data
+        const { plan, successful_stylings } = resPlan.data;
         setTryOnCount(successful_stylings);
         setSubscriptionPlan(plan);
+
+        // Profile data
+        const {
+          skin_tone,
+          body_shape,
+          occupation,
+          city,
+          gender,
+          nickname,
+          user_image_url,
+        } = resProfile.data;
+
+        setShowRegisterPrompt(false);
+        setProfileRaw({ skin_tone, body_shape, occupation, city, gender, nickname, user_image_url });
+        setNickname(nickname || "");
+
+        // Compose profile display
+        const items = [
+          {
+            label: "Profile",
+            items: [
+              { icon: MapPin, label: "Location", value: city },
+              { icon: Sparkles, label: "Skin Tone", value: skin_tone },
+              { icon: User, label: "Gender", value: gender },
+              { icon: Sparkles, label: "Body Shape", value: body_shape },
+              { icon: BriefcaseBusiness, label: "Occupation", value: occupation },
+            ],
+          },
+          {
+            label: "Monthly Status",
+            items: [
+              { icon: Shirt, label: "Styling", value: `${successful_stylings}x` },
+              { icon: CreditCard, label: "Plan", value: `${plan}` },
+            ],
+          },
+        ].filter((section) =>
+          section.items.some(
+            (item) =>
+              item.value !== "Not Set" &&
+              item.value !== "" &&
+              item.value !== "Category"
+          )
+        );
+
+        setProfileItems(items);
       } catch (err) {
-        console.error("Failed to fetch subscription plan:", err);
+        console.error("❌ Error fetching profile or plan:", err);
+        setProfileItems([]);
       }
     };
 
-    if (user) {
-      fetchUserPlan();
-    }
-  }, [user]);
+    fetchData();
+  }, [user, token]);
 
   // Fetch user style preference
   useEffect(() => {
     const fetchStylePref = async () => {
       try {
-        const token = user?.id_token || user?.access_token;
         if (!token) return;
 
         const res = await axios.get("/api/style-preference", {
@@ -155,14 +236,13 @@ export default function DashboardPage() {
     if (user) {
       fetchStylePref();
     }
-  }, [user]);
+  }, [user, token]);
 
   // Fetch user history
   useEffect(() => {
     if (!isLoading && user) {
       const fetchHistory = async () => {
         try {
-          const token = user.id_token || user.access_token;
           if (!token) throw new Error("Missing token");
 
           const res = await fetch("/api/styling-history", {
@@ -188,58 +268,7 @@ export default function DashboardPage() {
 
       fetchHistory();
     }
-  }, [isLoading, user]);
-
-  // Load profile display data
-  useEffect(() => {
-    const fetchUserProfile = async () => {
-      try {
-        const token = user?.id_token || user?.access_token;
-        if (!token) return;
-
-        const res = await axios.get("/api/user-profile", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        if (res.data) {
-          setShowRegisterPrompt(false);
-        };
-        const { skin_tone, body_shape, occupation, city, gender, nickname, user_image_url } = res.data;
-        setProfileRaw({ skin_tone, body_shape, occupation, city, gender, nickname, user_image_url });
-        setNickname(nickname || "");
-        const items = [
-          {
-            label: "Profile",
-            items: [
-              { icon: MapPin, label: "Location", value: city },
-              { icon: Sparkles, label: "Skin Tone", value: skin_tone },
-              { icon: User, label: "Gender", value: gender },
-              { icon: Sparkles, label: "Body Shape", value: body_shape },
-              { icon: BriefcaseBusiness, label: "Occupation", value: occupation },
-            ],
-          },
-          {
-            label: "Monthly Status",
-            items: [
-              { icon: Shirt, label: "Styling", value: `${tryOnCount}x` },
-              { icon: CreditCard, label: "Plan", value: `${subscriptionPlan}` },
-            ],
-          },
-
-        ].filter(section => section.items.some(item => item.value !== "Not Set" && item.value !== "" && item.value !== "Category"));
-
-        setProfileItems(items);
-      } catch (err) {
-        console.error('Error loading profile data:', err);
-        setProfileItems([]);
-      }
-    }
-    
-    if (user) {
-      fetchUserProfile();
-    }    
-  }, [user, tryOnCount, subscriptionPlan]);
+  }, [isLoading, user, token]);
 
   // Filter recommendations by category
   const tops = tryonItems.filter(item => item.category === "top");
@@ -331,8 +360,8 @@ export default function DashboardPage() {
                         <Image
                           src={bodyShapeImageMap[itemMap["Gender"].value.toLowerCase()][itemMap["Body Shape"].value.toLowerCase()]}
                           alt="Body Shape"
-                          width={56}
-                          height={56}
+                          width={96}
+                          height={96}
                           priority
                           className="rounded-md object-contain"
                         />
@@ -428,7 +457,7 @@ export default function DashboardPage() {
                   <Link
                     key={index}
                     href="/history"
-                    className="min-w-36 h-48 rounded-3xl overflow-hidden flex-shrink-0 bg-white shadow-md border border-gray-100 relative group"
+                    className="min-w-48 h-56 rounded-3xl overflow-hidden flex-shrink-0 bg-white shadow-md border border-gray-100 relative group"
                   >
                     {item?.styling_image_url ? (
                       <Image
@@ -465,7 +494,7 @@ export default function DashboardPage() {
         {/* Wardrobe Collection Section */}
         <div className="basis-1/2 flex flex-col bg-white shadow-md rounded-3xl border border-gray-100 p-3 h-full min-h-[300px]">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-primary mb-4">My Wardrobe</h2>
+            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-primary mb-2">My Wardrobe</h2>
             <Link href="/wardrobe" className="flex items-center text-sm text-primary font-medium">
               View All <ChevronRight size={16} className="ml-1" />
             </Link>
@@ -559,7 +588,7 @@ export default function DashboardPage() {
     <ConfirmationModal
       isOpen={showConfirmationModal}
       onClose={() => setShowConfirmationModal(false)}
-      token={user?.id_token || user?.access_token}
+      trackingPage="Dashboard"
     />
 
     {/* Referral Modal */}
@@ -574,6 +603,24 @@ export default function DashboardPage() {
         onClose={() => setShowReferralModal(false)}
       />
     )}
+
+    {/* Survey Prompt Modal */}
+    {showSurveyPrompt && (
+      <SurveyPromptModal
+        isOpen={showSurveyPrompt}
+        token={token}
+        onClose={() => {
+          track("survey_prompt", { selection: "declined" });
+          setShowSurveyPrompt(false);
+        }}
+        onSubmit={() => {
+          track("survey_prompt", { selection: "accepted" });
+          setShowSurveyPrompt(false);
+          router.push("/survey");
+        }}
+      />
+    )}
+
   </div>
   )
 }

@@ -11,7 +11,6 @@ const BUCKET_NAME = "fyuse-images";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    console.log("📩 Kling callback received:", JSON.stringify(body));
 
     const taskId = body?.task_id;
     const taskStatus = body?.task_status;
@@ -83,6 +82,32 @@ export async function POST(req: NextRequest) {
       });
 
       console.log("✅ styling_log updated for task:", taskId);
+
+      // Increment user's survey_prompt_stage
+      try {
+        const stylingEntry = await prisma.styling_log.findFirst({
+          where: { kling_task_id: taskId },
+          select: { user_id: true },
+        });
+
+        if (stylingEntry?.user_id) {
+          await prisma.profile.update({
+            where: { user_id: stylingEntry.user_id },
+            data: {
+              survey_prompt_stage: {
+                increment: 1,
+              },
+            },
+          });
+          console.log(`📈 Incremented survey_prompt_stage for user: ${stylingEntry.user_id}`);
+        } else {
+          console.warn("⚠️ No user found for this styling_log. Skipped survey_prompt_stage increment.");
+        }
+      } catch (error) {
+        console.error("❌ Error incrementing survey_prompt_stage:", error);
+        return NextResponse.json({ error: "Failed to update survey prompt stage" }, { status: 500 });
+      }
+
       return NextResponse.json({ message: "Try-on result processed successfully" });
     }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "react-oidc-context";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
@@ -13,12 +13,19 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
 export default function PricingPlans() {
   const router = useRouter();
   const [loading, setloading] = useState(false);
-  const { user } = useAuth();
+  const { user, isLoading, signinRedirect } = useAuth();
   const userEmail = user?.profile?.email;
 
   const [showThankYou, setShowThankYou] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(null);
 
+  // Redirect to sign in if not authenticated
+  useEffect(() => {
+    if (!isLoading && !user) {
+      signinRedirect();
+    }
+  }, [isLoading, user, signinRedirect]);
+    
   const handleTrack = async (action, planName) => {
     const payload = {
       userEmail,
