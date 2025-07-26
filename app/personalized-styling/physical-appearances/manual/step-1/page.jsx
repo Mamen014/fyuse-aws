@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation';
-import { useState, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from "react-oidc-context";
 import LoadingModalSpinner from '@/components/ui/LoadingState';
 
