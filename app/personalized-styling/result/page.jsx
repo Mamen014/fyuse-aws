@@ -346,7 +346,6 @@ export default function StylingPage() {
 
   return (
     <div className="min-h-screen px-4 py-8 bg-gradient-to-b from-blue-50 to-white flex flex-col items-center">
-      <Toaster position="top-center" />
 
       <div className="max-w-6xl w-full">
         <h1 className="text-3xl font-bold text-primary text-center mb-2">Your Perfect Look</h1>
