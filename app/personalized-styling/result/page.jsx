@@ -149,7 +149,7 @@ export default function StylingPage() {
     let attempts = 0;
     const maxAttempts = 20;
     const max404Retries = 3;
-    const interval = 5000;
+    const interval = 3000;
     const signal = controller.signal;
 
     const poll = async () => {
@@ -247,37 +247,29 @@ export default function StylingPage() {
 
   const handleFlow = useCallback(async () => {
     if (isHandlingFlow.current) {
-      console.log("⛔ Blocked: already handling");
       return;
     }
-
-    console.log("⚙️ Starting handleFlow");
     isHandlingFlow.current = true;
-    setLoading(true);
     clearTimeout(debounceTimeout.current);
 
     try {
       controllerRef.current = new AbortController();
       const { plan, tryOnCount } = await fetchUserPlan();
-      console.log("📦 Plan:", plan, "Try-on count:", tryOnCount);
 
       if (tryOnCount >= PLAN_LIMITS[plan].tryOn) {
-        console.log("🚫 Plan limit reached");
         setShowPricingPlans(true);
         setLoading(false);
         return;
       }
 
       const recommendation = await fetchRecommendation();
-      console.log("🧠 Recommendation received:", recommendation);
-
       const logId = await initiateTryOn(recommendation.productId);
-      console.log("🪪 Try-on task started with logId:", logId);
-
       if (!logId) throw new Error("Try-on initiation failed");
 
-      await new Promise(res => setTimeout(res, 1000));
-      cleanupRef.current = pollTaskStatus(logId, controllerRef.current);
+      setTimeout(() => {
+        cleanupRef.current = pollTaskStatus(logId, controllerRef.current);
+      }, 10000); 
+
     } catch (err) {
       if (controllerRef.current?.signal.aborted) return;
 
@@ -289,17 +281,13 @@ export default function StylingPage() {
         toast.error("No recommendations available. Please update your style preferences.", {
           duration: 4000,
         });
-
         setTimeout(() => {
-          setLoading(false);
           router.push('/personalized-styling/style-preferences');
         }, 2000);
-
         return;
       }
 
       setError(errorMessage);
-      setLoading(false);
     } finally {
       setIsPolling(false);
       isHandlingFlow.current = false;
@@ -316,15 +304,10 @@ export default function StylingPage() {
   
   // Initial run to handle flow
   useEffect(() => {
-    console.log("isLoading:", isLoading);
-    console.log("token:", token);
-    console.log("initialRun:", initialRun.current);
-
     if (isLoading) return;
     if (!token) return;
     if (initialRun.current) return;
 
-    console.log("✅ Running handleFlow...");
     initialRun.current = true;
 
     controllerRef.current = new AbortController();
@@ -350,12 +333,8 @@ export default function StylingPage() {
   }, [isLoading, token, handleFlow, pollTaskStatus, resultImageUrl]);
 
   // UI Rendering
-  if (isLoading || loading)
+  if (loading || !product || !resultImageUrl)
     return <LoadingModalSpinner message="Styling..." subMessage="This process only takes 30 seconds." />;
-  if (!product || !resultImageUrl) {
-    return <LoadingModalSpinner message="Styling..." subMessage="Please wait..." />;
-  }
-
 
   if (error && !product && !resultImageUrl)
     return (
@@ -515,11 +494,12 @@ export default function StylingPage() {
             disabled={loading}
             onClick={() => {
               if (loading) return;
+              setLoading(true);
               track('button_click', { selection: 'another_style' });
               resetState();
               cleanupRef.current?.();
               debounceTimeout.current = setTimeout(() => {
-                handleFlow(true);
+                handleFlow();
               }, 300);
             }}
             className={`w-full py-3 rounded-full text-white font-semibold bg-primary hover:bg-primary/10 border border-primary ${
@@ -532,10 +512,10 @@ export default function StylingPage() {
           </button>
 
           {/* Download Button */}
-          {resultImageUrl && (
+          {resultImageUrl && product?.productId && (
             <button
               onClick={ async () => {
-                track('click_download', { item_id: product?.productId });
+                track('click_download', { selection: product?.productId });
                 setIsDownloading(true);
                 try {
                   const res = await fetch(resultImageUrl);
