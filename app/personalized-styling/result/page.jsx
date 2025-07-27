@@ -246,9 +246,7 @@ export default function StylingPage() {
   };
 
   const handleFlow = useCallback(async () => {
-    if (isHandlingFlow.current) {
-      return;
-    }
+    if (isHandlingFlow.current) return;
     isHandlingFlow.current = true;
     clearTimeout(debounceTimeout.current);
 
@@ -268,27 +266,27 @@ export default function StylingPage() {
 
       setTimeout(() => {
         cleanupRef.current = pollTaskStatus(logId, controllerRef.current);
-      }, 10000); 
+      }, 15000);
 
     } catch (err) {
       if (controllerRef.current?.signal.aborted) return;
 
-      const errorMessage = err.message || 'Unexpected error';
+      const errorMessage = err?.message || 'Unexpected error';
       console.error("❌ handleFlow error:", errorMessage);
 
-      // ✅ Handle recommendation not found error
       if (errorMessage.includes('No recommendation')) {
         toast.error("No recommendations available. Please update your style preferences.", {
           duration: 4000,
         });
-        setTimeout(() => {
-          router.push('/personalized-styling/style-preferences');
-        }, 2000);
-        return;
+        setTimeout(() => router.push('/personalized-styling/style-preferences'), 2000);
+      } else {
+        toast.error(errorMessage); // ✅ Generic error feedback
       }
 
       setError(errorMessage);
+
     } finally {
+      setLoading(false);        // ✅ Always unset loading
       setIsPolling(false);
       isHandlingFlow.current = false;
     }
