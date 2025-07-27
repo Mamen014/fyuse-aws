@@ -1,3 +1,5 @@
+// app/personalized-styling/physical-appearances/manual/step-1/page.jsx
+
 'use client'
 
 import { useRouter } from 'next/navigation';
@@ -22,6 +24,7 @@ export default function PhysicalAttributesStep1() {
   useEffect(() => {
     if (!isLoading && !user) {
       signinRedirect();
+      return;
     }
   }, [isLoading, user, signinRedirect]);
     
@@ -74,7 +77,7 @@ export default function PhysicalAttributesStep1() {
       gender,
       skin_tone: skinTone,
     };
-    
+    if (!user?.id_token) return;
     try {
       fetch("/api/register-profile", {
         method: "POST",

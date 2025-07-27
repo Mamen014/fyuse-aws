@@ -1,7 +1,7 @@
 // /app/wardrobe/page.jsx
 
 "use client";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "react-oidc-context";
 import Image from "next/image";
 import { ToastContainer, toast } from "react-toastify";
@@ -10,17 +10,18 @@ import LoadingModalSpinner from "@/components/ui/LoadingState";
 import Navbar from "@/components/Navbar";
 import { ChevronRight, ShirtIcon } from "lucide-react";
 import ConfirmationModal from "@/components/ConfirmationModal";
+import { useUserProfile } from "../context/UserProfileContext";
 import axios from "axios";
 
 export default function WardrobePage() {
   const { user, isLoading, signinRedirect } = useAuth();
   const [likedRecommendations, setLikedRecommendations] = useState([]);
-  const [subscriptionPlan, setSubscriptionPlan] = useState(null);
-  const [nickname, setNickname] = useState("");
-  const [userImage, setuserImage] = useState("");
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const { profile, loading: profileLoading } = useUserProfile();
+  const userName = profileLoading ? "" : (profile?.nickname || "Guest");
+  const userImage = profileLoading ? null : profile?.user_image_url;
   const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
   const userEmail = user?.profile?.email;
   const token = user?.id_token || user?.access_token;
@@ -29,97 +30,61 @@ export default function WardrobePage() {
   useEffect(() => {
     if (!isLoading && !user) {
       signinRedirect();
+      return;
     }
   }, [isLoading, user, signinRedirect]);
 
-  // Set last updated date when component mounts and fetches user plan
+  // Fetch all user data
   useEffect(() => {
-    const fetchUserPlan = async () => {
-      try {
-        if (!token) throw new Error("Missing token");
-
-        const res = await fetch("/api/subscription-status", {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        if (!res.ok) throw new Error("Failed to fetch plan");
-        const data = await res.json();
-        setSubscriptionPlan(data.plan || "Basic");
-      } catch (err) {
-        console.error("Failed to fetch subscription plan:", err);
-        setSubscriptionPlan("Basic");
-      }
-    };
-
-    if (user) {
-      fetchUserPlan();
-    }
+    if (!user || !token) return;
+    setLoading(true);
+    fetchAllData();
   }, [user, token]);
 
-  // Load nickname
-  useEffect(() => {
-    const fetchNickname = async () => {
-      try {
-        if (!token) throw new Error("Missing token");
-
-        const res = await fetch("/api/user-profile", {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        if (!res.ok) throw new Error("Failed to fetch nickname");
-        const data = await res.json();
-        setNickname(data.nickname || "");
-      } catch (err) {
-        console.error("Failed to fetch nickname:", err);
-        setNickname("");
-      }
-    };
-
-    if (user) {
-      fetchNickname();
-    }
-  }, [user, token]);
-
-  // Fetch styled items when user is authenticated and subscription plan is set
-  useEffect(() => {
-    if (user && subscriptionPlan !== null) {
-      fetchHistory();
-    }
-  }, [user, subscriptionPlan, fetchHistory]);
-
-  // Fetch user's liked recommendations based on their subscription plan
-  const fetchHistory = useCallback(async () => {
-    if (!user) return;
-
+  const fetchAllData = async () => {
     try {
-      if (!token) throw new Error("Missing token");
-
-      const res = await fetch("/api/styling-history", {
+      // 1. Fetch Subscription Plan
+      const planRes = await fetch("/api/subscription-status", {
         method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
 
-      if (!res.ok) throw new Error(`Failed to fetch history: ${res.status}`);
-      const data = await res.json();
-      const limit = subscriptionPlan === "Glamour" ? data.length
-              : subscriptionPlan === "Elegant" ? 50
-              : 15;
-      setLikedRecommendations(data.slice(0, limit));
-      setuserImage(data[0]?.user_image_url || "/placeholder.svg");
+      if (planRes.status === 429) {
+        toast.error("Too many requests. Please wait.");
+        return;
+      }
+      if (!planRes.ok) throw new Error("Failed to fetch plan");
+
+      const planData = await planRes.json();
+      const plan = planData.plan || "Basic";
+
+      // 2. Fetch Styling History
+      const histRes = await fetch("/api/styling-history", {
+        method: "GET",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (histRes.status === 429) {
+        toast.error("You're sending requests too quickly. Please wait.");
+        return;
+      }
+      if (!histRes.ok) throw new Error(`Failed to fetch history: ${histRes.status}`);
+
+      const historyData = await histRes.json();
+      const limit =
+        plan === "Glamour"
+          ? historyData.length
+          : plan === "Elegant"
+          ? 50
+          : 15;
+      setLikedRecommendations(historyData.slice(0, limit));
     } catch (err) {
-      console.error("❌ Error fetching liked recommendations:", err);
-      toast.error("Failed to load your liked recommendations.");
-      setLikedRecommendations([]);
+      console.error("❌ Error fetching user data:", err);
+      toast.error("Failed to load user data.");
     } finally {
       setLoading(false);
     }
-  }, [user, subscriptionPlan, token]);
+  };  
 
   // Remove item from wardrobe
   const handleRemoveFromWardrobe = async (itemId, logId) => {
@@ -136,7 +101,7 @@ export default function WardrobePage() {
       if (!res.ok) throw new Error("Failed to remove item");
       toast.success("Item removed from wardrobe.");
       track("remove_item", { selection: itemId });
-      fetchHistory();
+      fetchAllData();
     } catch (err) {
       console.error("Failed to remove from wardrobe:", err);
       toast.error("Error removing item.");
@@ -178,7 +143,7 @@ export default function WardrobePage() {
   const bottoms = likedRecommendations.filter(item => item.category?.toLowerCase().includes("bottom"));
 
   // If still loading liked recommendations, show a loading spinner
-  if (loading) return <LoadingModalSpinner />;
+  if (loading || isLoading || profileLoading) return <LoadingModalSpinner />;
   
   return (
     <div className="bg-background max-w-7xl mx-auto h-screen flex flex-col relative px-4 md:px-8">
@@ -199,7 +164,7 @@ export default function WardrobePage() {
               </div>
               <div>
                 <h1 className="text-2xl font-semibold text-primary">
-                  {user ? `Hi, ${nickname || 'there'}!` : 'Your Wardrobe'}
+                  {user ? `Hi, ${userName || 'there'}!` : 'Your Wardrobe'}
                 </h1>
                 <p className="text-sm text-muted-foreground">Items you’ve tried!</p>
               </div>
@@ -230,8 +195,9 @@ export default function WardrobePage() {
           )}
         </div>
 
-        <WardrobeSection title="Top" items={tops} onRemove={handleRemoveFromWardrobe} />
-        <WardrobeSection title="Bottom" items={bottoms} onRemove={handleRemoveFromWardrobe} />
+        <WardrobeSection title="Top" items={tops} onRemove={handleRemoveFromWardrobe} onTrack={track} />
+        <WardrobeSection title="Bottom" items={bottoms} onRemove={handleRemoveFromWardrobe} onTrack={track} />
+
       </div>
       {isModalOpen && (
         <ConfirmationModal
@@ -245,7 +211,7 @@ export default function WardrobePage() {
   );
 }
 
-function WardrobeSection({ title, items, onRemove }) {
+function WardrobeSection({ title, items, onRemove, onTrack }) {
   return (
     <div className="mb-6">
       <h2 className="text-xl font-bold text-primary border-b border-muted mb-3 pb-1">{title} ({items.length})</h2>
@@ -277,7 +243,7 @@ function WardrobeSection({ title, items, onRemove }) {
                 <div className="flex flex-row items-start justify-between">
                   {item.link && (
                     <a href={item.link} target="_blank" rel="noopener noreferrer"
-                      onClick={() => track("view_product", { selection: item.item_id })}
+                      onClick={() => onTrack("view_product", { selection: item.item_id })}
                       className="inline-flex items-center text-sm text-cta hover:underline mt-1">
                       View Product <ChevronRight size={14} className="ml-1" />
                     </a>

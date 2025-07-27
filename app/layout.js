@@ -1,8 +1,11 @@
+// app/layout.js
+
 import "./globals.css";
 import OidcAuthProvider from "../components/OidcAuthProvider";
 import Script from "next/script";
 import PageViewTracker from "@/app/page-view-tracker";
 import { Poppins, Raleway } from "next/font/google";
+import { UserProfileProvider } from "@/app/context/UserProfileContext"; // 👈 Add this
 
 const poppins = Poppins({
   weight: ["300", "400", "500", "600", "700"],
@@ -44,8 +47,10 @@ export default function RootLayout({ children }) {
       </head>
       <body className="min-h-screen bg-white font-body antialiased">
         <OidcAuthProvider>
-          <PageViewTracker />
-          {children}
+          <UserProfileProvider> {/* ✅ Add here */}
+            <PageViewTracker />
+            {children}
+          </UserProfileProvider>
         </OidcAuthProvider>
       </body>
     </html>

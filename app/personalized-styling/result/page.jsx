@@ -310,6 +310,7 @@ export default function StylingPage() {
   useEffect(() => {
     if (!isLoading && !user) {
       signinRedirect();
+      return;
     }
   }, [isLoading, user, signinRedirect]);
   

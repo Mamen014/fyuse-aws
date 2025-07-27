@@ -2,7 +2,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -21,48 +21,17 @@ import {
 import { useAuth } from "react-oidc-context";
 import { useRouter } from "next/navigation";
 import LoadingModalSpinner from "./ui/LoadingState.jsx";
+import { useUserProfile } from "@/app/context/UserProfileContext.jsx";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [userName, setUserName] = useState("Guest");
 
+  const { profile, loading: profileLoading } = useUserProfile();
+  const userName = profileLoading ? "" : (profile?.nickname || "Guest");
   const router = useRouter();
   const { user, isLoading } = useAuth();
   const userEmail = user?.profile?.email;
-
-  // Load profile display data
-  useEffect(() => {
-    const fetchUserProfile = async () => {
-      try {
-        const token = user?.id_token || user?.access_token;
-        if (!token) {
-          console.warn("No token found, user may not be authenticated");
-          return};
-
-        const res = await fetch("/api/user-profile", {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        if (!res.ok) {
-          throw new Error(`HTTP error! status: ${res.status}`);
-        }
-        const data = await res.json();
-        const nickname = data.nickname;
-        
-        setUserName(nickname || "");
-      } catch (err) {
-        console.error('Error loading profile data:', err);
-        setUserName([]);
-      }
-    }
-    
-    if (user) {
-      fetchUserProfile();
-    }    
-  }, [user]);
 
   const handleSignOut = () => {
     sessionStorage.clear();
@@ -130,6 +99,7 @@ export default function Navbar() {
             <Image
             src="/logo-tb.png"
             alt="FYUSE Logo"
+            aria-label="Home"
             width={1920}
             height={800}
             priority
@@ -163,7 +133,7 @@ export default function Navbar() {
                 </span>
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="text-base font-semibold text-gray-900 truncate">{userName}</h3>
+                <h3 className="text-base font-semibold text-gray-900 truncate">{userName || "Guest"}</h3>
                 {userEmail && <p className="text-sm text-gray-500 truncate">{userEmail}</p>}
               </div>
               <div className="px-0 text-red-600">

@@ -1,13 +1,17 @@
+// app/personalized-styling/physical-appearances/manual/step-2/page.jsx
+
 'use client'
 
 import { useState, useEffect } from 'react';
 import { useAuth } from 'react-oidc-context';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Suspense } from 'react';
 import LoadingModalSpinner from '@/components/ui/LoadingState';
 import { useSearchParams } from 'next/navigation';
 
 function Step2Content() {
+  const router = useRouter();
   const [gender, setGender] = useState('');
   const [bodyShape, setBodyShape] = useState('');
   const [loading, setloading] = useState(false);
@@ -18,6 +22,7 @@ function Step2Content() {
   useEffect(() => {
     if (!isLoading && !user) {
       signinRedirect();
+      return;
     }
   }, [isLoading, user, signinRedirect]);
 
@@ -48,7 +53,7 @@ function Step2Content() {
   };
 
   const handleSubmit = () => {
-    window.location.href = '/personalized-styling/style-preferences';
+    router.push('/personalized-styling/style-preferences');
   };
 
   const maleBodyTypeImages = {
@@ -90,6 +95,8 @@ function Step2Content() {
     const payload = {
       body_shape: bodyShape,
     };
+    
+    if (!user?.id_token) return;
 
     try {
       await fetch("/api/register-profile", {

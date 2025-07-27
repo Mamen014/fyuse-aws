@@ -11,11 +11,10 @@ import ConfirmationModal from '@/components/ConfirmationModal';
 export default function TryOnHistoryPage() {
   const { user, isLoading, signinRedirect } = useAuth();
   const [tryonHistory, setTryonHistory] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
-    if (!loading && user) {
+    if (!isLoading && user) {
       const fetchHistory = async () => {
         try {
           const token = user.id_token || user.access_token;
@@ -42,12 +41,13 @@ export default function TryOnHistoryPage() {
 
       fetchHistory();
     }
-  }, [loading, user]);
+  }, [isLoading, user]);
 
   // Redirect to sign in if not authenticated
   useEffect(() => {
     if (!isLoading && !user) {
       signinRedirect();
+      return;
     }
   }, [isLoading, user, signinRedirect]);
 
@@ -75,7 +75,7 @@ export default function TryOnHistoryPage() {
           />
         )}
 
-        {loading ? (
+        {isLoading ? (
           <LoadingModalSpinner/>
         ) : tryonHistory.length === 0 ? (
           <div className="text-center py-16">

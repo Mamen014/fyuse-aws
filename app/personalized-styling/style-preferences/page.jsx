@@ -1,3 +1,5 @@
+// app/personalized-styling-style-preferences/page.jsx
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -16,7 +18,7 @@ export default function StylePreferencesPage() {
   const [clothingType, setClothingType] = useState('');
   const [fashionType, setFashionType] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [loading, setloading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const { user, isLoading, signinRedirect } = useAuth();
 
   // Define clothing options with active and inactive icons
@@ -46,17 +48,19 @@ export default function StylePreferencesPage() {
   useEffect(() => {
     if (!isLoading && !user) {
       signinRedirect();
+      return;
     }
   }, [isLoading, user, signinRedirect]);
+
     
   // Handle form submission
   const handleSubmit = async () => {
+    if (!user?.id_token) return;
     if (isSubmitting) return;
     setIsSubmitting(true);
-    setloading(true);
+    setLoading(true);
 
     try {
-
       await fetch("/api/save-style-preference", {
         method: "POST",
         headers: {
@@ -73,7 +77,10 @@ export default function StylePreferencesPage() {
     } catch (error) {
       console.error("Error saving preferences:", error);
       setIsSubmitting(false);
-      setloading(false);
+      setLoading(false);
+    } finally {
+      setIsSubmitting(false);
+      setLoading(false);
     }
   };
 

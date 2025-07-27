@@ -53,7 +53,6 @@ export default function ConfirmationModal({ isOpen, onClose, trackingPage }: Pro
     }
 
     setNavigating(true); // Show loading state
-    handleClose();
 
     // Slight delay to allow modal to visually close before route changes (optional but smoother UX)
     setTimeout(() => {

@@ -2,17 +2,18 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import Image from 'next/image';
 import { useRouter } from "next/navigation";
 import { useAuth } from "react-oidc-context";
 import Navbar from "@/components/Navbar";
 import LoadingModalSpinner from "@/components/ui/LoadingState";
+import { useUserProfile } from "../context/UserProfileContext";
 import ReferralModal from "@/components/ReferralModal";
 import ConfirmationModal from "@/components/ConfirmationModal";
 import SurveyPromptModal from "@/components/SurveyPromptModal";
-import { User, ChevronRight, Shirt, MapPin, Sparkles, BriefcaseBusiness, CreditCard } from "lucide-react";
+import { ChevronRight, Shirt, MapPin, BriefcaseBusiness, CreditCard } from "lucide-react";
 import axios from "axios";
 
 export default function DashboardPage() {
@@ -20,47 +21,25 @@ export default function DashboardPage() {
   const { user, isLoading, signinRedirect } = useAuth();
   const userEmail = user?.profile?.email;
   const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
-  const token = user?.access_token || user?.id_token;
+  const token = useMemo(() => {
+    if (!user) return null;
+    return user.access_token || user.id_token;
+  }, [user]);
+  
+  const { profile, loading: profileLoading, refetchProfile } = useUserProfile();
+  const nickname = profile?.nickname || "";
   
   const [tryOnCount, setTryOnCount] = useState(0);
   const [subscriptionPlan, setSubscriptionPlan] = useState(null);  
-  const [nickname, setNickname] = useState("");
   const [clothCategory, setClothCategory] = useState([]);
   const [fashType, setFashType] = useState([]);
   const [tryonItems, setTryonItems] = useState([]);
-  const [profileRaw, setProfileRaw] = useState(null);
   const [profileItems, setProfileItems] = useState([]);
-  const [Loading, setLoading] = useState(false);  
+  const [loading, setLoading] = useState(false);  
   const [showRegisterPrompt, setShowRegisterPrompt] = useState(false);
   const [showReferralModal, setShowReferralModal] = useState(false);
   const [showSurveyPrompt, setShowSurveyPrompt] = useState(false);
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
-
-  // Body shape image mapping
-  const bodyShapeImageMap = {
-    male: {
-      'rectangle': '/images/body-shape/male/rectangle.png',
-      'inverted triangle': '/images/body-shape/male/inverted-triangle.png',
-      'round': '/images/body-shape/male/round.png',
-      'trapezoid': '/images/body-shape/male/trapezoid.png',
-      'triangle': '/images/body-shape/male/triangle.png',
-    },
-    female: {
-      'hourglass': '/images/body-shape/female/hourglass.png',
-      'pear': '/images/body-shape/female/pear.png',
-      'apple': '/images/body-shape/female/apple.png',
-      'rectangle': '/images/body-shape/female/rectangle.png',
-      'inverted triangle': '/images/body-shape/female/inverted-triangle.png',
-    }
-  };
-
-  // Skin tone image mapping
-  const skinToneImageMap = {
-    'fair': '/images/skin-tone/fair.png',
-    'light': '/images/skin-tone/light.png',
-    'medium': '/images/skin-tone/medium.png',
-    'deep': '/images/skin-tone/deep.png',
-  };
 
   // Utility for display
   function capitalizeWords(str) {
@@ -87,7 +66,7 @@ export default function DashboardPage() {
   // Fetch survey prompt if user is authenticated
   useEffect(() => {
     try {
-      if (!token) return;
+      if (isLoading || !user || !token) return;
 
       // Fetch survey prompt
       const fetchSurveyPrompt = async () => {
@@ -113,14 +92,14 @@ export default function DashboardPage() {
     }
   }, [user, token]);
 
-  // Check if user has registered
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const value = localStorage.getItem("showRegister");
-      const shouldShow = value === "false" || value === "true";
-      setShowRegisterPrompt(shouldShow);
-    }
-  }, []);
+    if (!profile) return;
+
+    const isIncomplete =
+      !profile.city || !profile.occupation;
+
+    setShowRegisterPrompt(isIncomplete);
+  }, [profile]);
 
   // Show referral modal if applicable
   useEffect(() => {
@@ -136,83 +115,65 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!isLoading && !user) {
       signinRedirect();
+      return;
     }
   }, [isLoading, user, signinRedirect]);
 
-  // Fetch user profile and subscription plan
+  // Fetch user subscription plan
   useEffect(() => {
     const fetchData = async () => {
       try {
-        if (!user) return;
         if (!token) return;
 
-        const headers = {
-          Authorization: `Bearer ${token}`,
-        };
-
-        // Fetch both endpoints in parallel
-        const [resPlan, resProfile] = await Promise.all([
-          axios.get("/api/subscription-status", { headers }),
-          axios.get("/api/user-profile", { headers }),
-        ]);
+        // Fetch user subs data
+        const resPlan = await axios.get("/api/subscription-status", { 
+          headers: { Authorization: `Bearer ${token}` },           
+        });
 
         // Plan data
         const { plan, successful_stylings } = resPlan.data;
         setTryOnCount(successful_stylings);
         setSubscriptionPlan(plan);
-
-        // Profile data
-        const {
-          skin_tone,
-          body_shape,
-          occupation,
-          city,
-          gender,
-          nickname,
-          user_image_url,
-        } = resProfile.data;
-
-        setShowRegisterPrompt(false);
-        setProfileRaw({ skin_tone, body_shape, occupation, city, gender, nickname, user_image_url });
-        setNickname(nickname || "");
-
-        // Compose profile display
-        const items = [
-          {
-            label: "Profile",
-            items: [
-              { icon: MapPin, label: "Location", value: city },
-              { icon: Sparkles, label: "Skin Tone", value: skin_tone },
-              { icon: User, label: "Gender", value: gender },
-              { icon: Sparkles, label: "Body Shape", value: body_shape },
-              { icon: BriefcaseBusiness, label: "Occupation", value: occupation },
-            ],
-          },
-          {
-            label: "Monthly Status",
-            items: [
-              { icon: Shirt, label: "Styling", value: `${successful_stylings}x` },
-              { icon: CreditCard, label: "Plan", value: `${plan}` },
-            ],
-          },
-        ].filter((section) =>
-          section.items.some(
-            (item) =>
-              item.value !== "Not Set" &&
-              item.value !== "" &&
-              item.value !== "Category"
-          )
-        );
-
-        setProfileItems(items);
       } catch (err) {
-        console.error("❌ Error fetching profile or plan:", err);
-        setProfileItems([]);
+        console.error("❌ Error fetching plan:", err);
+        setTryOnCount("");
+        setSubscriptionPlan("");
       }
     };
 
     fetchData();
   }, [user, token]);
+
+  // Set profile data
+  useEffect(() => {
+    if (!profile || !subscriptionPlan) return;
+
+    const items = [
+      {
+        label: "Profile",
+        items: [
+          { icon: MapPin, label: "City", value: profile.city || "Not Set" },
+          { icon: BriefcaseBusiness, label: "Occupation", value: profile.occupation || "Not Set" },
+        ],
+      },
+      {
+        label: "Monthly Status",
+        items: [
+          { icon: Shirt, label: "Styling", value: `${tryOnCount}x` },
+          { icon: CreditCard, label: "Plan", value: `${subscriptionPlan}` },
+        ],
+      },
+    ].filter((section) =>
+      section.items.some(
+        (item) =>
+          item.value !== "Not Set" &&
+          item.value !== "" &&
+          item.value !== "Category"
+      )
+    );
+
+    setProfileItems(items);
+  }, [profile, tryOnCount, subscriptionPlan]);
 
   // Fetch user style preference
   useEffect(() => {
@@ -262,7 +223,6 @@ export default function DashboardPage() {
         } catch (err) {
           console.error("Error fetching history:", err);
           setTryonItems([]);
-          setLikedRecommendations([]);
         }
       };
 
@@ -275,7 +235,7 @@ export default function DashboardPage() {
   const bottoms = tryonItems.filter(item => item.category === "bottom");
 
   // Show loading spinner if data is still being fetched
-  if (isLoading || !user || Loading) {
+  if (isLoading || profileLoading  || !user || loading) {
     return <LoadingModalSpinner />;
   };
 
@@ -339,9 +299,9 @@ export default function DashboardPage() {
 
                     {/* Skin Tone */}
                     <div className="flex-1 flex flex-col items-center justify-center bg-gray-50 rounded-xl p-3">
-                      {skinToneImageMap[(itemMap["Skin Tone"]?.value || "").toLowerCase()] ? (
+                      {profile?.skin_tone ? (
                         <Image
-                          src={skinToneImageMap[(itemMap["Skin Tone"]?.value || "").toLowerCase()]}
+                          src={`/images/skin-tone/${profile.skin_tone}.png`}
                           alt="Skin Tone"
                           width={64}
                           height={64}
@@ -349,16 +309,15 @@ export default function DashboardPage() {
                         />
                       ) : <span className="text-gray-400">-</span>}
                       <span className="text-sm font-medium text-gray-900 mt-5">
-                        {capitalizeWords(itemMap["Skin Tone"]?.value || "Loading...")}
+                        {capitalizeWords(profile?.skin_tone)}
                       </span>
                     </div>
 
                     {/* Body Shape */}
                     <div className="flex-1 flex flex-col items-center bg-gray-50 rounded-xl p-3">
-                      {itemMap["Gender"]?.value && itemMap["Body Shape"]?.value &&
-                      bodyShapeImageMap[itemMap["Gender"].value.toLowerCase()]?.[itemMap["Body Shape"].value.toLowerCase()] ? (
+                      {profile?.gender && profile.body_shape ? (
                         <Image
-                          src={bodyShapeImageMap[itemMap["Gender"].value.toLowerCase()][itemMap["Body Shape"].value.toLowerCase()]}
+                          src={`/images/body-shape/${profile.gender}/${profile.body_shape}.png`}
                           alt="Body Shape"
                           width={96}
                           height={96}
@@ -367,23 +326,25 @@ export default function DashboardPage() {
                         />
                       ) : <span className="text-gray-400">-</span>}
                       <span className="text-sm font-medium text-gray-900 mt-1">
-                        {capitalizeWords(itemMap["Body Shape"]?.value || "Loading...")}
+                        {capitalizeWords(profile?.body_shape)}
                       </span>
                     </div>
                   </div>
 
                   {/* Location and Occupation */}
                   <div className="flex gap-2">
-                    {[itemMap["Location"], itemMap["Occupation"]].map((item, i) =>
-                      item && (
-                        <div key={i} className="bg-gray-50 rounded-xl p-3 flex items-center justify-center gap-2 flex-1">
-                          <item.icon className="w-6 h-6 text-primary" />
+                        <div className="bg-gray-50 rounded-xl p-3 flex items-center justify-center gap-2 flex-1">
+                          <MapPin className="w-6 h-6 text-primary" />
                           <div>
-                            <p className="text-sm font-medium text-gray-700">{item?.value || "Loading..."}</p>
+                            <p className="text-sm font-medium text-gray-700">{profile?.city}</p>
                           </div>
-                        </div>
-                      )
-                    )}
+                        </div> 
+                        <div className="bg-gray-50 rounded-xl p-3 flex items-center justify-center gap-2 flex-1">
+                          <BriefcaseBusiness className="w-6 h-6 text-primary" />
+                          <div>
+                            <p className="text-sm font-medium text-gray-700">{profile?.occupation}</p>
+                          </div>
+                        </div>                                            
                   </div>
                 </div>
               );

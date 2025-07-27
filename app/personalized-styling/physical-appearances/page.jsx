@@ -1,3 +1,5 @@
+// app/personalized-stlying/physical-appearances/page.jsx
+
 'use client'
 
 import { useRouter } from 'next/navigation';
@@ -11,6 +13,7 @@ import axios from 'axios';
 import 'react-toastify/dist/ReactToastify.css';
 import LoadingModalSpinner from '@/components/ui/LoadingState';
 import PrivacyPolicyModal from '@/components/PrivacyPolicyModal';
+import { useUserProfile } from '@/app/context/UserProfileContext';
 
 export default function AIPhotoUpload() {
   const router = useRouter();
@@ -19,19 +22,20 @@ export default function AIPhotoUpload() {
   const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
   const [isUserPhotoGuidanceOpen, setIsUserPhotoGuidanceOpen] = useState(false);
   const [fileToUpload, setFileToUpload] = useState(null);
-  const [isloading, setisLoading] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isValidUserImage, setIsValidUserImage] = useState(false);
   const [showAIModal, setShowAIModal] = useState(false);
   const [aiAnalysis, setAiAnalysis] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [showRegisterPrompt, setShowRegisterPrompt] = useState(false);
-  const [, setError] = useState(null);
-  const { user, isLoading, signinRedirect } = useAuth();
+  const [isPageLoading, setIsPageLoading] = useState(false);
+  const { user, isLoading: authLoading, signinRedirect } = useAuth();
+  const { profile, loading: profileLoading } = useUserProfile();
 
+  const showRegisterPrompt = !authLoading && user && !profileLoading && !profile;
+  const isInitialLoading = authLoading || profileLoading || isPageLoading || !user || !profile;
   const userEmail = user?.profile?.email;
   const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
+  const token = user?.access_token || user?.id_token;
   const allowedTypes = ["image/jpeg", "image/jpg"];
   const maxSizeMB = 4.5;
   const minResolution = 300;
@@ -55,21 +59,22 @@ export default function AIPhotoUpload() {
     },
   ];
 
-  //Check for register modal
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const showRegister = localStorage.getItem('showRegister');
-    if (showRegister === 'true') {
-      setShowRegisterPrompt(true);
-    }
-  }, []);
-
   // Redirect to sign in if not authenticated
   useEffect(() => {
-    if (!isLoading && !user) {
+    if (!authLoading && !user) {
       signinRedirect();
+      return;
     }
-  }, [isLoading, user, signinRedirect]);
+  }, [authLoading, user, signinRedirect]);
+
+  useEffect(() => {
+    if (!authLoading) {
+      const storedAgreement = localStorage.getItem("privacyAgreement");
+      if (storedAgreement === "true") {
+        setAgreeToPrivacy(true);
+      }
+    }
+  }, [authLoading, user]);
 
   //Gender mapping
   const genderIconMap = {
@@ -165,7 +170,7 @@ export default function AIPhotoUpload() {
       const uploadPromise = fetch(`/api/upload-image`, {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${user.id_token}`,
+          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(payload),
@@ -203,7 +208,7 @@ export default function AIPhotoUpload() {
         await fetch('/api/register-profile', {
           method: 'POST',
           headers: {
-            Authorization: `Bearer ${user.id_token}`,
+            Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(aiAnalysisResults),
@@ -223,7 +228,6 @@ export default function AIPhotoUpload() {
         toast.error('An error occurred during upload.', { autoClose: 5000 });
       }
 
-      setError(error);
       setShowAIModal(false);
       setIsAnalyzing(false);
     }
@@ -234,21 +238,21 @@ export default function AIPhotoUpload() {
     if (isSubmitting) return;
     track('ai_analysis', { selection: "accept" });
     setIsSubmitting(true);
-    setisLoading(true);   
+    setIsPageLoading(true);   
     
     try {
       // Navigate to the next page
-      setisLoading(true);
+      setIsPageLoading(true);
       router.push('style-preferences');
     } catch (error) {
       console.error('Error accepting analysis:', error);
       setIsSubmitting(false);
-      setisLoading(false);
+      setIsPageLoading(false);
     }
   };
 
   // Show loading spinner
-  if (isloading) {
+  if (isInitialLoading) {
     return (
     <LoadingModalSpinner 
       message="Uploading..." 
@@ -266,7 +270,7 @@ export default function AIPhotoUpload() {
       
       // Navigate to the first step of manual physical attributes
       track('ai_analysis', { selection: "decline" });
-      setisLoading(true);
+      setIsPageLoading(true);
       router.push('physical-appearances/manual/step-1');
     } catch (error) {
       console.error('Error during customization:', error);
@@ -388,12 +392,7 @@ export default function AIPhotoUpload() {
               onChange={(e) => {
                 const checked = e.target.checked;
                 setAgreeToPrivacy(checked);
-                if (userEmail) {
-                  localStorage.setItem(
-                    `privacyAgreement`,
-                    checked.toString()
-                  );
-                }
+                localStorage.setItem("privacyAgreement", checked.toString());
               }}
               className="w-4 h-4 accent-blue-500"
             />
@@ -414,15 +413,15 @@ export default function AIPhotoUpload() {
           {/* Upload Button */}
           <button
             onClick={handleUpload}
-            disabled={!fileToUpload || loading || !isValidUserImage}
+            disabled={!fileToUpload || isAnalyzing || !isValidUserImage || !agreeToPrivacy}
             className={`w-full py-3.5 font-medium rounded-lg transition-opacity duration-200 ${
-              fileToUpload && isValidUserImage && !loading
+              fileToUpload && agreeToPrivacy && isValidUserImage && !isAnalyzing
                 ? 'bg-primary text-white'
                 : 'bg-gray-300 text-gray-500 cursor-not-allowed'
             }`}
             style={{ borderRadius: '8px' }}
           >
-            {loading ? 'Analyzing...' : 'Analyze Photo'}
+            {isAnalyzing ? 'Analyzing...' : 'Analyze Photo'}
           </button>
         </div>
       </main>
@@ -492,10 +491,8 @@ export default function AIPhotoUpload() {
               <button
                 onClick={() => {
                   localStorage.setItem("registerFrom", "physical-appearances");
-                  localStorage.setItem('showRegister', 'false');
                   track('register', {selection: 'true'});
-                  setShowRegisterPrompt(false);
-                  setisLoading(true);
+                  setIsPageLoading(true);
                   router.push('/register');
                 }}
                 className="px-5 py-2 bg-primary text-white rounded-lg hover:bg-[#0a1b56] transition"
@@ -504,7 +501,6 @@ export default function AIPhotoUpload() {
               </button>
               <button
                 onClick={() => {
-                  localStorage.setItem('showRegister', 'false');
                   track('register', {selection: 'false'})
                   setShowRegisterPrompt(false);
                 }}
