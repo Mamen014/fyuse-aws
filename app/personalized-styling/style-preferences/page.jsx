@@ -163,6 +163,7 @@ export default function StylePreferencesPage() {
                   alt={style}
                   width={300}
                   height={300}
+                  priority
                   className="w-full h-80 object-cover group-hover:scale-[1.01] transition-transform duration-300"
                 />
                 <div className="p-4">

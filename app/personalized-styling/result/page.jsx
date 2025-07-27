@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from 'react-oidc-context';
 import axios from 'axios';
 import Image from 'next/image';
-import toast, { Toaster } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 
 import PricingPlans from '@/components/PricingPlanCard';
 import LoadingModalSpinner from '@/components/ui/LoadingState';
@@ -73,6 +73,16 @@ export default function StylingPage() {
 
     const data = await res.json();
 
+    if (res.status === 200 && data?.message === "No new recommendations available") {
+      setLoading(false);
+      console.log("🔥 Showing toast: no new recs");
+      toast.error("You've seen all styles. Try changing your preferences.", {autoClose: 5000} );
+      setTimeout(() => {
+        console.log("📦 Navigating away...");
+        router.push('/personalized-styling/style-preferences')}, 2000);
+      throw new Error("No new recommendations available");
+    }
+
     if (res.status === 400) {
       if (data?.error?.includes("Style preference")) {
         toast.error("Please select your style preferences first.");
@@ -99,18 +109,6 @@ export default function StylingPage() {
     if (res.status === 404) {
       toast.error("Recommended product is unavailable.");
       throw new Error("Product not found");
-    }
-
-    if (res.status === 200 && data?.message === "No recommendations found") {
-      toast.error("No matching styles found. Please update your style preferences.");
-      setTimeout(() => router.push('/personalized-styling/style-preferences'), 2000);
-      throw new Error("No recommendations found");
-    }
-
-    if (res.status === 200 && data?.message === "No new recommendations available") {
-      toast.error("You've seen all styles. Try changing your preferences.");
-      setTimeout(() => router.push('/personalized-styling/style-preferences'), 2000);
-      throw new Error("No new recommendations available");
     }
 
     if (!res.ok || !data?.productId) {
@@ -271,19 +269,10 @@ export default function StylingPage() {
       const errorMessage = err?.message || 'Unexpected error';
       console.error("❌ handleFlow error:", errorMessage);
 
-      if (errorMessage.includes('No recommendation')) {
-        toast.error("No recommendations available. Please update your style preferences.", {
-          duration: 4000,
-        });
-        setTimeout(() => router.push('/personalized-styling/style-preferences'), 2000);
-      } else {
-        toast.error(errorMessage); // ✅ Generic error feedback
-      }
-
       setError(errorMessage);
 
     } finally {
-      setLoading(false);        // ✅ Always unset loading
+      setLoading(false);      
       setIsPolling(false);
       isHandlingFlow.current = false;
     }
@@ -329,7 +318,11 @@ export default function StylingPage() {
 
   // UI Rendering
   if (loading || !product || !resultImageUrl)
-    return <LoadingModalSpinner message="Styling..." subMessage="This process only takes 30 seconds." />;
+    return (
+      <>
+        <LoadingModalSpinner message="Styling..." subMessage="This process only takes 30 seconds." />
+      </>
+    );
 
   if (error && !product && !resultImageUrl)
     return (

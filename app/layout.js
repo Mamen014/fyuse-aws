@@ -5,7 +5,8 @@ import OidcAuthProvider from "../components/OidcAuthProvider";
 import Script from "next/script";
 import PageViewTracker from "@/app/page-view-tracker";
 import { Poppins, Raleway } from "next/font/google";
-import { UserProfileProvider } from "@/app/context/UserProfileContext"; // 👈 Add this
+import { UserProfileProvider } from "@/app/context/UserProfileContext";
+import { Toaster } from "react-hot-toast"; // ✅ Import
 
 const poppins = Poppins({
   weight: ["300", "400", "500", "600", "700"],
@@ -47,8 +48,16 @@ export default function RootLayout({ children }) {
       </head>
       <body className="min-h-screen bg-white font-body antialiased">
         <OidcAuthProvider>
-          <UserProfileProvider> {/* ✅ Add here */}
+          <UserProfileProvider>
             <PageViewTracker />
+            <Toaster
+              position="top-center"
+              toastOptions={{
+                style: {
+                  zIndex: 9999,
+                },
+              }}
+            />
             {children}
           </UserProfileProvider>
         </OidcAuthProvider>
