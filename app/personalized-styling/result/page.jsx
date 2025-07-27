@@ -179,10 +179,7 @@ export default function StylingPage() {
         const { status, styling_image_url } = data;
 
         if (status === "succeed" && styling_image_url) {
-          if (!resultImageUrl) {
-            setResultImageUrl(styling_image_url);
-          };
-
+          setResultImageUrl(styling_image_url);
           if (!hasShownToast.current) {
             toast.success("Style added to wardrobe!");
             hasShownToast.current = true;
