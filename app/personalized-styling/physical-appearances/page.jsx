@@ -30,9 +30,10 @@ export default function AIPhotoUpload() {
   const [isPageLoading, setIsPageLoading] = useState(false);
   const { user, isLoading: authLoading, signinRedirect } = useAuth();
   const { profile, loading: profileLoading } = useUserProfile();
+  const nickname = profile?.nickname;
+  const [showRegisterPrompt, setShowRegisterPrompt] = useState(false);
 
-  const showRegisterPrompt = !authLoading && user && !profileLoading && !profile;
-  const isInitialLoading = authLoading || profileLoading || isPageLoading || !user || !profile;
+  const isInitialLoading = authLoading || profileLoading || isPageLoading || !user;
   const userEmail = user?.profile?.email;
   const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
   const token = user?.access_token || user?.id_token;
@@ -66,6 +67,18 @@ export default function AIPhotoUpload() {
       return;
     }
   }, [authLoading, user, signinRedirect]);
+
+  useEffect (() => {
+    if (!isInitialLoading) {
+      if (!nickname) {
+        console.log("nickname:", nickname);
+        setShowRegisterPrompt(true);
+      } else {
+        setShowRegisterPrompt(false);
+      }
+    }
+
+  }, [profile]);
 
   useEffect(() => {
     if (!authLoading) {

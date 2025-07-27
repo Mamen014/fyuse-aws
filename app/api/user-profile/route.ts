@@ -1,3 +1,5 @@
+// app/api/user-profile/route.ts
+
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { jwtDecode } from "jwt-decode";
@@ -34,7 +36,7 @@ export async function GET(request: Request) {
     });
 
     if (!profile) {
-      return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+      return NextResponse.json(null);
     }
 
     return NextResponse.json(profile);
