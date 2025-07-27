@@ -75,10 +75,8 @@ export default function StylingPage() {
 
     if (res.status === 200 && data?.message === "No new recommendations available") {
       setLoading(false);
-      console.log("🔥 Showing toast: no new recs");
       toast.error("You've seen all styles. Try changing your preferences.", {autoClose: 5000} );
       setTimeout(() => {
-        console.log("📦 Navigating away...");
         router.push('/personalized-styling/style-preferences')}, 2000);
       throw new Error("No new recommendations available");
     }
@@ -316,12 +314,13 @@ export default function StylingPage() {
     };
   }, [isLoading, token, handleFlow, pollTaskStatus, resultImageUrl]);
 
-  // UI Rendering
-  if (loading || !product || !resultImageUrl)
+  if (showPricingPlans)
     return (
-      <>
-        <LoadingModalSpinner message="Styling..." subMessage="This process only takes 30 seconds." />
-      </>
+      <PricingPlans
+        isOpen
+        onClose={() => setShowPricingPlans(false)}
+        sourcePage="result"
+      />
     );
 
   if (error && !product && !resultImageUrl)
@@ -335,13 +334,12 @@ export default function StylingPage() {
       </div>
     );
 
-  if (showPricingPlans)
+  // UI Rendering
+  if (loading || !product || !resultImageUrl)
     return (
-      <PricingPlans
-        isOpen
-        onClose={() => setShowPricingPlans(false)}
-        sourcePage="resultPage"
-      />
+      <>
+        <LoadingModalSpinner message="Styling..." subMessage="This process only takes 30 seconds." />
+      </>
     );
 
   return (
