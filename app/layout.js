@@ -1,7 +1,26 @@
+// app/layout.js
+
 import "./globals.css";
 import OidcAuthProvider from "../components/OidcAuthProvider";
 import Script from "next/script";
 import PageViewTracker from "@/app/page-view-tracker";
+import { Poppins, Raleway } from "next/font/google";
+import { UserProfileProvider } from "@/app/context/UserProfileContext";
+import { Toaster } from "react-hot-toast"; // ✅ Import
+
+const poppins = Poppins({
+  weight: ["300", "400", "500", "600", "700"],
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-poppins",
+});
+
+const raleway = Raleway({
+  weight: ["300", "400", "500", "600", "700"],
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-raleway",
+});
 
 export const metadata = {
   title: "FYUSE",
@@ -10,12 +29,8 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${poppins.variable} ${raleway.variable}`}>
       <head>
-        <link
-          href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Raleway:ital,wght@0,100..900;1,100..900&display=swap"
-          rel="stylesheet"
-        />      
         <Script
           strategy="afterInteractive"
           src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GOOGLE_MEASUREMENT_ID}`}
@@ -25,7 +40,6 @@ export default function RootLayout({ children }) {
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
-            // ✅ Disable automatic page_view here
             gtag('config', '${process.env.NEXT_PUBLIC_GOOGLE_MEASUREMENT_ID}', {
               send_page_view: false
             });
@@ -34,8 +48,18 @@ export default function RootLayout({ children }) {
       </head>
       <body className="min-h-screen bg-white font-body antialiased">
         <OidcAuthProvider>
-          <PageViewTracker />
-          {children}
+          <UserProfileProvider>
+            <PageViewTracker />
+            <Toaster
+              position="top-center"
+              toastOptions={{
+                style: {
+                  zIndex: 9999,
+                },
+              }}
+            />
+            {children}
+          </UserProfileProvider>
         </OidcAuthProvider>
       </body>
     </html>

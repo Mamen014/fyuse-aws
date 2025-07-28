@@ -1,78 +1,45 @@
+// app/dashboard/page.jsx
+
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
-import Image from "next/image";
+import Image from 'next/image';
 import { useRouter } from "next/navigation";
 import { useAuth } from "react-oidc-context";
 import Navbar from "@/components/Navbar";
 import LoadingModalSpinner from "@/components/ui/LoadingState";
+import { useUserProfile } from "../context/UserProfileContext";
 import ReferralModal from "@/components/ReferralModal";
-import { Venus, Mars, User, ChevronRight, Shirt, MapPin, Sparkles, BriefcaseBusiness, CreditCard } from "lucide-react";
+import ConfirmationModal from "@/components/ConfirmationModal";
+import SurveyPromptModal from "@/components/SurveyPromptModal";
+import { ChevronRight, Shirt, MapPin, BriefcaseBusiness, CreditCard } from "lucide-react";
 import axios from "axios";
 
-export default function dashboard() {
+export default function DashboardPage() {
   const router = useRouter();
   const { user, isLoading, signinRedirect } = useAuth();
   const userEmail = user?.profile?.email;
   const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
+  const token = useMemo(() => {
+    if (!user) return null;
+    return user.access_token || user.id_token;
+  }, [user]);
+  
+  const { profile, loading: profileLoading, refetchProfile } = useUserProfile();
+  const nickname = profile?.nickname || "";
   
   const [tryOnCount, setTryOnCount] = useState(0);
   const [subscriptionPlan, setSubscriptionPlan] = useState(null);  
-  const [nickname, setNickname] = useState("");
-  const [likedRecommendations, setLikedRecommendations] = useState([]);
+  const [clothCategory, setClothCategory] = useState([]);
+  const [fashType, setFashType] = useState([]);
   const [tryonItems, setTryonItems] = useState([]);
   const [profileItems, setProfileItems] = useState([]);
-  const [Loading, setLoading] = useState(false);  
+  const [loading, setLoading] = useState(false);  
   const [showRegisterPrompt, setShowRegisterPrompt] = useState(false);
   const [showReferralModal, setShowReferralModal] = useState(false);
+  const [showSurveyPrompt, setShowSurveyPrompt] = useState(false);
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
-  
-  // Gender icon mapping
-  const genderIconMap = {
-    male: <Mars className="w-20 h-20 text-primary" />,
-    female: <Venus className="w-20 h-20 text-primary" />,
-  };
-
-  // Body shape image mapping
-  const bodyShapeImageMap = {
-    male: {
-      'rectangle': '/images/body-shape/male/rectangle.png',
-      'inverted triangle': '/images/body-shape/male/inverted-triangle.png',
-      'round': '/images/body-shape/male/round.png',
-      'trapezoid': '/images/body-shape/male/trapezoid.png',
-      'triangle': '/images/body-shape/male/triangle.png',
-    },
-    female: {
-      'hourglass': '/images/body-shape/female/hourglass.png',
-      'pear': '/images/body-shape/female/pear.png',
-      'apple': '/images/body-shape/female/apple.png',
-      'rectangle': '/images/body-shape/female/rectangle.png',
-      'inverted triangle': '/images/body-shape/female/inverted-triangle.png',
-    }
-  };
-
-  // Skin tone image mapping
-  const skinToneImageMap = {
-    'fair': '/images/skin-tone/fair.png',
-    'light': '/images/skin-tone/light.png',
-    'medium': '/images/skin-tone/medium.png',
-    'deep': '/images/skin-tone/deep.png',
-  };
-
-  // Load nickname from localStorage
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const data = JSON.parse(localStorage.getItem("profile") || "{}");
-        if (data.nickname) {
-          setNickname(data.nickname);
-        }
-      } catch (err) {
-        console.warn("Failed to parse profile from localStorage:", err);
-      }
-    }
-  }, []);
 
   // Utility for display
   function capitalizeWords(str) {
@@ -91,19 +58,48 @@ export default function dashboard() {
       userEmail,
       action,
       timestamp: new Date().toISOString(),
-      page: 'dashboardPage',
+      page: 'dashboard',
       ...metadata,
     }).catch(console.error);
   };
 
-  // Check if user has registered
+  // Fetch survey prompt if user is authenticated
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const value = localStorage.getItem("showRegister");
-      const shouldShow = value === "false" || value === "true";
-      setShowRegisterPrompt(shouldShow);
+    try {
+      if (isLoading || !user || !token) return;
+
+      // Fetch survey prompt
+      const fetchSurveyPrompt = async () => {
+        const res = await fetch('/api/survey-prompt', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (!res.ok) throw new Error(`Failed to fetch survey prompt: ${res.status}`);
+        const data = await res.json();
+        if (data.dismissed === false && [3, 5, 9, 15].includes(data.stage) ) {
+          setShowSurveyPrompt(true);
+        }
+      };
+      if (user) {
+        fetchSurveyPrompt();
+      } 
     }
-  }, []);
+    catch (error) {
+      console.error("Error in fetching data:", error);
+    }
+  }, [user, token]);
+
+  useEffect(() => {
+    if (!profile) return;
+
+    const isIncomplete =
+      !profile.city || !profile.occupation;
+
+    setShowRegisterPrompt(isIncomplete);
+  }, [profile]);
 
   // Show referral modal if applicable
   useEffect(() => {
@@ -119,119 +115,127 @@ export default function dashboard() {
   useEffect(() => {
     if (!isLoading && !user) {
       signinRedirect();
+      return;
     }
   }, [isLoading, user, signinRedirect]);
 
-  // Fetch user subscription plan and counts
+  // Fetch user subscription plan
   useEffect(() => {
-    const fetchUserPlan = async () => {
+    const fetchData = async () => {
       try {
-        const res = await axios.get(`${API_BASE_URL}/userPlan?userEmail=${userEmail}`);
-        const planupdate = res.data.plan;
-        const updatedCount = res.data.tryOnCount || 0;
-        setTryOnCount(updatedCount);
-        setSubscriptionPlan(planupdate);
+        if (!token) return;
+
+        // Fetch user subs data
+        const resPlan = await axios.get("/api/subscription-status", { 
+          headers: { Authorization: `Bearer ${token}` },           
+        });
+
+        // Plan data
+        const { plan, successful_stylings } = resPlan.data;
+        setTryOnCount(successful_stylings);
+        setSubscriptionPlan(plan);
       } catch (err) {
-        console.error("Failed to fetch subscription plan:", err);
+        console.error("❌ Error fetching plan:", err);
+        setTryOnCount("");
+        setSubscriptionPlan("");
       }
     };
 
-    if (userEmail) {
-      fetchUserPlan();
+    fetchData();
+  }, [user, token]);
+
+  // Set profile data
+  useEffect(() => {
+    if (!profile || !subscriptionPlan) return;
+
+    const items = [
+      {
+        label: "Profile",
+        items: [
+          { icon: MapPin, label: "City", value: profile.city || "Not Set" },
+          { icon: BriefcaseBusiness, label: "Occupation", value: profile.occupation || "Not Set" },
+        ],
+      },
+      {
+        label: "Monthly Status",
+        items: [
+          { icon: Shirt, label: "Styling", value: `${tryOnCount}x` },
+          { icon: CreditCard, label: "Plan", value: `${subscriptionPlan}` },
+        ],
+      },
+    ].filter((section) =>
+      section.items.some(
+        (item) =>
+          item.value !== "Not Set" &&
+          item.value !== "" &&
+          item.value !== "Category"
+      )
+    );
+
+    setProfileItems(items);
+  }, [profile, tryOnCount, subscriptionPlan]);
+
+  // Fetch user style preference
+  useEffect(() => {
+    const fetchStylePref = async () => {
+      try {
+        if (!token) return;
+
+        const res = await axios.get("/api/style-preference", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const { clothing_category, fashion_type } = res.data;
+        setClothCategory(clothing_category);
+        setFashType(fashion_type);
+      } catch (err) {
+        console.error("Failed to fetch style preferences:", err);
+      }
+    };
+
+    if (user) {
+      fetchStylePref();
     }
-  }, [userEmail]);
+  }, [user, token]);
 
   // Fetch user history
   useEffect(() => {
     if (!isLoading && user) {
       const fetchHistory = async () => {
         try {
-          const endpoint = `${API_BASE_URL}/fetchTryonData`;
-          const res = await fetch(
-            `${endpoint}?email=${encodeURIComponent(userEmail)}`,
-            {
-              method: "GET",
-              headers: {
-                "Content-Type": "application/json",
-              },
-            }
-          );
+          if (!token) throw new Error("Missing token");
+
+          const res = await fetch("/api/styling-history", {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+
           if (!res.ok) throw new Error(`Failed to fetch history: ${res.status}`);
           const data = await res.json();
 
-          if (Array.isArray(data.tryonItems)) {
-            const sortedTryonItems = data.tryonItems
-              .filter(item => item.timestamp)
-              .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-            setTryonItems(sortedTryonItems.slice(0, 3));
-          } else {
-            setTryonItems([]);
-          }
-
-          if (Array.isArray(data.likedRecommendations)) {
-            setLikedRecommendations(data.likedRecommendations);
-          } else {
-            setLikedRecommendations([]);
-          }
+          // Sort by timestamp descending and take latest 3
+          const sortedTryonItems = data
+          setTryonItems(sortedTryonItems.slice(0, 3));
 
         } catch (err) {
           console.error("Error fetching history:", err);
           setTryonItems([]);
-          setLikedRecommendations([]);
         }
       };
 
       fetchHistory();
     }
-  }, [isLoading, user, API_BASE_URL, router]);
+  }, [isLoading, user, token]);
 
-  // Load profile display data
-  useEffect(() => {
-    if (typeof window !== 'undefined' && userEmail) {
-      try {
-        const data = JSON.parse(localStorage.getItem("profile") || "{}");
-        const birthdate = data.birthdate || "Not Set";
-        const location = data.city || "Not Set";
-        const occupation = data.occupation || "Not Set";
-        const gender = localStorage.getItem('gender') || "Not Set";
-        const bodyShape = localStorage.getItem('body-shape') || "Not Set";
-        const skinTone = localStorage.getItem('skin-tone') || "Not Set";
-
-        const items = [
-          {
-            label: "Profile",
-            items: [
-              { icon: MapPin, label: "Location", value: location },
-              { icon: Sparkles, label: "Skin Tone", value: skinTone },
-              { icon: User, label: "Gender", value: gender },
-              { icon: Sparkles, label: "Body Shape", value: bodyShape },
-              { icon: BriefcaseBusiness, label: "Occupation", value: occupation },
-            ],
-          },
-          {
-            label: "Monthly Status",
-            items: [
-              { icon: Shirt, label: "Styling", value: `${tryOnCount}x` },
-              { icon: CreditCard, label: "Plan", value: `${subscriptionPlan}` },
-            ],
-          },
-
-        ].filter(section => section.items.some(item => item.value !== "Not Set" && item.value !== "" && item.value !== "Category"));
-
-        setProfileItems(items);
-      } catch (err) {
-        console.error('Error loading profile data:', err);
-        setProfileItems([]);
-      }
-    }
-  }, [userEmail, tryOnCount, subscriptionPlan]);
-
-  //filter category
-  const tops = likedRecommendations.filter(item => item.category?.toLowerCase() === "top");
-  const bottoms = likedRecommendations.filter(item => item.category?.toLowerCase() === "bottom");
+  // Filter recommendations by category
+  const tops = tryonItems.filter(item => item.category === "top");
+  const bottoms = tryonItems.filter(item => item.category === "bottom");
 
   // Show loading spinner if data is still being fetched
-  if (isLoading || !user || Loading) {
+  if (isLoading || profileLoading  || !user || loading) {
     return <LoadingModalSpinner />;
   };
 
@@ -240,15 +244,15 @@ export default function dashboard() {
     <Navbar />
 
     {/* Main Content */}
-    <div className="flex-1 overflow-y-auto pb-20 pt-16">
+    <div className="flex flex-col pb-20 pt-16">
     
       {/* Greeting Section */}
-      <div className="px-6 pt-8 pb-6">
+      <div className="flex flex-col px-6 pt-8 pb-6">
         <div className="mb-6">
           <h1 className="text-3xl font-bold mb-1">
             {nickname ? `Hi ${nickname}!` : "Hi there!"}
           </h1>
-          <p className="text-sm text-primary/70">Let's find your next favorite look.</p>
+          <p className="text-sm text-primary/70">Let&apos;s find your next favorite look.</p>
 
           {showRegisterPrompt && (
             <div className="mt-4 p-4 rounded-2xl bg-white/5 border border-primary/20">
@@ -263,7 +267,7 @@ export default function dashboard() {
                     setLoading(true);
                     router.push("/register");
                   }}
-                  className="bg-primary text-white px-4 py-2 rounded-xl text-sm shadow-sm"
+                  className="bg-primary text-white px-4 py-2 rounded-xl text-sm shadow-md"
                 >
                   Setup
                 </button>
@@ -273,8 +277,8 @@ export default function dashboard() {
         </div>
 
         {/* Profile + Monthly Status Combined Section */}
-        <div className="px-6 mb-8">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
+        <div className="gap-6 px-6 mb-8">
+          <div className="flex flex-col md:flex-row gap-6">
 
             {/* Profile Card */}
             {(() => {
@@ -287,58 +291,60 @@ export default function dashboard() {
               });
 
               return (
-                <div className="bg-white rounded-2xl p-6 shadow-md col-span-1 lg:col-span-2 flex flex-col justify-between">
+                <div className="bg-white basis-1/2 rounded-2xl p-6 shadow-md flex flex-col justify-between">
                   <h3 className="text-xl sm:text-2xl font-bold tracking-tight text-primary mb-4">
                     {section.label}
                   </h3>
                   <div className="flex gap-2 mb-4">
 
                     {/* Skin Tone */}
-                    <div className="flex-1 flex flex-col items-center bg-gray-50 rounded-xl p-3">
-                      {skinToneImageMap[(itemMap["Skin Tone"]?.value || "").toLowerCase()] ? (
+                    <div className="flex-1 flex flex-col items-center justify-center bg-gray-50 rounded-xl p-3">
+                      {profile?.skin_tone ? (
                         <Image
-                          src={skinToneImageMap[(itemMap["Skin Tone"]?.value || "").toLowerCase()]}
+                          src={`/images/skin-tone/${profile.skin_tone}.png`}
                           alt="Skin Tone"
                           width={64}
                           height={64}
-                          className="rounded-md object-contain"
+                          className="rounded-md object-contain mt-4"
                         />
                       ) : <span className="text-gray-400">-</span>}
                       <span className="text-sm font-medium text-gray-900 mt-5">
-                        {capitalizeWords(itemMap["Skin Tone"]?.value)}
+                        {capitalizeWords(profile?.skin_tone)}
                       </span>
                     </div>
 
                     {/* Body Shape */}
                     <div className="flex-1 flex flex-col items-center bg-gray-50 rounded-xl p-3">
-                      {itemMap["Gender"]?.value && itemMap["Body Shape"]?.value &&
-                      bodyShapeImageMap[itemMap["Gender"].value.toLowerCase()]?.[itemMap["Body Shape"].value.toLowerCase()] ? (
+                      {profile?.gender && profile.body_shape ? (
                         <Image
-                          src={bodyShapeImageMap[itemMap["Gender"].value.toLowerCase()][itemMap["Body Shape"].value.toLowerCase()]}
+                          src={`/images/body-shape/${profile.gender}/${profile.body_shape}.png`}
                           alt="Body Shape"
-                          width={80}
-                          height={80}
+                          width={96}
+                          height={96}
+                          priority
                           className="rounded-md object-contain"
                         />
                       ) : <span className="text-gray-400">-</span>}
                       <span className="text-sm font-medium text-gray-900 mt-1">
-                        {capitalizeWords(itemMap["Body Shape"]?.value)}
+                        {capitalizeWords(profile?.body_shape)}
                       </span>
                     </div>
                   </div>
 
                   {/* Location and Occupation */}
                   <div className="flex gap-2">
-                    {[itemMap["Location"], itemMap["Occupation"]].map((item, i) =>
-                      item && (
-                        <div key={i} className="bg-gray-50 rounded-xl p-3 flex items-start gap-2 flex-1">
-                          <item.icon className="w-6 h-6 text-primary" />
+                        <div className="bg-gray-50 rounded-xl p-3 flex items-center justify-center gap-2 flex-1">
+                          <MapPin className="w-6 h-6 text-primary" />
                           <div>
-                            <p className="text-sm font-medium text-gray-700">{item.value}</p>
+                            <p className="text-sm font-medium text-gray-700">{profile?.city}</p>
                           </div>
-                        </div>
-                      )
-                    )}
+                        </div> 
+                        <div className="bg-gray-50 rounded-xl p-3 flex items-center justify-center gap-2 flex-1">
+                          <BriefcaseBusiness className="w-6 h-6 text-primary" />
+                          <div>
+                            <p className="text-sm font-medium text-gray-700">{profile?.occupation}</p>
+                          </div>
+                        </div>                                            
                   </div>
                 </div>
               );
@@ -356,7 +362,7 @@ export default function dashboard() {
               const PlanIcon = planItem.icon;
 
               return (
-                <div className="bg-white rounded-2xl p-6 border border-primary/20 shadow-md backdrop-blur-sm flex flex-col justify-between">
+                <div className="bg-white basis-1/2 rounded-2xl p-6 shadow-md flex flex-col justify-between">
                   <h3 className="text-lg sm:text-xl font-bold mb-4">Monthly Status</h3>
                   <div className="flex flex-row flex-wrap gap-3 sm:flex-col">
                     {/* Styling */}
@@ -364,7 +370,7 @@ export default function dashboard() {
                       <IconComponent className="w-10 h-10 text-primary" />
                       <div>
                         <p className="text-sm text-primary/60 mb-1">Styling</p>
-                        <p className="text-xl font-bold text-primary">{stylingItem.value}</p>
+                        <p className="text-xl font-bold text-primary">{stylingItem?.value || "Loading..."}</p>
                       </div>
                     </div>
 
@@ -373,7 +379,7 @@ export default function dashboard() {
                       <PlanIcon className="w-10 h-10 text-primary" />
                       <div>
                         <p className="text-sm text-primary/60 mb-1">Current Plan</p>
-                        <p className="text-xl font-bold text-primary">{planItem.value}</p>
+                        <p className="text-xl font-bold text-primary">{planItem?.value || "Loading..."}</p>
                       </div>
                     </div>
                   </div>
@@ -388,7 +394,7 @@ export default function dashboard() {
         <div className="mb-6">
           <button
             onClick={() => setShowConfirmationModal(true)}
-            className="bg-primary text-white font-bold text-lg py-4 w-full rounded-3xl shadow-lg hover:bg-primary/90"
+            className="bg-primary text-white font-bold text-lg py-4 w-full rounded-3xl shadow-md hover:bg-primary/90"
           >
             Start Style Discovery
           </button>
@@ -396,10 +402,10 @@ export default function dashboard() {
       </div>
 
       {/* Styling History & Wardrobe Collection Side by Side on Desktop */}
-      <div className="px-6 mb-8 flex flex-col gap-6 lg:grid lg:grid-cols-2 lg:gap-6">
+      <div className="px-6 mb-8 flex flex-col gap-6 md:flex-row md:items-stretch">
 
         {/* Styling History Section */}
-        <div className="flex flex-col mb-6">
+        <div className="basis-1/2 flex flex-col bg-white shadow-md rounded-3xl border border-gray-100 p-3 h-full min-h-[300px]">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-primary mb-4">Styling History</h2>
             <Link href="/history" className="flex items-center text-sm text-primary font-medium">
@@ -412,14 +418,14 @@ export default function dashboard() {
                   <Link
                     key={index}
                     href="/history"
-                    className="min-w-36 h-48 rounded-3xl overflow-hidden flex-shrink-0 bg-white shadow-md border border-gray-100 relative group"
+                    className="min-w-48 h-56 rounded-3xl overflow-hidden flex-shrink-0 bg-white shadow-md border border-gray-100 relative group"
                   >
-                    {item?.generatedImageUrl ? (
+                    {item?.styling_image_url ? (
                       <Image
-                        src={item.generatedImageUrl}
+                        src={item.styling_image_url}
                         alt={`Try-on #${tryonItems.length - index}`}
-                        fill
                         sizes="144px"
+                        fill
                         priority
                         className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
                       />
@@ -428,15 +434,6 @@ export default function dashboard() {
                         <Shirt className="w-10 h-10 text-gray-400" />
                       </div>
                     )}
-                    <div className="absolute bottom-3 left-3 right-3 space-y-1">
-                      <div className="bg-white/90 backdrop-blur-sm rounded-xl px-3 py-1.5">
-                        {item.timestamp && (
-                          <p className="text-xs text-gray-500">
-                            {new Date(item.timestamp).toLocaleDateString()}
-                          </p>
-                        )}
-                      </div>
-                    </div>
                   </Link>
                 ))
               : [1, 2, 3].map((item) => (
@@ -456,19 +453,19 @@ export default function dashboard() {
         </div>
 
         {/* Wardrobe Collection Section */}
-        <div className="flex flex-col">
+        <div className="basis-1/2 flex flex-col bg-white shadow-md rounded-3xl border border-gray-100 p-3 h-full min-h-[300px]">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-primary mb-4">My Wardrobe</h2>
+            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-primary mb-2">My Wardrobe</h2>
             <Link href="/wardrobe" className="flex items-center text-sm text-primary font-medium">
               View All <ChevronRight size={16} className="ml-1" />
             </Link>
           </div>
 
           {/* Wardrobe Grid */}
-          <div className="flex flex-col lg:flex-row gap-6">
+          <div className="flex flex-col lg:flex-row gap-5 justify-between">
 
             {/* Tops Section */}
-            <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 max-h-80 lg:max-h-72 overflow-hidden flex-1 flex flex-col">
+            <div className="bg-white rounded-3xl p-4 border border-primary/10 max-h-80 lg:max-h-72 overflow-hidden flex-1 flex flex-col">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-bold text-primary">Top</h3>
               </div>
@@ -476,15 +473,16 @@ export default function dashboard() {
                 {tops.length > 0
                   ? tops.slice(0, 3).map((recommendation) => (
                       <Link
-                        key={recommendation.productId}
+                        key={recommendation.item_id}
                         href="/wardrobe"
-                        className="flex-1 max-w-[120px] aspect-[3/4] rounded-2xl overflow-hidden bg-white shadow-sm border border-gray-100 relative group"
+                        className="flex-1 max-w-[120px] aspect-[3/4] rounded-2xl overflow-hidden bg-white shadow-md border border-gray-100 relative group"
                       >
-                        {recommendation.imageUrl ? (
+                        {recommendation.product_image_url ? (
                           <Image
-                            src={recommendation.imageUrl || "placeholder.svg"}
+                            src={recommendation.product_image_url || "placeholder.svg"}
                             alt="Top Item"
                             fill
+                            sizes="144px"
                             className="object-cover group-hover:scale-105 transition-transform duration-300"
                           />
                         ) : (
@@ -494,7 +492,7 @@ export default function dashboard() {
                         )}
                       </Link>
                     ))
-                  : [1, 2].map((item) => (
+                  : [0, 1, 2].map((item) => (
                       <div
                         key={item}
                         className="flex-1 max-w-[120px] aspect-[3/4] rounded-2xl overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center"
@@ -506,7 +504,7 @@ export default function dashboard() {
             </div>
 
             {/* Bottoms Section */}
-            <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 max-h-80 lg:max-h-72 overflow-hidden flex-1 flex flex-col">
+            <div className="bg-white rounded-3xl p-4 border border-primary/10 max-h-80 lg:max-h-72 overflow-hidden flex-1 flex flex-col">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-bold text-primary">Bottom</h3>
               </div>
@@ -514,15 +512,16 @@ export default function dashboard() {
                 {bottoms.length > 0
                   ? bottoms.slice(0, 3).map((recommendation) => (
                       <Link
-                        key={recommendation.productId}
+                        key={recommendation.item_id}
                         href="/wardrobe"
-                        className="flex-1 max-w-[120px] aspect-[3/4] rounded-2xl overflow-hidden bg-white shadow-sm border border-gray-100 relative group"
+                        className="flex-1 max-w-[120px] aspect-[3/4] rounded-2xl overflow-hidden bg-white shadow-md border border-gray-100 relative group"
                       >
-                        {recommendation.imageUrl ? (
+                        {recommendation.product_image_url ? (
                           <Image
-                            src={recommendation.imageUrl || "/placeholder.svg"}
+                            src={recommendation.product_image_url || "/placeholder.svg"}
                             alt="Bottom Item"
                             fill
+                            sizes="144px"
                             className="object-cover group-hover:scale-105 transition-transform duration-300"
                           />
                         ) : (
@@ -532,7 +531,7 @@ export default function dashboard() {
                         )}
                       </Link>
                     ))
-                  : [1, 2].map((item) => (
+                  : [0, 1, 2].map((item) => (
                       <div
                         key={item}
                         className="flex-1 max-w-[120px] aspect-[3/4] rounded-2xl overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center"
@@ -547,136 +546,11 @@ export default function dashboard() {
       </div>
     </div>
 
-    {/* Confirmation Modal */}
-    {showConfirmationModal && (
-      <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center overflow-y-auto">
-        <div className="modal-content w-full max-w-5xl rounded-2xl p-8 bg-white shadow-xl flex flex-col gap-10 md:flex-row md:gap-12">
-          {/* Left Column: Profile Summary */}
-          <div className="w-full md:w-[60%] space-y-6">
-
-            {/* Physical Attributes */}
-            <div className="border rounded-xl p-5 bg-muted">
-              <h3 className="font-bold text-xl text-primary mb-4">Physical Attributes</h3>
-              <div className="flex justify-between items-center gap-4">
-
-                {/* Skin Tone */}
-                <div className="flex flex-col items-center bg-white p-4 rounded-xl shadow w-full">
-                  {skinToneImageMap[(localStorage.getItem("skin-tone") || "").toLowerCase()] ? (
-                    <Image
-                      src={skinToneImageMap[(localStorage.getItem("skin-tone") || "").toLowerCase()]}
-                      alt="Skin Tone"
-                      width={64}
-                      height={64}
-                      className="rounded-md object-contain"
-                    />
-                  ) : (
-                    <span className="text-gray-400">-</span>
-                  )}
-                  <p className="text-sm font-medium text-gray-700 mt-2">
-                    {capitalizeWords(localStorage.getItem("skin-tone") || "Not Set")}
-                  </p>
-                </div>
-
-                {/* Body Shape */}
-                <div className="flex flex-col items-center bg-white p-4 rounded-xl shadow w-full">
-                  {localStorage.getItem("gender") &&
-                  localStorage.getItem("body-shape") &&
-                  bodyShapeImageMap[localStorage.getItem("gender").toLowerCase()]?.[localStorage.getItem("body-shape").toLowerCase()] ? (
-                    <Image
-                      src={
-                        bodyShapeImageMap[localStorage.getItem("gender").toLowerCase()][localStorage.getItem("body-shape").toLowerCase()]
-                      }
-                      alt="Body Shape"
-                      width={64}
-                      height={64}
-                      className="rounded-md object-contain"
-                    />
-                  ) : (
-                    <span className="text-gray-400">-</span>
-                  )}
-                  <p className="text-sm font-medium text-gray-700 mt-2">
-                    {capitalizeWords(localStorage.getItem("body-shape") || "Not Set")}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Liked Item Summary */}
-            <div className="border rounded-xl p-5 bg-muted">
-              <h3 className="font-bold text-xl text-primary mb-4">Latest Preference</h3>
-              {likedRecommendations.length > 0 ? (
-                <div className="flex items-center gap-5">
-                  <div className="rounded-xl overflow-hidden shadow-sm bg-white border border-gray-200 aspect-[3/4] w-[100px] h-[130px]">
-                    <Image
-                      src={likedRecommendations[likedRecommendations.length - 1].imageUrl || "/placeholder.svg"}
-                      alt="Liked item"
-                      width={100}
-                      height={130}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div className="flex flex-col text-sm text-primary">
-                    <p>
-                      <span className="font-semibold">Fashion Type:</span>{" "}
-                      {capitalizeWords(localStorage.getItem("fashion-type") || "Not Set")}
-                    </p>
-                    <p>
-                      <span className="font-semibold">Category:</span>{" "}
-                      {capitalizeWords(localStorage.getItem("clothing-category") || "Not Set")}
-                    </p>
-                  </div>
-                </div>
-              ) : (
-                <p className="text-gray-500 text-sm">No style pick found.</p>
-              )}
-            </div>
-
-            {/* Buttons */}
-            <div className="flex flex-wrap gap-3 pt-2 py-2">
-              <button
-                onClick={() => {
-                  setShowConfirmationModal(false);
-                  setLoading(true);
-                  router.push("/personalized-styling/result");
-                }}
-                className="bg-primary text-white px-5 py-2.5 rounded-lg w-full md:w-auto"
-              >
-                Continue
-              </button>
-              <button
-                onClick={() => {
-                  setShowConfirmationModal(false);
-                  setLoading(true);
-                  router.push("/personalized-styling/physical-appearances");
-                }}
-                className="bg-gray-100 text-gray-800 px-5 py-2.5 rounded-lg w-full md:w-auto"
-              >
-                Re-upload Photo
-              </button>
-              <button
-                onClick={() => {
-                  setShowConfirmationModal(false);
-                  setLoading(true);
-                  router.push("/personalized-styling/style-preferences");
-                }}
-                className="bg-gray-100 text-gray-800 px-5 py-2.5 rounded-lg w-full md:w-auto"
-              >
-                Change Preferences
-              </button>
-            </div>
-          </div>
-
-          {/* Right Column: User Image */}
-          <div className="w-full md:w-[40%] flex justify-center md:justify-end">
-            <img
-              src={localStorage.getItem("user_image") || "/placeholder.svg"}
-              alt="User Upload"
-              className="w-40 h-120 md:w-full md:max-w-xs object-cover rounded-xl border"
-            />
-          </div>
-        </div>
-      </div>
-    )}
+    <ConfirmationModal
+      isOpen={showConfirmationModal}
+      onClose={() => setShowConfirmationModal(false)}
+      trackingPage="Dashboard"
+    />
 
     {/* Referral Modal */}
     {showReferralModal && (
@@ -690,6 +564,24 @@ export default function dashboard() {
         onClose={() => setShowReferralModal(false)}
       />
     )}
+
+    {/* Survey Prompt Modal */}
+    {showSurveyPrompt && (
+      <SurveyPromptModal
+        isOpen={showSurveyPrompt}
+        token={token}
+        onClose={() => {
+          track("survey_prompt", { selection: "declined" });
+          setShowSurveyPrompt(false);
+        }}
+        onSubmit={() => {
+          track("survey_prompt", { selection: "accepted" });
+          setShowSurveyPrompt(false);
+          router.push("/survey");
+        }}
+      />
+    )}
+
   </div>
   )
 }

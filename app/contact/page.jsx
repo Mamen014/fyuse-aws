@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import CTAstyling from "@/components/ui/CTAstyling";
 
 // --- Contact Form Component ---
 const ContactForm = () => {
@@ -37,9 +38,7 @@ const ContactForm = () => {
     setStatus({ loading: true, success: false, error: null }); // Set loading state
 
     try {
-      const apiUrl = 'API_GATEWAY_INVOKE_URL/contact'; // <-- PASTE YOUR URL HERE
-
-      const response = await fetch(apiUrl, {
+      const response = await fetch(`api/contact`, {
           method: 'POST',
           headers: {
               'Content-Type': 'application/json',
@@ -144,7 +143,7 @@ const ContactForm = () => {
             animate={{ opacity: 1 }}
             className="text-green-600 mb-4 text-sm"
           >
-            Message sent successfully! We'll get back to you soon.
+            Message sent successfully! We&apos;ll get back to you soon.
           </motion.p>
         )}
 
@@ -163,7 +162,7 @@ const ContactForm = () => {
         <button
           type="submit"
           disabled={status.loading} // Disable button when loading
-          className={`bg-cta hover:bg-primary text-cta-foreground px-8 py-3 rounded-full shadow-lg hover:scale-105 transition-transform text-lg font-semibold w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed ${
+          className={`bg-primary hover:bg-cta text-cta-foreground px-8 py-3 rounded-full shadow-lg hover:scale-105 transition-transform text-lg font-semibold w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed ${
             status.loading ? 'animate-pulse' : '' // Add pulse animation when loading
           }`}
         >
@@ -193,9 +192,10 @@ export default function Contact() {
               Contact Us
             </h1>
             <p className="mt-4 text-lg text-foreground max-w-2xl mx-auto">
-              Have questions, feedback, or just want to say hi? We’d love to
+              Have questions, feedback, or just want to say hi? We&apos;d love to
               hear from you!
             </p>
+            <CTAstyling />
           </motion.div>
 
           <ContactForm />

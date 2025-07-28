@@ -2,19 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
-import { useAuth } from 'react-oidc-context';
 import { ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import LoadingModalSpinner from '@/components/ui/LoadingState';
+import CTAstyling from '@/components/ui/CTAstyling';
 
 export default function LandingPage() {
-  const router = useRouter();
-  const { user, signinRedirect } = useAuth();
   const [openFAQ, setOpenFAQ] = useState(null);
-  const [isRedirecting, setIsRedirecting] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   
   // Hero carousel images - placeholder person images
@@ -50,7 +45,7 @@ export default function LandingPage() {
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentIndex((prevIndex) => (prevIndex + 1) % heroImages.length);
-    }, 3000); // Change image every 3 seconds
+    }, 2000); // Change image every 2 seconds
 
     return () => clearInterval(interval);
   }, [heroImages.length]);
@@ -129,34 +124,6 @@ export default function LandingPage() {
     setOpenFAQ(openFAQ === index ? null : index);
   };
 
-  // Authentication and redirection logic
-  const handleClick = async (e) => {
-    e.preventDefault();
-    try {
-      setIsRedirecting(true);
-      localStorage.setItem('from', 'landing-page');
-      localStorage.setItem('showRegister', 'true');
-      localStorage.setItem('seeReferral', 'true');
-      document.cookie = "hasRegistered=true; path=/; max-age=31536000";      
-
-      if (!user) {
-        setTimeout(() => {
-          signinRedirect();
-        }, 100);
-      } else {
-        router.push('/');
-      }
-    } catch (error) {
-      console.error('Authentication error:', error);
-      router.push('/');
-    }
-  };
-
-  // If redirecting, show loading spinner
-  if (isRedirecting) {
-    return <LoadingModalSpinner />;
-  }
-
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground overflow-x-hidden">
       <Navbar />
@@ -210,12 +177,7 @@ export default function LandingPage() {
                   Smart fashion. <br className="hidden sm:block" />Made to fit you perfectly.
                 </motion.h1>
 
-                <button
-                  onClick={handleClick}
-                  className="inline-block px-6 sm:px-10 py-3 sm:py-4 rounded-full w-full max-w-xs sm:max-w-sm text-lg sm:text-xl font-semibold transition-all duration-300 shadow-xl mt-6 cursor-pointer bg-primary text-primary-foreground hover:bg-primary/90 hover:-translate-y-1 hover:shadow-md"
-                >
-                  Start Free Styling
-                </button>
+                <CTAstyling/>
 
                 <p className="text-sm text-primary/70 mt-3">
                   Made for professionals like you.
@@ -439,12 +401,7 @@ export default function LandingPage() {
               who seek more. Be among the first to explore it.
             </p>
             <div className="space-y-4 max-w-xs w-full mx-auto sm:space-y-0 sm:space-x-4 sm:flex sm:justify-center sm:items-center">
-              <button
-                onClick={handleClick}
-                className="inline-block px-6 sm:px-10 py-3 sm:py-4 rounded-full text-lg sm:text-xl font-semibold transition-all duration-300 shadow-xl mb-4 sm:mb-0 cursor-pointer bg-primary text-primary-foreground hover:bg-primary/90 hover:-translate-y-1 hover:shadow-md"
-              >
-                Start Free Styling
-              </button>
+              <CTAstyling/>
             </div>
           </div>
         </section>

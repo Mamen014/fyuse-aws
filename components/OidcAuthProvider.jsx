@@ -1,8 +1,7 @@
 'use client';
 
 import React from 'react';
-import { AuthProvider, useAuth } from 'react-oidc-context';
-import LoadingModalSpinner from './ui/LoadingState';
+import { AuthProvider } from 'react-oidc-context';
 
 const getOidcConfig = () => {
   const origin =

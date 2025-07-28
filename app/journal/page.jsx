@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import CTAstyling from '@/components/ui/CTAstyling';
 
 export default function BlogIndexPage() {
   const blogs = [
@@ -47,12 +48,7 @@ export default function BlogIndexPage() {
           <p className="text-base sm:text-lg mb-6 text-muted-foreground">
             Curious how FYUSE can match outfits to your unique shape?
           </p>
-          <Link
-            href="/"
-            className="inline-block bg-primary text-primary-foreground px-6 py-3 rounded-full text-sm sm:text-base hover:bg-[#004799] transition font-heading"
-          >
-            Discover My Style →
-          </Link>
+          <CTAstyling />
         </div>
       </main>
 

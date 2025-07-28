@@ -1,7 +1,9 @@
+// app/personalized-styling/physical-appearances/manual/step-1/page.jsx
+
 'use client'
 
 import { useRouter } from 'next/navigation';
-import { useState, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from "react-oidc-context";
 import LoadingModalSpinner from '@/components/ui/LoadingState';
 
@@ -13,13 +15,19 @@ export default function PhysicalAttributesStep1() {
   const [sliderPosition, setSliderPosition] = useState(0);
   const sliderRef = useRef(null);
   const sliderContainerRef = useRef(null);
-  const { user } = useAuth();
-  const userEmail = user?.profile?.email;
-  const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
+  const { user, isLoading, signinRedirect } = useAuth();
 
   // Skin tone options
   const skinTones = ['fair', 'light', 'medium', 'deep'];
 
+  // Redirect to sign in if not authenticated
+  useEffect(() => {
+    if (!isLoading && !user) {
+      signinRedirect();
+      return;
+    }
+  }, [isLoading, user, signinRedirect]);
+    
   function capitalizeWords(str) {
     if (!str) return '';
     return str
@@ -61,27 +69,20 @@ export default function PhysicalAttributesStep1() {
   };
 
   const handleSubmit = () => {
-    localStorage.setItem('gender', gender);
-    localStorage.setItem('skin-tone', skinTone);
-    router.push(`step-2`);
+    router.push(`step-2?gender=${gender?.toLowerCase()}`);
   };
-
-  const data = {
-    gender,
-    skinTone,
-  }
 
     const physic1 = async () => {
     const payload = {
-      userEmail,
-      section: "physicalAppearance1",
-      data,
+      gender,
+      skin_tone: skinTone,
     };
-    
+    if (!user?.id_token) return;
     try {
-      fetch(`${API_BASE_URL}/userPref`, {
+      fetch("/api/register-profile", {
         method: "POST",
         headers: {
+          Authorization: `Bearer ${user.id_token}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify(payload),

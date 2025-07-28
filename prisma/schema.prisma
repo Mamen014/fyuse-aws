@@ -1,0 +1,109 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model subs_plan {
+  user_id   String  @id
+  subs_date DateTime?
+  plan      String?
+  status    String?
+  profile   Profile @relation(fields: [user_id], references: [user_id])
+}
+
+model style_preference {
+  id                Int      @id @default(autoincrement())
+  user_id           String
+  clothing_category String
+  fashion_type      String
+  timestamp         DateTime?
+  profile           Profile  @relation(fields: [user_id], references: [user_id])
+}
+
+model styling_log {
+  id                String   @id @default(uuid()) // Internal primary key
+  user_id           String
+  item_id           String
+  kling_task_id     String?  @unique              // External Kolors ID
+  created_at        DateTime? @default(now())
+  updated_at        DateTime?
+  styling_image_url String?
+  user_image_url    String?
+  status            String?
+  wardrobe          Boolean?
+
+  profile           Profile       @relation(fields: [user_id], references: [user_id])
+  product           product_data  @relation(fields: [item_id], references: [item_id])
+}
+
+model product_data {
+  item_id           String   @id
+  brand             String
+  gender            String
+  clothing_category String
+  cloth_fitting     String
+  clothing_type     String
+  fashion_type      String
+  product_name      String
+  color             String
+  product_image_url String
+  product_link      String
+
+  styling_logs      styling_log[]
+}
+
+model Profile {
+  user_id        String   @id
+  gender         String?
+  body_shape     String?
+  skin_tone      String?
+  user_image_url String?
+  nickname       String?
+  birthdate      DateTime?
+  country        String?
+  city           String?
+  phone_number   String?
+  occupation     String?
+
+  subs_plan         subs_plan?
+  style_preferences style_preference[]
+  styling_logs      styling_log[]
+  survey_responses  survey_response[]
+
+  survey_prompt_dismissed Boolean? @default(false)
+  survey_prompt_stage     Int      @default(0)
+}
+
+model ContactMessage {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  message   String
+  createdAt DateTime @default(now())
+}
+
+model survey_response {
+  id                 String   @id @default(uuid())
+  user_id            String
+  stylingSatisfaction String?
+  styleMatch          String?
+  bodyShape           String?
+  skinTone            String?
+  tryonRealism        String?
+  tryonEase           String?
+  appExperience       String?
+  device              String?
+  issues              String?
+  shareIntent         String?
+  purchaseIntent      String?
+  likeMost            String?
+  improveSuggestions  String?
+  email               String?
+  submittedAt         DateTime @default(now())
+
+  profile             Profile  @relation(fields: [user_id], references: [user_id])
+}

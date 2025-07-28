@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import LoadingModalSpinner from "@/components/ui/LoadingState";
 
-export default function PricingPlans({ isOpen, onClose, sourcePage = "Unknown" }) {
+export default function PricingPlans({ onClose, sourcePage = "Unknown" }) {
   const router = useRouter();
   const { user } = useAuth();
   const [isRedirecting, setIsRedirecting] = useState(false);
@@ -18,8 +18,7 @@ export default function PricingPlans({ isOpen, onClose, sourcePage = "Unknown" }
       name: "Basic",
       price: "Free Forever",
       features: [
-        "10 Virtual Fitting",
-        "20 Personalized Styling",
+        "10 Personalized Styling",
         "20 Change Preferences",
         "15 Saved Items in Wardrobe",
       ],
@@ -29,8 +28,7 @@ export default function PricingPlans({ isOpen, onClose, sourcePage = "Unknown" }
       name: "Elegant",
       price: "Rp. 29,999/mo",
       features: [
-        "20 Virtual Fitting",
-        "40 Personalized Styling",
+        "20 Personalized Styling",
         "30 Change Preferences",
         "50 Saved Items in Wardrobe",
       ],
@@ -40,8 +38,7 @@ export default function PricingPlans({ isOpen, onClose, sourcePage = "Unknown" }
       name: "Glamour",
       price: "Rp. 59,999/mo",
       features: [
-        "40 Virtual Fitting",
-        "60 Personalized Styling",
+        "40 Personalized Styling",
         "Unlimited Change Preferences",
         "Unlimited Saved Items in Wardrobe",
       ],
@@ -103,8 +100,8 @@ export default function PricingPlans({ isOpen, onClose, sourcePage = "Unknown" }
           }}
         >
           <div className="bg-background text-primary rounded-3xl p-8 max-w-7xl w-full mx-4 shadow-2xl relative overflow-y-auto max-h-[90vh]">
-            <h2 className="text-3xl md:text-4xl font-bold text-center mb-8">
-              Choose Your Plan
+            <h2 className="text-xl md:text-4xl font-semibold text-center mb-8">
+              You&apos;ve Reached Monthly Limit<br />Please Upgrade
             </h2>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">

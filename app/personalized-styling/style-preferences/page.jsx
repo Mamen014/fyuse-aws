@@ -1,6 +1,8 @@
+// app/personalized-styling-style-preferences/page.jsx
+
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from 'react-oidc-context';
 import { motion } from 'framer-motion';
@@ -16,10 +18,8 @@ export default function StylePreferencesPage() {
   const [clothingType, setClothingType] = useState('');
   const [fashionType, setFashionType] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [loading, setloading] = useState(false);
-  const { user } = useAuth();
-  const userEmail = user?.profile?.email;
-  const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
+  const [loading, setLoading] = useState(false);
+  const { user, isLoading, signinRedirect } = useAuth();
 
   // Define clothing options with active and inactive icons
   const clothingOptions = [
@@ -44,51 +44,46 @@ export default function StylePreferencesPage() {
     Streetwear: { desc: 'Graphic tees and oversized fits', image: '/styles/streetwear.png' },
   };
 
+  // Redirect to sign in if not authenticated
+  useEffect(() => {
+    if (!isLoading && !user) {
+      signinRedirect();
+      return;
+    }
+  }, [isLoading, user, signinRedirect]);
+
+    
   // Handle form submission
   const handleSubmit = async () => {
+    if (!user?.id_token) return;
     if (isSubmitting) return;
     setIsSubmitting(true);
-    setloading(true);
+    setLoading(true);
 
     try {
-      localStorage.setItem('fashion-type', fashionType);
-      localStorage.setItem('clothing-category', clothingType);
+      await fetch("/api/save-style-preference", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${user.id_token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          clothing_category: clothingType,
+          fashion_type: fashionType,
+        }),
+      });
 
-      const savePreferences = async () => {
-        try {
-          await Promise.all([
-            fetch(`${API_BASE_URL}/userPref`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                userEmail,
-                section: 'StylePref1',
-                data: { selectedType: fashionType },
-              }),
-            }),
-            fetch(`${API_BASE_URL}/userPref`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                userEmail,
-                section: 'StylePref3',
-                data: { clothingType },
-              }),
-            }),
-          ]);
-        } catch (error) {
-          console.error('Error saving preferences:', error);
-        }
-      };
-
-      savePreferences();
-      router.push('result');
+      router.push("result");
     } catch (error) {
-      console.error('Error in form submission:', error);
+      console.error("Error saving preferences:", error);
       setIsSubmitting(false);
-      setloading(false);
+      setLoading(false);
+    } finally {
+      setIsSubmitting(false);
+      setLoading(false);
     }
   };
+
 
   // Show loading spinner while submitting
   if (loading) return <LoadingModalSpinner />;
@@ -163,10 +158,13 @@ export default function StylePreferencesPage() {
                     : 'bg-white border-gray-200 hover:shadow-md'}
                 `}
               >
-                <img
+                <Image
                   src={image}
                   alt={style}
-                  className="w-full h-52 object-cover group-hover:scale-[1.01] transition-transform duration-300"
+                  width={300}
+                  height={300}
+                  priority
+                  className="w-full h-80 object-cover group-hover:scale-[1.01] transition-transform duration-300"
                 />
                 <div className="p-4">
                   <h4 className={`font-bold text-lg ${fashionType === style ? 'text-white' : 'text-primary'}`}>

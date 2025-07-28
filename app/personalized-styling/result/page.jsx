@@ -1,35 +1,45 @@
+// app/personalized-styling/result/page.jsx
+
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from 'react-oidc-context';
 import axios from 'axios';
-import toast, { Toaster } from 'react-hot-toast';
+import Image from 'next/image';
+import toast from 'react-hot-toast';
+
 import PricingPlans from '@/components/PricingPlanCard';
 import LoadingModalSpinner from '@/components/ui/LoadingState';
 
-export default function AutoTryOnRecommendationPage() {
+const PLAN_LIMITS = {
+  basic: { tryOn: 10 },
+  elegant: { tryOn: 20 },
+  glamour: { tryOn: 40 },
+};
+
+export default function StylingPage() {
   const router = useRouter();
-  const auth = useAuth();
-  const userEmail = auth?.user?.profile?.email;
+  const { user, isLoading, signinRedirect } = useAuth();
+  const token = user?.access_token || user?.id_token || '';
+  const userEmail = user?.profile?.email;
   const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
 
+  const controllerRef = useRef(null);
+  const cleanupRef = useRef(null);
+  const pollingLogId = useRef(null);
+  const hasShownToast = useRef(false);
+  const isHandlingFlow = useRef(false);
+  const debounceTimeout = useRef(null);
+  const initialRun = useRef(false);
+
+  const [loading, setLoading] = useState(true);
+  const [, setIsPolling] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [showPricingPlans, setShowPricingPlans] = useState(false);
   const [product, setProduct] = useState(null);
   const [resultImageUrl, setResultImageUrl] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [isDownloading, setIsDownloading] = useState(false);
   const [error, setError] = useState(null);
-  const [showPricingPlans, setShowPricingPlans] = useState(false);
-  const [tryOnCount, setTryOnCount] = useState(0);
-  const [subscriptionPlan, setSubscriptionPlan] = useState(null);
-  const [subsDate, setSubsDate] = useState(null);
-  const [isPolling, setIsPolling] = useState(false);
-
-  const PLAN_LIMITS = {
-    Basic: { tryOn: 10 },
-    Elegant: { tryOn: 20 },
-    Glamour: { tryOn: 40 },
-  };
 
   const resetState = () => {
     setProduct(null);
@@ -37,125 +47,163 @@ export default function AutoTryOnRecommendationPage() {
     setError(null);
     setShowPricingPlans(false);
     setIsPolling(false);
-    sessionStorage.removeItem('currentTaskId');
+    hasShownToast.current = false;
+    sessionStorage.removeItem('currentLogId');
     sessionStorage.removeItem('recommendedProduct');
   };
 
-  const getActivePlan = () => {
-    if (!subscriptionPlan || !subsDate) return 'Basic';
-    const parsedDate = new Date(subsDate);
-    if (isNaN(parsedDate)) return 'Basic';
-    const diff = (Date.now() - parsedDate.getTime()) / (1000 * 60 * 60 * 24);
-    return diff > 30 ? 'Basic' : subscriptionPlan;
-  };
-
-  const fetchUserPlan = async () => {
-    const res = await axios.get(`${API_BASE_URL}/userPlan?userEmail=${userEmail}`);
-    const { plan, subsDate, tryOnCount } = res.data;
-
-    if (!plan || !subsDate) throw new Error("Invalid plan response");
-
-    setSubscriptionPlan(plan);
-    setSubsDate(subsDate);
-    setTryOnCount(tryOnCount || 0);
-
-    return {
-      plan,
-      subsDate,
-      tryOnCount: tryOnCount || 0,
-    };
-  };
-
-  const fetchRecommendation = async () => {
-    const res = await axios.post(`${API_BASE_URL}/StyleRec`, { userEmail });
-    const data = res.data;
-    if (data?.productId) {
-      setProduct(data);
-      sessionStorage.setItem('recommendedProduct', JSON.stringify(data));
-      return data;
-    } else {
-      throw new Error('No recommendation found.');
+  const fetchUserPlan = useCallback(async () => {
+    try {
+      const res = await axios.get('/api/subscription-status', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const { plan, successful_stylings } = res.data;
+      return { plan, tryOnCount: successful_stylings };
+    } catch (err) {
+      console.error('Failed to fetch subscription plan:', err);
+      return { plan: 'basic', tryOnCount: 0 };
     }
-  };
+  }, [token]);
 
-  const initiateTryOn = async (apparelImage) => {
-    const userImage = localStorage.getItem('user_image');
-    if (!userImage || !apparelImage) throw new Error('Missing images.');
-
-    const res = await axios.post(`${API_BASE_URL}/tryon-image`, {
-      person_image_url: userImage,
-      garment_image_url: apparelImage,
-      userEmail,
+  const fetchRecommendation = useCallback(async () => {
+    const res = await fetch('/api/recommend-product', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
     });
 
-    const taskId = res.data?.taskId;
-    sessionStorage.setItem('currentTaskId', taskId);
-    return taskId;
-  };
+    const data = await res.json();
 
-  const pollTryOnResult = (taskId) => {
+    if (res.status === 200 && data?.message === "No new recommendations available") {
+      setLoading(false);
+      toast.error("You've seen all styles. Try changing your preferences.", {autoClose: 5000} );
+      setTimeout(() => {
+        router.push('/personalized-styling/style-preferences')}, 2000);
+      throw new Error("No new recommendations available");
+    }
+
+    if (res.status === 400) {
+      if (data?.error?.includes("Style preference")) {
+        toast.error("Please select your style preferences first.");
+        setTimeout(() => router.push('/personalized-styling/style-preferences'), 2000);
+      } else if (data?.error?.includes("gender")) {
+        toast.error("Incomplete profile. Please update your gender.");
+        setTimeout(() => router.push('/personalized-styling/physical-appearances'), 2000);
+      }
+      throw new Error(data?.error || "Bad request.");
+    }
+
+    if (res.status === 401) {
+      toast.error("Session expired. Please log in again.");
+      setTimeout(() => {
+        try {
+          signinRedirect();
+        } catch (err) {
+          console.error("Sign-in redirect failed:", err);
+        }
+      }, 2000);
+      throw new Error("Unauthorized");
+    }
+
+    if (res.status === 404) {
+      toast.error("Recommended product is unavailable.");
+      throw new Error("Product not found");
+    }
+
+    if (!res.ok || !data?.productId) {
+      toast.error("Something went wrong while recommending a product.");
+      throw new Error(data?.error || "Unexpected recommendation failure");
+    }
+
+    setProduct(data);
+    sessionStorage.setItem('recommendedProduct', JSON.stringify(data));
+    return data;
+  }, [token, router, signinRedirect]);
+
+  const initiateTryOn = useCallback(async (item_id) => {
+    const res = await fetch('/api/tryon', {
+      method: 'POST',
+      headers: { 
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json', 
+      },
+      body: JSON.stringify({ item_id }),
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData.error || 'Try-on failed.');
+    }
+
+    const { log_id } = await res.json();
+    if (!log_id) throw new Error('Missing log ID.');
+    sessionStorage.setItem('currentLogId', log_id);
+    return log_id;
+  }, [token]);
+
+  const pollTaskStatus = useCallback((logId, controller) => {
     setIsPolling(true);
     let attempts = 0;
-    const maxAttempts = 12;
+    const maxAttempts = 20;
+    const max404Retries = 3;
+    const interval = 3000;
+    const signal = controller.signal;
 
-    const interval = setInterval(async () => {
-      attempts++;
-      if (attempts > maxAttempts) {
-        clearInterval(interval);
-        setIsPolling(false);
-        toast.error("Try-on is taking too long. Please try again.");
-        setLoading(false);
+    const poll = async () => {
+
+      if (logId !== sessionStorage.getItem('currentLogId')) {
+        console.warn('Stale task result, ignoring');
         return;
       }
 
       try {
-        const res = await axios.get(`${API_BASE_URL}/process-tryon-result?taskId=${taskId}`);
-        const data = res.data;
-        if (data.status === 'succeed') {
-          clearInterval(interval);
-          setResultImageUrl(data.generatedImageUrl);
+        const res = await fetch(`/api/tryon/status?log_id=${logId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+          signal,
+        });
+
+        if (res.status === 404 && attempts < max404Retries) {
+          console.warn("🔁 Got 404, retrying...");
+          attempts++;
+          return setTimeout(poll, interval);
+        }
+
+        if (!res.ok) {
+          throw new Error(`Polling failed: ${res.status}`);
+        }
+
+        const data = await res.json();
+        const { status, styling_image_url } = data;
+
+        if (status === "succeed" && styling_image_url) {
+          setResultImageUrl(styling_image_url);
+          if (!hasShownToast.current) {
+            toast.success("Style added to wardrobe!");
+            hasShownToast.current = true;
+          };
+
+          setIsPolling(false);
+          setLoading(false);        
+          return;
+        }
+
+        if (++attempts < maxAttempts) {
+          setTimeout(poll, interval);
+        } else {
           setIsPolling(false);
           setLoading(false);
-          toast.success('Style added to wardrobe!');
-        } else if (data.status === 'failed') {
-          clearInterval(interval);
-          setIsPolling(false);
-          setError(data.errorMessage || 'Try-on failed.');
-          setLoading(false);
-          toast.error(data.errorMessage || 'Try-on failed.');
+          toast.error("Try-on timed out.");
         }
       } catch (err) {
-        clearInterval(interval);
+        if (err.name === "AbortError") return;
+        console.error("Polling error:", err);
         setIsPolling(false);
-        setError(err.message || 'Polling failed.');
         setLoading(false);
-        toast.error(err.message || 'Polling failed.');
+        toast.error("Polling failed.");
       }
-    }, 5000);
-  };
+    };
 
-  const handleFullFlow = async () => {
-    try {
-      const { plan, tryOnCount } = await fetchUserPlan();
-      if (tryOnCount >= PLAN_LIMITS[plan].tryOn) {
-        setShowPricingPlans(true);
-        setLoading(false);
-        toast('You have reached your monthly limit. Please upgrade.', {
-          icon: '⚠️',
-          duration: 6000,
-        });
-        return;
-      }
-
-      const recommendation = await fetchRecommendation();
-      const taskId = await initiateTryOn(recommendation.imageS3Url);
-      pollTryOnResult(taskId);
-    } catch (err) {
-      console.error('Retry flow error:', err);
-      setError(err.message || 'Unexpected error occurred.');
-      setLoading(false);
-    }
-  };
+    poll();
+  }, [token, resultImageUrl]);
 
   const track = async (action, metadata = {}) => {
     if (!userEmail) return;
@@ -163,129 +211,161 @@ export default function AutoTryOnRecommendationPage() {
       await axios.post(`${API_BASE_URL}/trackevent`, {
         userEmail,
         action,
+        page: 'result',
         timestamp: new Date().toISOString(),
-        page: 'resultPage',
         ...metadata,
       });
     } catch (err) {
-      console.error('Tracking failed:', err.message);
+      console.warn('Tracking failed:', err.message);
     }
   };
 
   const trackPersonalizeEvent = async ({ userId, itemId, eventType, liked }) => {
-    const sessionId = `session-${Date.now()}`;
     try {
       await fetch(`${API_BASE_URL}/stylingRecTrack`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, sessionId, itemId, eventType, liked }),
+        body: JSON.stringify({
+          userId,
+          sessionId: `session-${Date.now()}`,
+          itemId,
+          eventType,
+          liked,
+        }),
       });
     } catch (err) {
-      console.error('Failed to track personalize event:', err);
+      console.warn('Event track failed:', err);
     }
   };
 
+  const handleFlow = useCallback(async () => {
+    if (isHandlingFlow.current) return;
+    isHandlingFlow.current = true;
+    clearTimeout(debounceTimeout.current);
+
+    try {
+      controllerRef.current = new AbortController();
+      const { plan, tryOnCount } = await fetchUserPlan();
+
+      if (tryOnCount >= PLAN_LIMITS[plan].tryOn) {
+        setShowPricingPlans(true);
+        setLoading(false);
+        return;
+      }
+
+      const recommendation = await fetchRecommendation();
+      const logId = await initiateTryOn(recommendation.productId);
+      if (!logId) throw new Error("Try-on initiation failed");
+
+      setTimeout(() => {
+        cleanupRef.current = pollTaskStatus(logId, controllerRef.current);
+      }, 15000);
+
+    } catch (err) {
+      if (controllerRef.current?.signal.aborted) return;
+
+      const errorMessage = err?.message || 'Unexpected error';
+      console.error("❌ handleFlow error:", errorMessage);
+
+      setError(errorMessage);
+
+    } finally {
+      setLoading(false);      
+      setIsPolling(false);
+      isHandlingFlow.current = false;
+    }
+  }, [fetchUserPlan, fetchRecommendation, initiateTryOn, pollTaskStatus, router]);
+
+  // Redirect to sign in if not authenticated
   useEffect(() => {
-    if (!userEmail) {
-      setError('You must be signed in to use this feature.');
-      setLoading(false);
+    if (!isLoading && !user) {
+      signinRedirect();
       return;
     }
-
-    const startFlow = async () => {
-      try {
-        const { plan, tryOnCount } = await fetchUserPlan();
-        if (tryOnCount >= PLAN_LIMITS[plan].tryOn) {
-          setShowPricingPlans(true);
-          setLoading(false);
-          toast('You have reached your monthly limit. Please upgrade.', {
-            icon: '⚠️',
-            duration: 6000,
-          });
-          return;
-        }
-
-        const savedTaskId = sessionStorage.getItem('currentTaskId');
-        const savedProduct = sessionStorage.getItem('recommendedProduct');
-
-        if (savedProduct) {
-          setProduct(JSON.parse(savedProduct));
-        }
-
-        if (savedTaskId && !resultImageUrl) {
-          pollTryOnResult(savedTaskId);
-        } else {
-          const recommendation = await fetchRecommendation();
-          const taskId = await initiateTryOn(recommendation.imageS3Url);
-          pollTryOnResult(taskId);
-        }
-      } catch (err) {
-        console.error('Flow error:', err);
-        setError(err.message || 'Unexpected error occurred.');
-        setLoading(false);
-      }
-    };
-
-    startFlow();
-  }, [userEmail]);
-
+  }, [isLoading, user, signinRedirect]);
+  
+  // Initial run to handle flow
   useEffect(() => {
-    const handleVisibility = () => {
-      if (document.visibilityState === 'visible' && !resultImageUrl && !loading && !isPolling) {
-        window.location.reload();
-      }
+    if (isLoading) return;
+    if (!token) return;
+    if (initialRun.current) return;
+
+    initialRun.current = true;
+
+    controllerRef.current = new AbortController();
+    const savedLogId = sessionStorage.getItem("currentLogId");
+    const savedProduct = sessionStorage.getItem("recommendedProduct");
+
+    if (savedProduct) setProduct(JSON.parse(savedProduct));
+
+    if (savedLogId && pollingLogId.current !== savedLogId && !resultImageUrl) {
+      pollingLogId.current = savedLogId;
+      cleanupRef.current = pollTaskStatus(savedLogId, controllerRef.current);
+    } else if (!savedLogId && !resultImageUrl) {
+      debounceTimeout.current = setTimeout(() => {
+        handleFlow();
+      }, 300);
+    }
+
+    return () => {
+      controllerRef.current?.abort();
+      cleanupRef.current?.();
+      clearTimeout(debounceTimeout.current);
     };
-    document.addEventListener('visibilitychange', handleVisibility);
-    return () => document.removeEventListener('visibilitychange', handleVisibility);
-  }, [resultImageUrl, loading, isPolling]);
+  }, [isLoading, token, handleFlow, pollTaskStatus, resultImageUrl]);
 
-  if (loading) return <LoadingModalSpinner message="Styling..." subMessage="This process only takes 30 seconds." />;
-
-  if (showPricingPlans && subscriptionPlan !== null && tryOnCount !== null) {
+  if (showPricingPlans)
     return (
       <PricingPlans
-        isOpen={showPricingPlans}
+        isOpen
         onClose={() => setShowPricingPlans(false)}
-        onSelect={(plan) => {
-          console.log('Plan selected:', plan);
-        }}
-        sourcePage="resultPage"
+        sourcePage="result"
       />
     );
-  }
 
-  if (error) {
+  if (error && !product && !resultImageUrl)
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen text-center p-4">
-        <h2 className="text-2xl font-bold text-red-600 mb-4">Error</h2>
-        <p className="text-gray-700 mb-6">{error}</p>
-        <button onClick={() => router.push('/dashboard')} className="bg-primary text-white px-6 py-2 rounded-md">
-          Back To Dashboard
+      <div className="min-h-screen flex flex-col justify-center items-center text-center px-4">
+        <h1 className="text-2xl font-bold text-red-600 mb-4">Error</h1>
+        <p className="mb-6">{error}</p>
+        <button onClick={() => router.push('/dashboard')} className="bg-primary text-white rounded-md">
+          Back to Dashboard
         </button>
       </div>
     );
-  }
+
+  // UI Rendering
+  if (loading || !product || !resultImageUrl)
+    return (
+      <>
+        <LoadingModalSpinner message="Styling..." subMessage="This process only takes 30 seconds." />
+      </>
+    );
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white px-4 py-8 flex flex-col items-center justify-center">
-      <Toaster position="top-center" />
+    <div className="min-h-screen px-4 py-8 bg-gradient-to-b from-blue-50 to-white flex flex-col items-center">
 
-      <div className="w-full max-w-6xl mx-auto px-4">
-        <h1 className="text-primary text-3xl font-bold mb-3 text-center">Your Perfect Look</h1>
+      <div className="max-w-6xl w-full">
+        <h1 className="text-3xl font-bold text-primary text-center mb-2">Your Perfect Look</h1>
         <p className="text-gray-600 text-center mb-8">This style has been added to your wardrobe</p>
 
-        <div className="flex flex-col md:flex-row gap-8 w-full items-start mb-12">
-          <div className="w-full md:w-1/2">
-            <div className="relative overflow-hidden rounded-2xl shadow-2xl">
+        {/* Images */}
+        <div className="flex flex-col md:flex-row gap-8 mb-12 items-stretch">
+          {/* Left: Try-On Result */}
+          <div className="md:w-1/2 w-full flex">
+            <div className="relative rounded-2xl shadow-2xl overflow-hidden w-full aspect-[3/4]">
               {resultImageUrl ? (
-                <img
+                <Image
                   src={resultImageUrl}
                   alt="Try-On Result"
-                  className="w-full object-cover max-h-[600px]"
+                  fill
+                  className="object-cover"
+                  priority
+                  unoptimized
                 />
               ) : (
-                <div className="w-full h-96 flex items-center justify-center bg-gray-100 text-gray-400 text-sm">
-                  Generating your look...
+                <div className="w-full h-full flex justify-center items-center bg-gray-100 text-sm text-gray-500">
+                  Not available
                 </div>
               )}
               <div className="absolute top-4 right-4 bg-white/90 text-primary px-3 py-1 rounded-full text-sm font-medium">
@@ -294,53 +374,134 @@ export default function AutoTryOnRecommendationPage() {
             </div>
           </div>
 
-          {product && (
-            <div className="w-full md:w-1/2">
-              <h2 className="text-xl font-semibold text-primary mb-4 text-center md:text-left">Original Product</h2>
-              <div className="bg-white rounded-2xl p-6 shadow-2xl">
-                <img
-                  src={product.imageS3Url}
-                  className="w-full max-h-[400px] object-contain rounded-xl mb-4"
-                />
-                <div className="text-center md:text-left">
-                  <h3 className="text-lg font-bold">{product.productName}</h3>
-                  <p className="text-gray-600">{product.brand}</p>
-                  {product.productLink && (
-                    <a
-                      href={product.productLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={() => {
-                        trackPersonalizeEvent({
-                          userId: userEmail,
-                          itemId: product.productId,
-                          eventType: 'view_product',
-                          liked: true
-                        });
-                      }}
-                      className="inline-block mt-3 text-white bg-[#0B1F63] hover:bg-[#0a1a57] px-4 py-2 rounded-full"
-                    >
-                      View Product
-                    </a>
-                  )}
+          {product ? (
+            <>
+              {/* Right: Product Info */}
+              <div className="md:w-1/2 w-full flex">
+                <div className="rounded-2xl p-6 shadow-2xl w-full flex flex-col">
+
+                  {/* Product Image */}
+                  <div className="relative w-full aspect-[3/4]">
+                    {product?.imageS3Url ? (
+                      <Image
+                        src={product.imageS3Url}
+                        alt={product.productName || 'Product'}
+                        fill
+                        className="object-cover rounded-xl"
+                        priority
+                        unoptimized
+                      />
+                    ) : (
+                      <div className="w-full h-full flex justify-center items-center bg-gray-100 text-sm text-gray-500">
+                        Loading product...
+                      </div>
+                    )}
+
+                  </div>
+
+                  {/* Product Detail */}
+                  <div className="flex flex-col justify-between mt-4">
+
+                    {/* Detail Info */}
+                    <div className="flex flex-col text-left">
+                      <div className="font-bold mb-4">
+                        <h3>{product?.productName || "loading..."}</h3>
+                      </div>
+                      <div>
+                        {product?.brand ? (
+                          <Image
+                            src={`/images/brand-logo/${product?.brand}.png`}
+                            alt="Brand Icon"
+                            width={64}
+                            height={64}
+                            className='inline-block ml-4 mb-4'
+                          />
+                        ) : (
+                          <div className="text-sm text-gray-400">Loading...</div>
+                        )}
+
+                      </div>
+                    </div>
+
+                    {/* Product Links */}
+                    <div className="flex flex-row text-center gap-3">                 
+
+                      {/* Purchase Button */}
+                      {product?.productLink && product?.productId && (
+                        <a
+                          href={product.productLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={() => {
+                            track('click_purchase', { selection: product.productId });
+                          }}                          
+                          className="w-full text-white bg-primary hover:bg-primary/80 px-4 py-2 rounded-full"
+                        >
+                          Purchase
+                        </a>
+                      )}
+                    
+                    </div>
+                  
+                  </div>
+
                 </div>
-              </div>
-            </div>
+              </div>              
+            </>
+          ) : (
+            <div className="w-full text-center py-12 text-gray-500">Preparing your product...</div>
           )}
+
         </div>
 
-        <div className="w-full max-w-md space-y-4 mx-auto">
-          {resultImageUrl && (
+        {/* Button */}
+        <div className="flex flex col lg:flex-row w-full max-w-6xl mx-auto gap-4">
+
+          {/* Back to Dashboard Button */}
+          <button
+            onClick={() => {
+              resetState();
+              track('button_click', { selection: 'back_to_dashboard' });
+              setLoading(true);
+              router.push('/dashboard');
+            }}
+            className={`w-full py-3 rounded-full font-semibold bg-white border text-primary ${
+              loading
+                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                : 'text-primary border-primary hover:bg-primary/10'
+            }`}
+          >
+            Dashboard
+          </button>
+
+          {/* Try Another Style Button */}
+          <button
+            disabled={loading}
+            onClick={() => {
+              if (loading) return;
+              setLoading(true);
+              track('button_click', { selection: 'another_style' });
+              resetState();
+              cleanupRef.current?.();
+              debounceTimeout.current = setTimeout(() => {
+                handleFlow();
+              }, 300);
+            }}
+            className={`w-full py-3 rounded-full text-white font-semibold bg-primary hover:bg-primary/10 border border-primary ${
+              loading
+                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                : 'text-primary border-primary hover:bg-primary/80'
+            }`}
+          >
+            {loading ? 'Loading...' : 'Another Style'}
+          </button>
+
+          {/* Download Button */}
+          {resultImageUrl && product?.productId && (
             <button
-              onClick={async () => {
+              onClick={ async () => {
+                track('click_download', { selection: product?.productId });
                 setIsDownloading(true);
-                track('download_look', { selection: resultImageUrl });
-                trackPersonalizeEvent({
-                  userId: userEmail,
-                  itemId: product?.productId,
-                  eventType: 'download',
-                  liked: true
-                });
                 try {
                   const res = await fetch(resultImageUrl);
                   const blob = await res.blob();
@@ -351,57 +512,16 @@ export default function AutoTryOnRecommendationPage() {
                   a.click();
                   URL.revokeObjectURL(url);
                 } catch {
-                  toast.error("Download failed");
+                  toast.error('Download failed');
                 } finally {
                   setIsDownloading(false);
                 }
               }}
-              className="w-full py-3 rounded-full text-white font-semibold bg-green-600 hover:bg-green-700"
+              className="w-full py-3 rounded-full text-primary font-semibold bg-background hover:bg-primary/10 border border-primary"
             >
-              {isDownloading ? 'Downloading...' : 'Download Your Look'}
+              {isDownloading ? 'Downloading...' : 'Download'}
             </button>
           )}
-
-          <button
-            disabled={loading}
-            onClick={async () => {
-              if (loading) return;
-              trackPersonalizeEvent({
-                userId: userEmail,
-                itemId: product?.productId,
-                eventType: 'retry',
-                liked: false
-              });
-              setLoading(true);
-              resetState();
-              await handleFullFlow();
-            }}
-            className={`w-full py-3 rounded-full font-semibold border-2 ${
-              loading
-                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                : 'text-primary border-primary hover:bg-primary/5'
-            }`}
-          >
-            {loading ? 'Loading...' : 'Try Another Style'}
-          </button>
-
-          <button
-            onClick={() => {
-              trackPersonalizeEvent({
-                userId: userEmail,
-                itemId: product?.productId,
-                eventType: 'back_dashboard',
-                liked: false
-              });
-              sessionStorage.removeItem('currentTaskId');
-              sessionStorage.removeItem('recommendedProduct');
-              setLoading(true);
-              router.push('/dashboard');
-            }}
-            className="w-full py-3 rounded-full font-semibold bg-white border text-primary"
-          >
-            Back to Dashboard
-          </button>
         </div>
       </div>
     </div>

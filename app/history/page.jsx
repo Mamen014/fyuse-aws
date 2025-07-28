@@ -2,56 +2,54 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from 'react-oidc-context';
-import Image from 'next/image';
 import { Shirt } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import LoadingModalSpinner from '@/components/ui/LoadingState';
+import Image from 'next/image';
+import ConfirmationModal from '@/components/ConfirmationModal';
 
 export default function TryOnHistoryPage() {
-  const { user } = useAuth();
-  const userEmail = user?.profile?.email;
+  const { user, isLoading, signinRedirect } = useAuth();
   const [tryonHistory, setTryonHistory] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
-    const fetchHistory = async () => {
-      if (!userEmail) return;
-      
-      try {
-        const endpoint = `${API_BASE_URL}/historyHandler`;
-        const res = await fetch(
-          `${endpoint}?email=${encodeURIComponent(userEmail)}`,
-          {
+    if (!isLoading && user) {
+      const fetchHistory = async () => {
+        try {
+          const token = user.id_token || user.access_token;
+          if (!token) throw new Error("Missing token");
+
+          const res = await fetch("/api/styling-history", {
             method: "GET",
             headers: {
-              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
             },
-          }
-        );
-        
-        if (!res.ok) throw new Error(`Failed to fetch history: ${res.status}`);
-        const data = await res.json();
-        
-        if (Array.isArray(data.tryonItems)) {
-          const sortedTryonItems = data.tryonItems
-            .filter(item => item.timestamp)
-            .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-          setTryonHistory(sortedTryonItems);
-        } else {
+          });
+
+          if (!res.ok) throw new Error(`Failed to fetch history: ${res.status}`);
+          const data = await res.json();
+
+          // Sort by timestamp descending and take latest 3
+          setTryonHistory(data);
+
+        } catch (err) {
+          console.error("Error fetching history:", err);
           setTryonHistory([]);
         }
-      } catch (err) {
-        console.error("Error fetching history:", err);
-        setTryonHistory([]);
-      } finally {
-        setLoading(false);
-      }
-    };
+      };
 
-    fetchHistory();
-  }, [userEmail]);
+      fetchHistory();
+    }
+  }, [isLoading, user]);
+
+  // Redirect to sign in if not authenticated
+  useEffect(() => {
+    if (!isLoading && !user) {
+      signinRedirect();
+      return;
+    }
+  }, [isLoading, user, signinRedirect]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -59,11 +57,25 @@ export default function TryOnHistoryPage() {
       
       <main className="max-w-4xl mx-auto px-4 pt-20 pb-16">
         {/* Header */}
-        <div className="flex items-center mb-6 pt-4">
+        <div className="flex items-center justify-between mb-6 pt-4">
           <h1 className="text-2xl font-bold text-primary">Styling History</h1>
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="bg-primary text-white px-5 py-2.5 rounded-full text-sm font-semibold hover:bg-primary/90 transition"
+          >
+            Style Me
+          </button>
         </div>
 
-        {loading ? (
+        {isModalOpen && (
+          <ConfirmationModal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            trackingPage="styling-history"
+          />
+        )}
+
+        {isLoading ? (
           <LoadingModalSpinner/>
         ) : tryonHistory.length === 0 ? (
           <div className="text-center py-16">
@@ -76,11 +88,12 @@ export default function TryOnHistoryPage() {
             {tryonHistory.slice(0, 15).map((item, index) => (
               <div key={index} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                 <div className="aspect-[3/4] relative">
-                  {item.generatedImageUrl ? (
+                  {item.styling_image_url ? (
                     <Image
-                      src={item.generatedImageUrl}
+                      src={item.styling_image_url}
                       alt={`Try-on #${index + 1}`}
                       fill
+                      priority
                       className="object-cover"
                     />
                   ) : (
@@ -94,9 +107,9 @@ export default function TryOnHistoryPage() {
                   <div className="flex justify-between items-start mb-2">
                   </div>
                   
-                  {item.timestamp && (
+                  {item.updated_at && (
                     <p className="text-sm text-gray-500">
-                      {new Date(item.timestamp).toLocaleDateString()}
+                      {new Date(item.updated_at).toLocaleDateString()}
                     </p>
                   )}
                   

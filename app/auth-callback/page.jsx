@@ -1,12 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import LoadingModalSpinner from '@/components/ui/LoadingState';
 
 export default function AuthCallback() {
   const router = useRouter();
-  const [ loading, setloading ] = useState(false);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;

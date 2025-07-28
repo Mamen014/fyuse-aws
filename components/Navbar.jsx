@@ -1,6 +1,8 @@
+// components/Navbar.jsx
+
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -19,26 +21,17 @@ import {
 import { useAuth } from "react-oidc-context";
 import { useRouter } from "next/navigation";
 import LoadingModalSpinner from "./ui/LoadingState.jsx";
+import { useUserProfile } from "@/app/context/UserProfileContext.jsx";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [userName, setUserName] = useState("Guest");
 
+  const { profile, loading: profileLoading } = useUserProfile();
+  const userName = profileLoading ? "" : (profile?.nickname || "Guest");
   const router = useRouter();
-  const auth = useAuth();
-  const userEmail = auth?.user?.profile?.email;
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    try {
-      const stored = JSON.parse(localStorage.getItem("profile") || "{}");
-      const fallback = userEmail?.split("@")[0] || "Guest";
-      setUserName(stored.nickname || fallback);
-    } catch (err) {
-      console.warn("Failed to load user profile from localStorage", err);
-    }
-  }, [userEmail]);
+  const { user, isLoading } = useAuth();
+  const userEmail = user?.profile?.email;
 
   const handleSignOut = () => {
     sessionStorage.clear();
@@ -51,7 +44,7 @@ export default function Navbar() {
   };
 
   const SignOutButton = ({ isInMobileMenu = false }) => {
-    if (auth.isLoading || !auth.isAuthenticated) return null;
+    if (isLoading || !user) return null;
     const className = isInMobileMenu
       ? "block text-sm font-medium text-red-500 cursor-pointer"
       : "text-sm text-gray-600 hover:text-red-500 font-medium px-4 py-2";
@@ -77,7 +70,7 @@ export default function Navbar() {
     { label: "Wardrobe", icon: Shirt, path: "/wardrobe" },
   ];
 
-  const menuItems = auth.isAuthenticated
+  const menuItems = user
     ? [...authOnlyMenuItems, ...baseMenuItems]
     : baseMenuItems;
 
@@ -85,21 +78,37 @@ export default function Navbar() {
     <nav className="fixed top-0 left-0 w-full bg-white z-50 shadow-sm">
       {loading && <LoadingModalSpinner message="Redirecting..." subMessage="Please wait a moment" />}
 
-      <div className="h-16 px-4 flex items-center justify-between max-w-7xl mx-auto">
-        <button
-          type="button"
-          onClick={() => setIsMenuOpen(!isMenuOpen)}
-          className="w-16 h-16 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors"
-          aria-expanded={isMenuOpen}
-          aria-label="Toggle menu"
-        >
-          {isMenuOpen ? <X className="w-10 h-10 text-gray-700" /> : <Menu className="w-10 h-10 text-gray-700" />}
-        </button>
+      <div className="h-16 px-4 sm:px-6 flex items-center justify-between max-w-7xl mx-auto">
 
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+        {/* Left: Hamburger */}
+        <div className="flex justify-start">
+          <button
+            type="button"
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="w-16 h-16 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors"
+            aria-expanded={isMenuOpen}
+            aria-label="Toggle menu"
+          >
+            {isMenuOpen ? <X className="w-10 h-10 text-gray-700" /> : <Menu className="w-10 h-10 text-gray-700" />}
+          </button>
+        </div>
+
+        {/* Center: Logo */}
+        <div className="flex justify-center min-w-0 overflow-hidden">
           <Link href="/dashboard">
-            <Image src="/logo-tb.png" alt="FYUSE Logo" width={1920} height={800} priority className="w-40 h-auto" />
+            <Image
+            src="/logo-tb.png"
+            alt="FYUSE Logo"
+            aria-label="Home"
+            width={1920}
+            height={800}
+            priority
+            className="h-12 w-auto max-w-[160px] sm:max-w-[200px]"
+          />
           </Link>
+        </div>
+        {/* Right: Empty div to balance flex layout */}
+        <div className="w-12">
         </div>
       </div>
 
@@ -115,7 +124,7 @@ export default function Navbar() {
           isMenuOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        {auth.isAuthenticated && (
+        {user && (
           <div className="px-6 py-6 bg-gray-50 border-b border-gray-200">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
@@ -124,7 +133,7 @@ export default function Navbar() {
                 </span>
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="text-base font-semibold text-gray-900 truncate">{userName}</h3>
+                <h3 className="text-base font-semibold text-gray-900 truncate">{userName || "Guest"}</h3>
                 {userEmail && <p className="text-sm text-gray-500 truncate">{userEmail}</p>}
               </div>
               <div className="px-0 text-red-600">
@@ -144,11 +153,15 @@ export default function Navbar() {
             {menuItems.map(({ label, icon: Icon, path }) => (
               <button
                 key={label}
-                onClick={() => {
-                  setIsMenuOpen(false);
-                  setLoading(true);
-                  router.push(path);
-                }}
+                  onClick={() => {
+                    if (path === window.location.pathname) {
+                      setIsMenuOpen(false);
+                      return;
+                    }
+                    setIsMenuOpen(false);
+                    setLoading(true);
+                    router.push(path);
+                  }}
                 className="flex items-center gap-3 w-full text-left px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 <Icon className="w-5 h-5 text-gray-500" />
