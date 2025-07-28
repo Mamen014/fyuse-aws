@@ -1,5 +1,3 @@
-// app/api/user-profile/route.ts
-
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { jwtDecode } from "jwt-decode";
@@ -22,26 +20,30 @@ export async function GET(request: Request) {
   }
 
   try {
-    const profile = await prisma.profile.findUnique({
+    // 🔍 Check if profile exists
+    let profile = await prisma.profile.findUnique({
       where: { user_id: userId },
-      select: {
-        gender: true,
-        skin_tone: true,
-        body_shape: true,
-        occupation: true,
-        city: true,
-        nickname: true,
-        user_image_url: true,
-      },
     });
 
+    // ✨ If not, create a blank profile
     if (!profile) {
-      return NextResponse.json(null);
+      profile = await prisma.profile.create({
+        data: { user_id: userId },
+      });
     }
 
-    return NextResponse.json(profile);
+    // 🔁 Return profile (select only needed fields)
+    return NextResponse.json({
+      gender: profile?.gender,
+      skin_tone: profile?.skin_tone,
+      body_shape: profile?.body_shape,
+      occupation: profile?.occupation,
+      city: profile?.city,
+      nickname: profile?.nickname,
+      user_image_url: profile?.user_image_url,
+    });
   } catch (err) {
-    console.error("Error fetching profile:", err);
+    console.error("Error fetching or creating profile:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

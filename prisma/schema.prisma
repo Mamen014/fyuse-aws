@@ -20,7 +20,7 @@ model style_preference {
   user_id           String
   clothing_category String
   fashion_type      String
-  timestamp         DateTime
+  timestamp         DateTime?
   profile           Profile  @relation(fields: [user_id], references: [user_id])
 }
 
