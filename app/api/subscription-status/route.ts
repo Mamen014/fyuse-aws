@@ -41,6 +41,15 @@ export async function GET(req: NextRequest) {
       subs_date = getFirstDayOfMonth();
       plan = "basic";
       status = "active";
+      
+      await prisma.subs_plan.create({
+        data: {
+          user_id,
+          subs_date,
+          plan,
+          status,
+        },
+      });      
     } else {
       const now = new Date();
       const rawDate = subscription.subs_date ?? getFirstDayOfMonth();
