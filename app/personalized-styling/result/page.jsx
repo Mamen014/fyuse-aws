@@ -8,9 +8,10 @@ import { useAuth } from 'react-oidc-context';
 import axios from 'axios';
 import Image from 'next/image';
 import toast from 'react-hot-toast';
-
+import { getOrCreateSessionId } from '@/lib/session';
 import PricingPlans from '@/components/PricingPlanCard';
 import LoadingModalSpinner from '@/components/ui/LoadingState';
+import { sendGAEvent } from '@next/third-parties/google';
 
 const PLAN_LIMITS = {
   basic: { tryOn: 10 },
@@ -24,6 +25,7 @@ export default function StylingPage() {
   const token = user?.access_token || user?.id_token || '';
   const userEmail = user?.profile?.email;
   const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
+  const sessionId = getOrCreateSessionId();
 
   const controllerRef = useRef(null);
   const cleanupRef = useRef(null);
@@ -40,6 +42,7 @@ export default function StylingPage() {
   const [product, setProduct] = useState(null);
   const [resultImageUrl, setResultImageUrl] = useState(null);
   const [error, setError] = useState(null);
+  const [pageLoadTime, setPageLoadTime] = useState(null);
 
   const resetState = () => {
     setProduct(null);
@@ -55,7 +58,10 @@ export default function StylingPage() {
   const fetchUserPlan = useCallback(async () => {
     try {
       const res = await axios.get('/api/subscription-status', {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { 
+          "x-session-id": sessionId,
+          Authorization: `Bearer ${token}` 
+        },
       });
       const { plan, successful_stylings } = res.data;
       return { plan, tryOnCount: successful_stylings };
@@ -68,7 +74,10 @@ export default function StylingPage() {
   const fetchRecommendation = useCallback(async () => {
     const res = await fetch('/api/recommend-product', {
       method: 'POST',
-      headers: { Authorization: `Bearer ${token}` },
+      headers: { 
+        "x-session-id": sessionId,
+        Authorization: `Bearer ${token}` 
+      },
     });
 
     const data = await res.json();
@@ -123,6 +132,7 @@ export default function StylingPage() {
     const res = await fetch('/api/tryon', {
       method: 'POST',
       headers: { 
+        "x-session-id": sessionId,
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json', 
       },
@@ -157,7 +167,10 @@ export default function StylingPage() {
 
       try {
         const res = await fetch(`/api/tryon/status?log_id=${logId}`, {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: { 
+            "x-session-id": sessionId,
+            Authorization: `Bearer ${token}` 
+          },
           signal,
         });
 
@@ -205,36 +218,31 @@ export default function StylingPage() {
     poll();
   }, [token, resultImageUrl]);
 
-  const track = async (action, metadata = {}) => {
-    if (!userEmail) return;
+  const logActivity = async (
+    action,
+    { selection, page } = {}
+  ) => {
     try {
-      await axios.post(`${API_BASE_URL}/trackevent`, {
-        userEmail,
-        action,
-        page: 'result',
-        timestamp: new Date().toISOString(),
-        ...metadata,
-      });
-    } catch (err) {
-      console.warn('Tracking failed:', err.message);
-    }
-  };
-
-  const trackPersonalizeEvent = async ({ userId, itemId, eventType, liked }) => {
-    try {
-      await fetch(`${API_BASE_URL}/stylingRecTrack`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/log-activity", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+          "x-session-id": sessionId,
+        },
         body: JSON.stringify({
-          userId,
-          sessionId: `session-${Date.now()}`,
-          itemId,
-          eventType,
-          liked,
+          action,
+          selection,
+          page: page || window.location.pathname,
+          timestamp: new Date().toISOString(),
         }),
       });
-    } catch (err) {
-      console.warn('Event track failed:', err);
+
+      if (!res.ok) {
+        console.warn("⚠️ Failed to log activity:", await res.json());
+      }
+    } catch (error) {
+      console.error("❌ Activity log error:", error);
     }
   };
 
@@ -275,6 +283,10 @@ export default function StylingPage() {
       isHandlingFlow.current = false;
     }
   }, [fetchUserPlan, fetchRecommendation, initiateTryOn, pollTaskStatus, router]);
+
+  useEffect(() => {
+    setPageLoadTime(Date.now());
+  }, []); 
 
   // Redirect to sign in if not authenticated
   useEffect(() => {
@@ -319,7 +331,7 @@ export default function StylingPage() {
       <PricingPlans
         isOpen
         onClose={() => setShowPricingPlans(false)}
-        sourcePage="result"
+        sourcePage="/personalized-styling/result"
       />
     );
 
@@ -433,7 +445,24 @@ export default function StylingPage() {
                           target="_blank"
                           rel="noopener noreferrer"
                           onClick={() => {
-                            track('click_purchase', { selection: product.productId });
+                            logActivity('click_purchase', { selection: product.productId });
+                            let timeToClickSeconds = null;
+                            if (pageLoadTime) {
+                                const currentTime = Date.now();
+                                const durationMs = currentTime - pageLoadTime;
+                                timeToClickSeconds = Math.round(durationMs / 1000);
+                                console.log(`Time to click "Purchase" button: ${timeToClickSeconds} seconds`);
+                            } else {
+                                console.warn('pageLoadTime was not set for "Purchase" button, cannot calculate time to click.');
+                            }                            
+                            sendGAEvent({
+                              event: 'click_purchase',
+                              item_id: product.productId,    
+                              item_name: product.productName,
+                              item_brand: product.brand,    
+                              link_url: product.productLink,
+                              time_to_click_seconds: timeToClickSeconds,
+                            });                            
                           }}                          
                           className="w-full text-white bg-primary hover:bg-primary/80 px-4 py-2 rounded-full"
                         >
@@ -461,7 +490,7 @@ export default function StylingPage() {
           <button
             onClick={() => {
               resetState();
-              track('button_click', { selection: 'back_to_dashboard' });
+              logActivity('button_click', { selection: 'back_to_dashboard' });
               setLoading(true);
               router.push('/dashboard');
             }}
@@ -480,7 +509,7 @@ export default function StylingPage() {
             onClick={() => {
               if (loading) return;
               setLoading(true);
-              track('button_click', { selection: 'another_style' });
+              logActivity('button_click', { selection: 'another_style' });
               resetState();
               cleanupRef.current?.();
               debounceTimeout.current = setTimeout(() => {
@@ -500,7 +529,7 @@ export default function StylingPage() {
           {resultImageUrl && product?.productId && (
             <button
               onClick={ async () => {
-                track('click_download', { selection: product?.productId });
+                logActivity('click_download', { selection: product?.productId });
                 setIsDownloading(true);
                 try {
                   const res = await fetch(resultImageUrl);

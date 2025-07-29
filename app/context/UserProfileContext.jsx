@@ -1,7 +1,10 @@
+// app/context/UserProfileContext.jsx
+
 "use client";
 
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { useAuth } from "react-oidc-context";
+import { getOrCreateSessionId } from "@/lib/session";
 
 const UserProfileContext = createContext(null);
 
@@ -14,13 +17,14 @@ export const UserProfileProvider = ({ children }) => {
 
   const fetchProfile = useCallback(async () => {
     if (!token) return;
-
+    const sessionId = getOrCreateSessionId();
     setLoading(true);
     try {
       const res = await fetch("/api/user-profile", {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
+          "x-session-id": sessionId,
         },
       });
       if (!res.ok) throw new Error(`Status ${res.status}`);

@@ -12,6 +12,7 @@ import BottomActive from '/public/images/cloth-fitting/short-active.png';
 import BottomInactive from '/public/images/cloth-fitting/short-inactive.png';
 import Image from 'next/image';
 import LoadingModalSpinner from '@/components/ui/LoadingState';
+import { getOrCreateSessionId } from "@/lib/session"; 
 
 export default function StylePreferencesPage() {
   const router = useRouter();
@@ -20,6 +21,9 @@ export default function StylePreferencesPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loading, setLoading] = useState(false);
   const { user, isLoading, signinRedirect } = useAuth();
+
+  const sessionId = getOrCreateSessionId();
+  
 
   // Define clothing options with active and inactive icons
   const clothingOptions = [
@@ -64,6 +68,7 @@ export default function StylePreferencesPage() {
       await fetch("/api/save-style-preference", {
         method: "POST",
         headers: {
+          "x-session-id": sessionId,
           Authorization: `Bearer ${user.id_token}`,
           "Content-Type": "application/json",
         },
@@ -73,7 +78,7 @@ export default function StylePreferencesPage() {
         }),
       });
 
-      router.push("result");
+      router.push("/personalized-styling/result");
     } catch (error) {
       console.error("Error saving preferences:", error);
       setIsSubmitting(false);

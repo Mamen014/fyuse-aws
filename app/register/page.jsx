@@ -9,6 +9,7 @@ import { Country, City } from 'country-state-city';
 import dynamic from 'next/dynamic';
 import LoadingModalSpinner from '@/components/ui/LoadingState';
 import PrivacyPolicyModal from '@/components/PrivacyPolicyModal';
+import { getOrCreateSessionId } from "@/lib/session";
 
 // Dynamically import Select with no SSR
 const DynamicSelect = dynamic(() => import('react-select'), {
@@ -24,7 +25,7 @@ export default function RegisterAI() {
   const userEmail = user?.profile?.email;
   const countrySelectId = useId();
   const citySelectId = useId();
-
+  const sessionId = getOrCreateSessionId();
   const [formData, setFormData] = useState({
     nickname: '',
     birthdate: '',
@@ -179,13 +180,11 @@ export default function RegisterAI() {
     setupLocation();
 
     // Restore privacy agreement if exists
-    if (userEmail) {
-      const storedAgreement = localStorage.getItem(`privacyAgreement:${userEmail}`);
-      if (storedAgreement === "true") {
-        setAgreeToPrivacy(true);
-      }
+    const storedAgreement = localStorage.getItem(`privacyAgreement`);
+    if (storedAgreement === "true") {
+      setAgreeToPrivacy(true);
     }
-  }, [isClient, userEmail]);
+  }, [isClient]);
 
 
   const isFormValid = () => {
@@ -280,6 +279,7 @@ export default function RegisterAI() {
       fetch("/api/register-profile", {
         method: "POST",
         headers: {
+          "x-session-id": sessionId,
           Authorization: `Bearer ${user.id_token}`,
           "Content-Type": "application/json",
         },
@@ -458,12 +458,10 @@ export default function RegisterAI() {
               onChange={(e) => {
                 const checked = e.target.checked;
                 setAgreeToPrivacy(checked);
-                if (userEmail) {
-                  localStorage.setItem(
-                    `privacyAgreement:${userEmail}`,
-                    checked.toString()
-                  );
-                }
+                localStorage.setItem(
+                  `privacyAgreement`,
+                  checked.toString()
+                );
               }}
               className="w-4 h-4 accent-blue-500"
             />

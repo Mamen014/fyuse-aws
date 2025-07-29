@@ -7,45 +7,51 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useRouter } from "next/navigation";
 import LoadingModalSpinner from "@/components/ui/LoadingState";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
+import { getOrCreateSessionId } from "@/lib/session";
 
 export default function PricingPlans() {
   const router = useRouter();
-  const [loading, setloading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const { user, isLoading, signinRedirect } = useAuth();
+  const sessionId = getOrCreateSessionId();
+  const token = user?.access_token;
   const userEmail = user?.profile?.email;
 
   const [showThankYou, setShowThankYou] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(null);
 
-  // Redirect to sign in if not authenticated
   useEffect(() => {
     if (!isLoading && !user) {
       signinRedirect();
     }
   }, [isLoading, user, signinRedirect]);
-    
-  const handleTrack = async (action, planName) => {
-    const payload = {
-      userEmail,
-      action,
-      selection: planName,
-      timestamp: new Date().toISOString(),
-      page: "planPage",
-    };
+
+  // 🔍 Injected Logging Function (not imported from lib)
+  const logActivity = async (action, selection) => {
+    if (!token || !sessionId) return;
 
     try {
-      await fetch(`${API_BASE_URL}/trackevent`, {
+      const res = await fetch("/api/log-activity", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+          "x-session-id": sessionId,
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          action,
+          page: "/plan",
+          selection,
+          timestamp: new Date().toISOString(),
+        }),
       });
 
-    } catch (err) {
-      console.error("Failed to track user event:", err);
+      if (!res.ok) {
+        const err = await res.json();
+        console.warn("⚠️ Failed to log activity:", err.message);
+      }
+    } catch (error) {
+      console.error("❌ Activity log error:", error);
     }
   };
 
@@ -58,7 +64,6 @@ export default function PricingPlans() {
         "20 Change Preferences",
         "15 Saved Items in Wardrobe",
       ],
-      promo: "",
       buttonText: "Continue with Basic",
     },
     {
@@ -69,7 +74,6 @@ export default function PricingPlans() {
         "30 Change Preferences",
         "50 Saved Items in Wardrobe",
       ],
-      promo: "",
       buttonText: "Upgrade to Elegant – Rp.29.999/Mo",
     },
     {
@@ -80,35 +84,32 @@ export default function PricingPlans() {
         "Unlimited Change Preferences",
         "Unlimited Saved Items in Wardrobe",
       ],
-      promo: "",
       buttonText: "Upgrade to Glamour – Rp.59.999/Mo",
     },
   ];
 
-  const handlePlanSelect = (planName) => {
-    handleTrack("purchase_plan", planName);
+  const handlePlanSelect = async (planName) => {
+    setLoading(true);
+    logActivity("purchase_plan", planName).catch(() => {});
 
     if (planName === "Basic") {
-      setloading(true);
       router.push("/dashboard");
     } else {
       setSelectedPlan(planName);
       setShowThankYou(true);
+      setLoading(false);
     }
   };
 
   const closeThankYouModal = () => {
-    setloading(true);
+    setLoading(true);
     setShowThankYou(false);
     router.push("/dashboard");
   };
 
   return (
     <>
-    {loading && (
-      <LoadingModalSpinner/>
-    )}
-
+      {loading && <LoadingModalSpinner />}
       <Navbar />
       <div className="bg-background text-foreground mt-20 min-h-screen p-8">
         <h2 className="text-3xl md:text-4xl font-bold text-center mb-8 text-primary">
@@ -121,28 +122,15 @@ export default function PricingPlans() {
               className="border border-cta bg-background rounded-xl p-6 shadow-lg flex flex-col justify-between"
             >
               <div>
-                <h3 className="text-xl md:text-2xl font-semibold text-center text-primary">
-                  {plan.name}
-                </h3>
-
-                <p className="text-lg md:text-xl text-cta mt-2 text-center">
-                  {plan.price}
-                </p>
-
+                <h3 className="text-xl md:text-2xl font-semibold text-center text-primary">{plan.name}</h3>
+                <p className="text-lg md:text-xl text-cta mt-2 text-center">{plan.price}</p>
                 <ul className="mt-4 text-sm md:text-base text-foreground list-disc ml-6 space-y-2">
                   {plan.features.map((feature, i) => (
                     <li key={i}>{feature}</li>
                   ))}
                 </ul>
-
-                {plan.promo && (
-                  <p className="mt-3 text-cta text-xs md:text-sm text-center">
-                    {plan.promo}
-                  </p>
-                )}
               </div>
-
-              <div className="mt-6 space-y-3">
+              <div className="mt-6">
                 <Button
                   onClick={() => handlePlanSelect(plan.name)}
                   className="w-full bg-cta text-cta-foreground rounded-full text-sm md:text-base hover:bg-primary transition-colors"
@@ -155,7 +143,6 @@ export default function PricingPlans() {
           ))}
         </div>
       </div>
-
       <Footer />
 
       {/* Thank You Modal */}
@@ -166,7 +153,7 @@ export default function PricingPlans() {
               🎉 Thank You for Choosing FYUSE Premium!
             </h3>
             <p className="text-base text-foreground mb-4">
-              You’ve selected the Elegant/Glamour Plan with special promo pricing.
+              You’ve selected the {selectedPlan} Plan with special promo pricing.
               <br />
               We’re currently in early-access testing mode — actual payment isn’t required yet.
               <br />
@@ -176,7 +163,6 @@ export default function PricingPlans() {
               {selectedPlan === "Elegant" && "✔ You’re now pre-enrolled in the Elegant Plan (Rp.29,999/mo)"}
               {selectedPlan === "Glamour" && "✔ You’re now pre-enrolled in the Glamour Plan (Rp.59,999/mo)"}
             </p>
-
             <Button
               onClick={closeThankYouModal}
               className="mt-6 bg-cta text-cta-foreground rounded-full hover:bg-primary"

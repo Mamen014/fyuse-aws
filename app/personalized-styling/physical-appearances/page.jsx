@@ -14,6 +14,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import LoadingModalSpinner from '@/components/ui/LoadingState';
 import PrivacyPolicyModal from '@/components/PrivacyPolicyModal';
 import { useUserProfile } from '@/app/context/UserProfileContext';
+import { getOrCreateSessionId } from "@/lib/session";
 
 export default function AIPhotoUpload() {
   const router = useRouter();
@@ -33,6 +34,7 @@ export default function AIPhotoUpload() {
   const nickname = profile?.nickname;
   const [showRegisterPrompt, setShowRegisterPrompt] = useState(false);
 
+  const sessionId = getOrCreateSessionId();
   const isInitialLoading = authLoading || profileLoading || isPageLoading || !user;
   const userEmail = user?.profile?.email;
   const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
@@ -71,7 +73,6 @@ export default function AIPhotoUpload() {
   useEffect (() => {
     if (!isInitialLoading) {
       if (!nickname) {
-        console.log("nickname:", nickname);
         setShowRegisterPrompt(true);
       } else {
         setShowRegisterPrompt(false);
@@ -174,7 +175,7 @@ export default function AIPhotoUpload() {
       };
 
       // Fire off both requests, but wait for analyzerTest first
-      const analyzerPromise = fetch(`${API_BASE_URL}/analyzerTest`, {
+      const analyzerPromise = fetch(`${API_BASE_URL}/analyzer`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -183,6 +184,7 @@ export default function AIPhotoUpload() {
       const uploadPromise = fetch(`/api/upload-image`, {
         method: 'POST',
         headers: {
+          "x-session-id": sessionId,
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
@@ -214,7 +216,7 @@ export default function AIPhotoUpload() {
         throw new Error('Upload failed: No image URL returned');
       }
 
-      track('upload_photo', { selection: uploadData.user_image_url });
+      logActivity('upload_photo', { selection: uploadData.user_image_url });
 
       // Save to backend
       try {
@@ -249,7 +251,7 @@ export default function AIPhotoUpload() {
   // Accept AI analysis
   const handleAcceptAnalysis = async () => {
     if (isSubmitting) return;
-    track('ai_analysis', { selection: "accept" });
+    logActivity('ai_analysis', { selection: "accept" });
     setIsSubmitting(true);
     setIsPageLoading(true);   
     
@@ -267,10 +269,7 @@ export default function AIPhotoUpload() {
   // Show loading spinner
   if (isInitialLoading) {
     return (
-    <LoadingModalSpinner 
-      message="Uploading..." 
-      subMessage="Please wait" 
-    />
+    <LoadingModalSpinner />
     );
   }
 
@@ -282,7 +281,7 @@ export default function AIPhotoUpload() {
     try {
       
       // Navigate to the first step of manual physical attributes
-      track('ai_analysis', { selection: "decline" });
+      logActivity('ai_analysis', { selection: "decline" });
       setIsPageLoading(true);
       router.push('physical-appearances/manual/step-1');
     } catch (error) {
@@ -292,18 +291,31 @@ export default function AIPhotoUpload() {
   };
 
   // Tracker for user activity
-  const track = async (action, metadata = {}) => {
-    if (!userEmail) return;
+  const logActivity = async (
+    action,
+    { selection, page } = {}
+  ) => {
     try {
-      await axios.post(`${API_BASE_URL}/trackevent`, {
-        userEmail,
-        action,
-        timestamp: new Date().toISOString(),
-        page: 'physical_appearance',
-        ...metadata,
+      const res = await fetch("/api/log-activity", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+          "x-session-id": sessionId,
+        },
+        body: JSON.stringify({
+          action,
+          selection,
+          page: page || window.location.pathname,
+          timestamp: new Date().toISOString(),
+        }),
       });
-    } catch (err) {
-      console.error('Tracking failed:', err.message);
+
+      if (!res.ok) {
+        console.warn("⚠️ Failed to log activity:", await res.json());
+      }
+    } catch (error) {
+      console.error("❌ Activity log error:", error);
     }
   };
 
@@ -384,7 +396,7 @@ export default function AIPhotoUpload() {
                   <div className="mt-auto">
                     <button
                       onClick={() => {
-                        track("button_click", {selection: "upload_guidence"});
+                        logActivity("button_click", {selection: "upload_guidence"});
                         setIsUserPhotoGuidanceOpen(true)}}
                       className="underline text-[16px] text-blue-400 cursor-pointer"
                     >
@@ -504,7 +516,7 @@ export default function AIPhotoUpload() {
               <button
                 onClick={() => {
                   localStorage.setItem("registerFrom", "physical-appearances");
-                  track('register', {selection: 'true'});
+                  logActivity('register', {selection: 'true'});
                   setIsPageLoading(true);
                   router.push('/register');
                 }}
@@ -514,7 +526,7 @@ export default function AIPhotoUpload() {
               </button>
               <button
                 onClick={() => {
-                  track('register', {selection: 'false'})
+                  logActivity('register', {selection: 'false'})
                   setShowRegisterPrompt(false);
                 }}
                 className="px-5 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition"

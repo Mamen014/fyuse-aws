@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from "react-oidc-context";
 import LoadingModalSpinner from '@/components/ui/LoadingState';
+import { getOrCreateSessionId } from "@/lib/session";
 
 export default function PhysicalAttributesStep1() {
   const router = useRouter();
@@ -16,6 +17,7 @@ export default function PhysicalAttributesStep1() {
   const sliderRef = useRef(null);
   const sliderContainerRef = useRef(null);
   const { user, isLoading, signinRedirect } = useAuth();
+  const sessionId = getOrCreateSessionId();
 
   // Skin tone options
   const skinTones = ['fair', 'light', 'medium', 'deep'];
@@ -82,6 +84,7 @@ export default function PhysicalAttributesStep1() {
       fetch("/api/register-profile", {
         method: "POST",
         headers: {
+          "x-session-id": sessionId,
           Authorization: `Bearer ${user.id_token}`,
           "Content-Type": "application/json",
         },

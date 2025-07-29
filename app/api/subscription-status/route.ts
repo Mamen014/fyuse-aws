@@ -2,30 +2,46 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getUserIdFromRequest } from "@/lib/get_user_id";
+import { logger } from "@/lib/logger";
+import { getUserIdFromAuth } from "@/lib/session";
 
-// Get the first day of the current month
 function getFirstDayOfMonth(): Date {
   const now = new Date();
   return new Date(now.getFullYear(), now.getMonth(), 1);
 }
 
-// Get number of days between two dates
 function getDateDifferenceInDays(a: Date, b: Date): number {
   const msPerDay = 1000 * 60 * 60 * 24;
   const diffMs = a.getTime() - b.getTime();
   return Math.floor(diffMs / msPerDay);
 }
 
-export async function GET(req: NextRequest) {
+export async function GET(request: NextRequest) {
+  const authHeader = request.headers.get("authorization") || "";
+  const sessionId = request.headers.get("x-session-id") || "unknown";
+  const userId = getUserIdFromAuth(authHeader);
+
+  const log = logger.withContext({
+    sessionId,
+    userId,
+    routeName: "subscription-status",
+  });
+
+  if (!authHeader.startsWith("Bearer ")) {
+    log.error("Authorization header missing or malformed");
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  if (!userId) {
+    log.error("Failed to decode user ID from token");
+    return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+  }
+
   try {
-    const user_id = getUserIdFromRequest(req);
-    if (!user_id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    log.info("Fetching subscription record");
 
     const subscription = await prisma.subs_plan.findUnique({
-      where: { user_id },
+      where: { user_id: userId },
       select: {
         subs_date: true,
         plan: true,
@@ -38,19 +54,23 @@ export async function GET(req: NextRequest) {
     let status: string;
 
     if (!subscription) {
+      log.info("No subscription found — creating default basic plan");
+
       subs_date = getFirstDayOfMonth();
       plan = "basic";
       status = "active";
-      
+
       await prisma.subs_plan.create({
         data: {
-          user_id,
+          user_id: userId,
           subs_date,
           plan,
           status,
         },
-      });      
+      });
     } else {
+      log.info("Existing subscription found");
+
       const now = new Date();
       const rawDate = subscription.subs_date ?? getFirstDayOfMonth();
       const rawPlan = subscription.plan ?? "basic";
@@ -59,10 +79,12 @@ export async function GET(req: NextRequest) {
       const ageInDays = getDateDifferenceInDays(now, rawDate);
 
       if (rawPlan !== "basic" && ageInDays <= 30) {
+        log.info(`Preserving premium plan: ${rawPlan}`);
         subs_date = rawDate;
         plan = rawPlan;
         status = rawStatus;
       } else {
+        log.info("Resetting to basic plan due to expiration");
         subs_date = getFirstDayOfMonth();
         plan = "basic";
         status = "active";
@@ -71,17 +93,19 @@ export async function GET(req: NextRequest) {
 
     const successfulTasks = await prisma.styling_log.findMany({
       where: {
-        user_id,
+        user_id: userId,
         status: "succeed",
         created_at: {
           gte: subs_date,
         },
       },
-      distinct: ["id"], // ✅ use internal ID
+      distinct: ["id"],
       select: {
-        id: true, // ✅ log ID
+        id: true,
       },
     });
+
+    log.info("Returning subscription status response");
 
     return NextResponse.json({
       subs_date: subs_date.toISOString(),
@@ -91,7 +115,8 @@ export async function GET(req: NextRequest) {
     });
 
   } catch (err) {
-    console.error("Error retrieving subscription:", err);
+    log.error("Unexpected error retrieving subscription status");
+    console.error("Subscription route error:", err);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }

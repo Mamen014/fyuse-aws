@@ -1,4 +1,5 @@
 // components/SurveyPromptModal.tsx
+import { getOrCreateSessionId } from "@/lib/session";
 
 type Props = {
   isOpen: boolean;
@@ -8,11 +9,13 @@ type Props = {
 };
 
 export default function SurveyPromptModal({ isOpen, token, onClose, onSubmit }: Props) {
+  const sessionId = getOrCreateSessionId();
   const dismissSurvey = () => {
     try {
       fetch('/api/survey-prompt/increment-stage', {
         method: 'POST',
         headers: {
+          "x-session-id": sessionId,
           'Authorization': `Bearer ${token}`,
         },
       });

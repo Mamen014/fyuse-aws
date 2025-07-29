@@ -1,8 +1,11 @@
+// app/page-view-tracker.js
+
 'use client';
 
 import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { useAuth } from 'react-oidc-context';
+import { sendGAEvent } from '@next/third-parties/google';
 
 export default function PageViewTracker() {
   const pathname = usePathname();
@@ -23,12 +26,13 @@ export default function PageViewTracker() {
     // Set global user_id (only once per session)
     if (userId) {
       window.gtag('set', { user_id: userId });
+    } else {
+      window.gtag('set', { user_id: null });
     }
 
-    // Send GA page_view
-    window.gtag('config', process.env.NEXT_PUBLIC_GOOGLE_MEASUREMENT_ID, {
+    sendGAEvent({
+      event: 'page_view',
       page_path: pathname,
-      ...(userId && { user_id: userId }), // optional: inline per-view
     });
 
   }, [pathname, isAuthenticated, user]);

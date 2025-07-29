@@ -1,17 +1,41 @@
 "use client"
 
 import { useAuth } from "react-oidc-context"
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, usePathname } from "next/navigation";
+import { useState, useEffect } from "react";
 import LoadingModalSpinner from "./LoadingState";
+import { sendGAEvent } from '@next/third-parties/google';
 
 export default function CTAstyling () {
     const router = useRouter()
+    const pathname = usePathname();
+    const [pageLoadTime, setPageLoadTime] = useState(null);
     const [isRedirecting, setIsRedirecting] = useState(false);
     const { user, signinRedirect } = useAuth();
 
+    useEffect(() => {
+      setPageLoadTime(Date.now());
+    }, []); 
+
     const handleClick = async (e) => {
-    e.preventDefault();
+      e.preventDefault();
+
+      let timeToClickSeconds = null;
+      if (pageLoadTime) {
+          const currentTime = Date.now();
+          const durationMs = currentTime - pageLoadTime;
+          timeToClickSeconds = Math.round(durationMs / 1000); // Convert milliseconds to seconds
+          console.log(`Time to click: ${timeToClickSeconds} seconds`); // For debugging
+      } else {
+          console.warn('pageLoadTime was not set, cannot calculate time to click.');
+      }      
+
+      sendGAEvent({
+          event: 'click_start_free_styling',
+          page_context: pathname,  
+          user_status: user ? 'authenticated' : 'unauthenticated',
+          time_to_click_seconds: timeToClickSeconds,
+      });    
     try {
       setIsRedirecting(true);
       localStorage.setItem('from', 'landing-page');

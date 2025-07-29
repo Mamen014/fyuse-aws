@@ -7,11 +7,13 @@ import Navbar from '@/components/Navbar';
 import LoadingModalSpinner from '@/components/ui/LoadingState';
 import Image from 'next/image';
 import ConfirmationModal from '@/components/ConfirmationModal';
+import { getOrCreateSessionId } from '@/lib/session';
 
 export default function TryOnHistoryPage() {
   const { user, isLoading, signinRedirect } = useAuth();
   const [tryonHistory, setTryonHistory] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const sessionId = getOrCreateSessionId();
 
   useEffect(() => {
     if (!isLoading && user) {
@@ -23,6 +25,7 @@ export default function TryOnHistoryPage() {
           const res = await fetch("/api/styling-history", {
             method: "GET",
             headers: {
+              "x-session-id": sessionId,
               Authorization: `Bearer ${token}`,
             },
           });

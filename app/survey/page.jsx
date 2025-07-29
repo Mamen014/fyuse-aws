@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from 'react-oidc-context';
 import toast, { Toaster } from 'react-hot-toast';
 import LoadingModalSpinner from '@/components/ui/LoadingState';
-
+import { getOrCreateSessionId } from "@/lib/session";
 
 export default function SurveyPage() {
   const { user, isLoading, signinRedirect } = useAuth();
@@ -41,6 +41,7 @@ export default function SurveyPage() {
     'shareIntent',
     'purchaseIntent',
   ];
+  const sessionId = getOrCreateSessionId();
 
   const isFormValid = requiredFields.every((field) => formData[field]);
 
@@ -82,6 +83,7 @@ export default function SurveyPage() {
       const res = await fetch('/api/submit-survey', {
         method: 'POST',
         headers: {
+          "x-session-id": sessionId,
           authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },

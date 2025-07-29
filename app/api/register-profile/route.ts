@@ -1,21 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { jwtDecode } from "jwt-decode";
+import { logger } from "@/lib/logger";
+import { getUserIdFromAuth } from "@/lib/session";
 
 export async function POST(req: NextRequest) {
-  const authHeader = req.headers.get("authorization");
+  const authHeader = req.headers.get("authorization") || "";
+  const sessionId = req.headers.get("x-session-id") || "unknown";
 
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+  const userId = getUserIdFromAuth(authHeader);
+  const log = logger.withContext({
+    sessionId,
+    userId,
+    routeName: "register-profile",
+  });
+
+  if (!authHeader.startsWith("Bearer ")) {
+    log.error("Missing or malformed Authorization header");
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const token = authHeader.replace("Bearer ", "");
-  let user_id: string;
-
-  try {
-    const decoded = jwtDecode<{ sub: string }>(token);
-    user_id = decoded.sub;
-  } catch {
+  if (!userId) {
+    log.error("Failed to decode user ID from token");
     return NextResponse.json({ error: "Invalid token" }, { status: 401 });
   }
 
@@ -35,9 +40,10 @@ export async function POST(req: NextRequest) {
       occupation,
     } = body;
 
-    // Upsert logic (insert if new, or update if already exists)
+    log.info("Received profile registration data");
+
     const profile = await prisma.profile.upsert({
-      where: { user_id },
+      where: { user_id: userId },
       update: {
         gender,
         body_shape,
@@ -51,7 +57,7 @@ export async function POST(req: NextRequest) {
         occupation,
       },
       create: {
-        user_id,
+        user_id: userId,
         gender,
         body_shape,
         skin_tone,
@@ -65,9 +71,11 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    log.info("User profile registered or updated");
+
     return NextResponse.json(profile, { status: 200 });
   } catch (err) {
-    console.error("Failed to register profile:", err);
+    log.error("Failed to register or update profile");
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

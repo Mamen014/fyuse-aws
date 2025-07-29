@@ -9,6 +9,7 @@ import Image from 'next/image';
 import { Suspense } from 'react';
 import LoadingModalSpinner from '@/components/ui/LoadingState';
 import { useSearchParams } from 'next/navigation';
+import { getOrCreateSessionId } from "@/lib/session";
 
 function Step2Content() {
   const router = useRouter();
@@ -17,6 +18,7 @@ function Step2Content() {
   const [loading, setloading] = useState(false);
   const { user, isLoading, signinRedirect } = useAuth();
   const params = useSearchParams();
+  const sessionId = getOrCreateSessionId();  
 
   // Redirect to sign in if not authenticated
   useEffect(() => {
@@ -102,6 +104,7 @@ function Step2Content() {
       await fetch("/api/register-profile", {
         method: "POST",
         headers: {
+          "x-session-id": sessionId,
           Authorization: `Bearer ${user.id_token}`,
           "Content-Type": "application/json",
         },

@@ -1,49 +1,57 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { jwtDecode } from "jwt-decode";
+import { logger } from "@/lib/logger";
+import { getUserIdFromAuth } from "@/lib/session";
 
 export async function GET(request: Request) {
-  const authHeader = request.headers.get("authorization");
+  const authHeader = request.headers.get("authorization") || "";
+  const sessionId = request.headers.get("x-session-id") || "unknown";
 
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+  const userId = getUserIdFromAuth(authHeader);
+  const log = logger.withContext({
+    sessionId,
+    userId,
+    routeName: "user-profile",
+  });
+
+  if (!authHeader.startsWith("Bearer ")) {
+    log.error("Missing or malformed Authorization header");
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const token = authHeader.split(" ")[1];
-
-  let userId: string;
-  try {
-    const decoded = jwtDecode<{ sub: string }>(token);
-    userId = decoded.sub;
-  } catch (error) {
+  if (!userId) {
+    log.error("Failed to decode user ID from token");
     return NextResponse.json({ error: "Invalid token" }, { status: 401 });
   }
 
   try {
-    // 🔍 Check if profile exists
     let profile = await prisma.profile.findUnique({
       where: { user_id: userId },
     });
 
-    // ✨ If not, create a blank profile
     if (!profile) {
       profile = await prisma.profile.create({
         data: { user_id: userId },
       });
+      log.info("Created new user profile");
+    } else {
+      log.info("Fetched existing user profile");
     }
 
-    // 🔁 Return profile (select only needed fields)
     return NextResponse.json({
-      gender: profile?.gender,
-      skin_tone: profile?.skin_tone,
-      body_shape: profile?.body_shape,
-      occupation: profile?.occupation,
-      city: profile?.city,
-      nickname: profile?.nickname,
-      user_image_url: profile?.user_image_url,
+      gender: profile.gender,
+      skin_tone: profile.skin_tone,
+      body_shape: profile.body_shape,
+      occupation: profile.occupation,
+      city: profile.city,
+      nickname: profile.nickname,
+      user_image_url: profile.user_image_url,
     });
   } catch (err) {
-    console.error("Error fetching or creating profile:", err);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    log.error("Unexpected error fetching or creating user profile");
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
   }
 }

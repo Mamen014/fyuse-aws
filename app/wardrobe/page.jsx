@@ -11,6 +11,7 @@ import Navbar from "@/components/Navbar";
 import { ChevronRight, ShirtIcon } from "lucide-react";
 import ConfirmationModal from "@/components/ConfirmationModal";
 import { useUserProfile } from "../context/UserProfileContext";
+import { getOrCreateSessionId } from "@/lib/session";
 import axios from "axios";
 
 export default function WardrobePage() {
@@ -22,9 +23,8 @@ export default function WardrobePage() {
   const { profile, loading: profileLoading } = useUserProfile();
   const userName = profileLoading ? "" : (profile?.nickname || "Guest");
   const userImage = profileLoading ? null : profile?.user_image_url;
-  const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
-  const userEmail = user?.profile?.email;
   const token = user?.id_token || user?.access_token;
+  const sessionId = getOrCreateSessionId();
 
   // Redirect to sign in if not authenticated
   useEffect(() => {
@@ -46,7 +46,10 @@ export default function WardrobePage() {
       // 1. Fetch Subscription Plan
       const planRes = await fetch("/api/subscription-status", {
         method: "GET",
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { 
+          "x-session-id": sessionId,
+          Authorization: `Bearer ${token}`,
+        },
       });
 
       if (planRes.status === 429) {
@@ -61,7 +64,10 @@ export default function WardrobePage() {
       // 2. Fetch Styling History
       const histRes = await fetch("/api/styling-history", {
         method: "GET",
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          "x-session-id": sessionId,
+        },
       });
 
       if (histRes.status === 429) {
@@ -84,7 +90,35 @@ export default function WardrobePage() {
     } finally {
       setLoading(false);
     }
-  };  
+  };
+
+  const logActivity = async (
+    action,
+    { selection, page } = {}
+  ) => {
+    try {
+      const res = await fetch("/api/log-activity", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+          "x-session-id": sessionId,
+        },
+        body: JSON.stringify({
+          action,
+          selection,
+          page: page || window.location.pathname,
+          timestamp: new Date().toISOString(),
+        }),
+      });
+
+      if (!res.ok) {
+        console.warn("⚠️ Failed to log activity:", await res.json());
+      }
+    } catch (error) {
+      console.error("❌ Activity log error:", error);
+    }
+  };
 
   // Remove item from wardrobe
   const handleRemoveFromWardrobe = async (itemId, logId) => {
@@ -92,6 +126,7 @@ export default function WardrobePage() {
       const res = await fetch("/api/remove-from-wardrobe", {
         method: "PATCH",
         headers: {
+          "x-session-id": sessionId,
           "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json",
         },
@@ -100,24 +135,12 @@ export default function WardrobePage() {
 
       if (!res.ok) throw new Error("Failed to remove item");
       toast.success("Item removed from wardrobe.");
-      track("remove_item", { selection: itemId });
+      logActivity("remove_item", { selection: itemId });
       fetchAllData();
     } catch (err) {
       console.error("Failed to remove from wardrobe:", err);
       toast.error("Error removing item.");
     }
-  };
-
-  // Track user actions
-  const track = async (action, metadata = {}) => {
-    if (!userEmail) return;
-    await axios.post(`${API_BASE_URL}/trackevent`, {
-      userEmail,
-      action,
-      timestamp: new Date().toISOString(),
-      page: 'wardrobe',
-      ...metadata,
-    }).catch(console.error);
   };
 
   // If user is not authenticated, show a message prompting them to sign in
@@ -195,8 +218,8 @@ export default function WardrobePage() {
           )}
         </div>
 
-        <WardrobeSection title="Top" items={tops} onRemove={handleRemoveFromWardrobe} onTrack={track} />
-        <WardrobeSection title="Bottom" items={bottoms} onRemove={handleRemoveFromWardrobe} onTrack={track} />
+        <WardrobeSection title="Top" items={tops} onRemove={handleRemoveFromWardrobe} onTrack={logActivity} />
+        <WardrobeSection title="Bottom" items={bottoms} onRemove={handleRemoveFromWardrobe} onTrack={logActivity} />
 
       </div>
       {isModalOpen && (

@@ -13,14 +13,14 @@ import { useUserProfile } from "../context/UserProfileContext";
 import ReferralModal from "@/components/ReferralModal";
 import ConfirmationModal from "@/components/ConfirmationModal";
 import SurveyPromptModal from "@/components/SurveyPromptModal";
+import { getOrCreateSessionId } from "@/lib/session";
 import { ChevronRight, Shirt, MapPin, BriefcaseBusiness, CreditCard } from "lucide-react";
 import axios from "axios";
+import { sendGAEvent } from "@next/third-parties/google";
 
 export default function DashboardPage() {
   const router = useRouter();
   const { user, isLoading, signinRedirect } = useAuth();
-  const userEmail = user?.profile?.email;
-  const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
   const token = useMemo(() => {
     if (!user) return null;
     return user.access_token || user.id_token;
@@ -28,6 +28,7 @@ export default function DashboardPage() {
   
   const { profile, loading: profileLoading, refetchProfile } = useUserProfile();
   const nickname = profile?.nickname || "";
+  const sessionId = getOrCreateSessionId();
   
   const [tryOnCount, setTryOnCount] = useState(0);
   const [subscriptionPlan, setSubscriptionPlan] = useState(null);  
@@ -52,15 +53,32 @@ export default function DashboardPage() {
   }
 
   // Track user actions
-  const track = async (action, metadata = {}) => {
-    if (!userEmail) return;
-    await axios.post(`${API_BASE_URL}/trackevent`, {
-      userEmail,
-      action,
-      timestamp: new Date().toISOString(),
-      page: 'dashboard',
-      ...metadata,
-    }).catch(console.error);
+  const logActivity = async (
+    action,
+    { selection, page } = {}
+  ) => {
+    try {
+      const res = await fetch("/api/log-activity", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+          "x-session-id": sessionId,
+        },
+        body: JSON.stringify({
+          action,
+          selection,
+          page: page || window.location.pathname,
+          timestamp: new Date().toISOString(),
+        }),
+      });
+
+      if (!res.ok) {
+        console.warn("⚠️ Failed to log activity:", await res.json());
+      }
+    } catch (error) {
+      console.error("❌ Activity log error:", error);
+    }
   };
 
   // Fetch survey prompt if user is authenticated
@@ -75,6 +93,7 @@ export default function DashboardPage() {
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
+            "x-session-id": sessionId,
           },
         });
         if (!res.ok) throw new Error(`Failed to fetch survey prompt: ${res.status}`);
@@ -127,7 +146,10 @@ export default function DashboardPage() {
 
         // Fetch user subs data
         const resPlan = await axios.get("/api/subscription-status", { 
-          headers: { Authorization: `Bearer ${token}` },           
+          headers: { 
+            "x-session-id": sessionId,
+            Authorization: `Bearer ${token}`, 
+          },           
         });
 
         // Plan data
@@ -184,6 +206,7 @@ export default function DashboardPage() {
         const res = await axios.get("/api/style-preference", {
           headers: {
             Authorization: `Bearer ${token}`,
+            "x-session-id": sessionId,
           },
         });
         const { clothing_category, fashion_type } = res.data;
@@ -210,6 +233,7 @@ export default function DashboardPage() {
             method: "GET",
             headers: {
               Authorization: `Bearer ${token}`,
+              "x-session-id": sessionId,
             },
           });
 
@@ -336,13 +360,13 @@ export default function DashboardPage() {
                         <div className="bg-gray-50 rounded-xl p-3 flex items-center justify-center gap-2 flex-1">
                           <MapPin className="w-6 h-6 text-primary" />
                           <div>
-                            <p className="text-sm font-medium text-gray-700">{profile?.city}</p>
+                            <p className="text-sm font-medium text-gray-700">{capitalizeWords(profile?.city)}</p>
                           </div>
                         </div> 
                         <div className="bg-gray-50 rounded-xl p-3 flex items-center justify-center gap-2 flex-1">
                           <BriefcaseBusiness className="w-6 h-6 text-primary" />
                           <div>
-                            <p className="text-sm font-medium text-gray-700">{profile?.occupation}</p>
+                            <p className="text-sm font-medium text-gray-700">{capitalizeWords(profile?.occupation)}</p>
                           </div>
                         </div>                                            
                   </div>
@@ -379,7 +403,7 @@ export default function DashboardPage() {
                       <PlanIcon className="w-10 h-10 text-primary" />
                       <div>
                         <p className="text-sm text-primary/60 mb-1">Current Plan</p>
-                        <p className="text-xl font-bold text-primary">{planItem?.value || "Loading..."}</p>
+                        <p className="text-xl font-bold text-primary">{capitalizeWords(planItem?.value || "Loading...")}</p>
                       </div>
                     </div>
                   </div>
@@ -393,7 +417,13 @@ export default function DashboardPage() {
         {/* CTA Button */}
         <div className="mb-6">
           <button
-            onClick={() => setShowConfirmationModal(true)}
+            onClick={() => {
+              sendGAEvent({
+                event: 'click_start_style_discovery',
+                page_context: 'dashboard_page',
+              });              
+              console.log("record to GA4");
+              setShowConfirmationModal(true)}}
             className="bg-primary text-white font-bold text-lg py-4 w-full rounded-3xl shadow-md hover:bg-primary/90"
           >
             Start Style Discovery
@@ -549,7 +579,7 @@ export default function DashboardPage() {
     <ConfirmationModal
       isOpen={showConfirmationModal}
       onClose={() => setShowConfirmationModal(false)}
-      trackingPage="Dashboard"
+      trackingPage="/dashboard"
     />
 
     {/* Referral Modal */}
@@ -557,7 +587,7 @@ export default function DashboardPage() {
       <ReferralModal
         isOpen={showReferralModal}
         handleTrack={(selectedOption) => {
-          track("referral_selection", { selection: selectedOption }); 
+          logActivity("referral_selection", { selection: selectedOption }); 
           localStorage.removeItem("seeReferral");
           setShowReferralModal(false);
         }}
@@ -571,11 +601,11 @@ export default function DashboardPage() {
         isOpen={showSurveyPrompt}
         token={token}
         onClose={() => {
-          track("survey_prompt", { selection: "declined" });
+          logActivity("survey_prompt", { selection: "declined" });
           setShowSurveyPrompt(false);
         }}
         onSubmit={() => {
-          track("survey_prompt", { selection: "accepted" });
+          logActivity("survey_prompt", { selection: "accepted" });
           setShowSurveyPrompt(false);
           router.push("/survey");
         }}
