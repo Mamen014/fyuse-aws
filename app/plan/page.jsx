@@ -15,7 +15,6 @@ export default function PricingPlans() {
   const { user, isLoading, signinRedirect } = useAuth();
   const sessionId = getOrCreateSessionId();
   const token = user?.access_token;
-  const userEmail = user?.profile?.email;
 
   const [showThankYou, setShowThankYou] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(null);

@@ -44,7 +44,7 @@ export default function TryOnHistoryPage() {
 
       fetchHistory();
     }
-  }, [isLoading, user]);
+  }, [isLoading, user, sessionId]);
 
   // Redirect to sign in if not authenticated
   useEffect(() => {

@@ -9,7 +9,6 @@ import { useAuth } from 'react-oidc-context';
 import { motion } from "framer-motion";
 import { ToastContainer, toast } from 'react-toastify';
 import Image from 'next/image';
-import axios from 'axios';
 import 'react-toastify/dist/ReactToastify.css';
 import LoadingModalSpinner from '@/components/ui/LoadingState';
 import PrivacyPolicyModal from '@/components/PrivacyPolicyModal';
@@ -79,7 +78,7 @@ export default function AIPhotoUpload() {
       }
     }
 
-  }, [profile]);
+  }, [profile, isInitialLoading, nickname]);
 
   useEffect(() => {
     if (!authLoading) {

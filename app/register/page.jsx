@@ -22,7 +22,6 @@ const DynamicSelect = dynamic(() => import('react-select'), {
 export default function RegisterAI() {
   const router = useRouter();
   const { user, isLoading, signinRedirect } = useAuth();
-  const userEmail = user?.profile?.email;
   const countrySelectId = useId();
   const citySelectId = useId();
   const sessionId = getOrCreateSessionId();

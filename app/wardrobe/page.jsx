@@ -1,7 +1,7 @@
 // /app/wardrobe/page.jsx
 
 "use client";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "react-oidc-context";
 import Image from "next/image";
 import { ToastContainer, toast } from "react-toastify";
@@ -12,7 +12,6 @@ import { ChevronRight, ShirtIcon } from "lucide-react";
 import ConfirmationModal from "@/components/ConfirmationModal";
 import { useUserProfile } from "../context/UserProfileContext";
 import { getOrCreateSessionId } from "@/lib/session";
-import axios from "axios";
 
 export default function WardrobePage() {
   const { user, isLoading, signinRedirect } = useAuth();
@@ -39,9 +38,9 @@ export default function WardrobePage() {
     if (!user || !token) return;
     setLoading(true);
     fetchAllData();
-  }, [user, token]);
+  }, [user, token, fetchAllData]);
 
-  const fetchAllData = async () => {
+  const fetchAllData = useCallback(async () => {
     try {
       // 1. Fetch Subscription Plan
       const planRes = await fetch("/api/subscription-status", {
@@ -90,7 +89,7 @@ export default function WardrobePage() {
     } finally {
       setLoading(false);
     }
-  };
+  },[token, sessionId]);
 
   const logActivity = async (
     action,

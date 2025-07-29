@@ -23,8 +23,6 @@ export default function StylingPage() {
   const router = useRouter();
   const { user, isLoading, signinRedirect } = useAuth();
   const token = user?.access_token || user?.id_token || '';
-  const userEmail = user?.profile?.email;
-  const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
   const sessionId = getOrCreateSessionId();
 
   const controllerRef = useRef(null);
@@ -69,7 +67,7 @@ export default function StylingPage() {
       console.error('Failed to fetch subscription plan:', err);
       return { plan: 'basic', tryOnCount: 0 };
     }
-  }, [token]);
+  }, [token, sessionId]);
 
   const fetchRecommendation = useCallback(async () => {
     const res = await fetch('/api/recommend-product', {
@@ -126,7 +124,7 @@ export default function StylingPage() {
     setProduct(data);
     sessionStorage.setItem('recommendedProduct', JSON.stringify(data));
     return data;
-  }, [token, router, signinRedirect]);
+  }, [token, router, signinRedirect, sessionId]);
 
   const initiateTryOn = useCallback(async (item_id) => {
     const res = await fetch('/api/tryon', {
@@ -148,7 +146,7 @@ export default function StylingPage() {
     if (!log_id) throw new Error('Missing log ID.');
     sessionStorage.setItem('currentLogId', log_id);
     return log_id;
-  }, [token]);
+  }, [token, sessionId]);
 
   const pollTaskStatus = useCallback((logId, controller) => {
     setIsPolling(true);
@@ -216,7 +214,7 @@ export default function StylingPage() {
     };
 
     poll();
-  }, [token, resultImageUrl]);
+  }, [token, sessionId]);
 
   const logActivity = async (
     action,
@@ -282,7 +280,7 @@ export default function StylingPage() {
       setIsPolling(false);
       isHandlingFlow.current = false;
     }
-  }, [fetchUserPlan, fetchRecommendation, initiateTryOn, pollTaskStatus, router]);
+  }, [fetchUserPlan, fetchRecommendation, initiateTryOn, pollTaskStatus]);
 
   useEffect(() => {
     setPageLoadTime(Date.now());

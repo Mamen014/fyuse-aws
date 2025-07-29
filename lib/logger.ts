@@ -6,7 +6,7 @@ export type LogContext = {
   userId?: string;
   sessionId?: string;
   routeName?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 };
 
 function formatError(err: unknown) {

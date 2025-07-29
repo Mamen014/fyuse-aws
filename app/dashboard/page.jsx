@@ -109,7 +109,7 @@ export default function DashboardPage() {
     catch (error) {
       console.error("Error in fetching data:", error);
     }
-  }, [user, token]);
+  }, [user, token, isLoading, sessionId]);
 
   useEffect(() => {
     if (!profile) return;
@@ -164,7 +164,7 @@ export default function DashboardPage() {
     };
 
     fetchData();
-  }, [user, token]);
+  }, [user, token, sessionId]);
 
   // Set profile data
   useEffect(() => {
@@ -220,7 +220,7 @@ export default function DashboardPage() {
     if (user) {
       fetchStylePref();
     }
-  }, [user, token]);
+  }, [user, token, sessionId]);
 
   // Fetch user history
   useEffect(() => {
@@ -252,7 +252,7 @@ export default function DashboardPage() {
 
       fetchHistory();
     }
-  }, [isLoading, user, token]);
+  }, [isLoading, user, token, sessionId]);
 
   // Filter recommendations by category
   const tops = tryonItems.filter(item => item.category === "top");

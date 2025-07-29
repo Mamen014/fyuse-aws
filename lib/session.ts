@@ -22,14 +22,17 @@ export function getOrCreateSessionId(): string {
 }
 
 // ---------- Server-side only ----------
+type JwtPayload = { sub?: string };
+
 export function getUserIdFromAuth(authHeader: string): string | undefined {
   try {
     const token = authHeader.split(" ")[1];
-    const decoded: any = JSON.parse(
+    const decoded = JSON.parse(
       Buffer.from(token.split(".")[1], "base64").toString()
-    );
+    ) as JwtPayload;
     return decoded.sub;
   } catch {
     return undefined;
   }
 }
+
