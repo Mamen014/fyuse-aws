@@ -33,12 +33,6 @@ export default function WardrobePage() {
     }
   }, [isLoading, user, signinRedirect]);
 
-  // Fetch all user data
-  useEffect(() => {
-    if (!user || !token) return;
-    setLoading(true);
-    fetchAllData();
-  }, [user, token, fetchAllData]);
 
   const fetchAllData = useCallback(async () => {
     try {
@@ -142,6 +136,13 @@ export default function WardrobePage() {
     }
   };
 
+  // Fetch all user data
+  useEffect(() => {
+    if (!user || !token) return;
+    setLoading(true);
+    fetchAllData();
+  }, [user, token, fetchAllData]);
+  
   // If user is not authenticated, show a message prompting them to sign in
   if (!user) {
     return (
