@@ -5,7 +5,7 @@
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import Image from 'next/image';
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "react-oidc-context";
 import Navbar from "@/components/Navbar";
 import LoadingModalSpinner from "@/components/ui/LoadingState";
@@ -29,7 +29,7 @@ export default function DashboardPage() {
   const { profile, loading: profileLoading, refetchProfile } = useUserProfile();
   const nickname = profile?.nickname || "";
   const sessionId = getOrCreateSessionId();
-  
+  const pathname = usePathname();
   const [tryOnCount, setTryOnCount] = useState(0);
   const [subscriptionPlan, setSubscriptionPlan] = useState(null);  
   const [clothCategory, setClothCategory] = useState([]);
@@ -41,6 +41,17 @@ export default function DashboardPage() {
   const [showReferralModal, setShowReferralModal] = useState(false);
   const [showSurveyPrompt, setShowSurveyPrompt] = useState(false);
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
+
+  // Helper function to send GA events using window.gtag
+  const trackGAEvent = (eventName, eventParams = {}) => {
+    if (typeof window.gtag === 'function') {
+      window.gtag('event', eventName, {
+        ...eventParams,
+      });
+    } else {
+      console.error('window.gtag is NOT available to track event:', eventName);
+    }
+  };
 
   // Utility for display
   function capitalizeWords(str) {
@@ -288,6 +299,10 @@ export default function DashboardPage() {
                 <button
                   onClick={() => {
                     localStorage.setItem("registerFrom", "dashboard");
+                    trackGAEvent('click_setup_profile', {
+                      page_context: pathname,
+                      user_status: user ? 'authenticated' : 'unauthenticated',
+                    });                    
                     setLoading(true);
                     router.push("/register");
                   }}
@@ -418,11 +433,10 @@ export default function DashboardPage() {
         <div className="mb-6">
           <button
             onClick={() => {
-              sendGAEvent({
-                event: 'click_start_style_discovery',
-                page_context: 'dashboard_page',
-              });              
-              console.log("record to GA4");
+              trackGAEvent('click_start_style_discovery', {
+                page_context: pathname,
+                user_status: user ? 'authenticated' : 'unauthenticated',
+              });          
               setShowConfirmationModal(true)}}
             className="bg-primary text-white font-bold text-lg py-4 w-full rounded-3xl shadow-md hover:bg-primary/90"
           >

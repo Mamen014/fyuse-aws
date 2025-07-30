@@ -3,7 +3,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from 'react-oidc-context';
 import { motion } from 'framer-motion';
 import TopActive from '/public/images/cloth-fitting/cloth-active.png';
@@ -16,14 +16,30 @@ import { getOrCreateSessionId } from "@/lib/session";
 
 export default function StylePreferencesPage() {
   const router = useRouter();
+  const pathname = usePathname();
   const [clothingType, setClothingType] = useState('');
   const [fashionType, setFashionType] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loading, setLoading] = useState(false);
   const { user, isLoading, signinRedirect } = useAuth();
-
+  const [pageLoadTime, setPageLoadTime] = useState(null);
   const sessionId = getOrCreateSessionId();
   
+  // Set page load time on component mount
+  useEffect(() => {
+    setPageLoadTime(Date.now());
+  }, []);
+
+  // Helper function to send GA events using window.gtag
+  const trackGAEvent = (eventName, eventParams = {}) => {
+    if (typeof window.gtag === 'function') {
+      window.gtag('event', eventName, {
+        ...eventParams,
+      });
+    } else {
+      console.error('window.gtag is NOT available to track event:', eventName);
+    }
+  };
 
   // Define clothing options with active and inactive icons
   const clothingOptions = [
@@ -64,6 +80,28 @@ export default function StylePreferencesPage() {
     setIsSubmitting(true);
     setLoading(true);
 
+    // Calculate time to click submit
+    let timeToClickSeconds = null;
+    if (pageLoadTime) {
+      const currentTime = Date.now();
+      const durationMs = currentTime - pageLoadTime;
+      timeToClickSeconds = Math.round(durationMs / 1000);
+    } else {
+      console.warn('pageLoadTime was not set for "Discover My Style" button, cannot calculate time to click.');
+    }
+
+    // Track the submit event
+    trackGAEvent('submit_style_preferences', {
+      clothing_category: clothingType,
+      fashion_type: fashionType,
+      page_context: pathname,
+      time_to_click_seconds: timeToClickSeconds,
+      user_status: user ? 'authenticated' : 'unauthenticated',
+    });
+
+    // Add a short delay before actual submission to ensure GA event is sent
+    await new Promise(resolve => setTimeout(resolve, 300));
+        
     try {
       await fetch("/api/save-style-preference", {
         method: "POST",

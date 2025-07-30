@@ -11,7 +11,6 @@ import toast from 'react-hot-toast';
 import { getOrCreateSessionId } from '@/lib/session';
 import PricingPlans from '@/components/PricingPlanCard';
 import LoadingModalSpinner from '@/components/ui/LoadingState';
-import { sendGAEvent } from '@next/third-parties/google';
 
 const PLAN_LIMITS = {
   basic: { tryOn: 10 },
@@ -436,37 +435,42 @@ export default function StylingPage() {
                     {/* Product Links */}
                     <div className="flex flex-row text-center gap-3">                 
 
-                      {/* Purchase Button */}
-                      {product?.productLink && product?.productId && (
-                        <a
-                          href={product.productLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={() => {
-                            logActivity('click_purchase', { selection: product.productId });
-                            let timeToClickSeconds = null;
-                            if (pageLoadTime) {
-                                const currentTime = Date.now();
-                                const durationMs = currentTime - pageLoadTime;
-                                timeToClickSeconds = Math.round(durationMs / 1000);
-                                console.log(`Time to click "Purchase" button: ${timeToClickSeconds} seconds`);
-                            } else {
-                                console.warn('pageLoadTime was not set for "Purchase" button, cannot calculate time to click.');
-                            }                            
-                            sendGAEvent({
-                              event: 'click_purchase',
-                              item_id: product.productId,    
+                    {/* Purchase Button */}
+                    {product?.productLink && product?.productId && (
+                      <a
+                        href={product.productLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => {
+                          logActivity('click_purchase', { selection: product.productId });
+
+                          let timeToClickSeconds = null;
+                          if (pageLoadTime) {
+                            const currentTime = Date.now();
+                            const durationMs = currentTime - pageLoadTime;
+                            timeToClickSeconds = Math.round(durationMs / 1000);
+                            console.log(`Time to click "Purchase" button: ${timeToClickSeconds} seconds`);
+                          } else {
+                            console.warn('pageLoadTime was not set for "Purchase" button, cannot calculate time to click.');
+                          }
+
+                          if (typeof window.gtag === 'function') {
+                            window.gtag('event', 'click_purchase', {
+                              item_id: product.productId,
                               item_name: product.productName,
-                              item_brand: product.brand,    
+                              item_brand: product.brand,
                               link_url: product.productLink,
                               time_to_click_seconds: timeToClickSeconds,
-                            });                            
-                          }}                          
-                          className="w-full text-white bg-primary hover:bg-primary/80 px-4 py-2 rounded-full"
-                        >
-                          Purchase
-                        </a>
-                      )}
+                            });
+                          } else {
+                            console.error('window.gtag is NOT available for "Purchase" button click!');
+                          }
+                        }}
+                        className="w-full text-white bg-primary hover:bg-primary/80 px-4 py-2 rounded-full"
+                      >
+                        Purchase
+                      </a>
+                    )}
                     
                     </div>
                   

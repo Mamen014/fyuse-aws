@@ -4,7 +4,6 @@ import { useAuth } from "react-oidc-context"
 import { useRouter, usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import LoadingModalSpinner from "./LoadingState";
-import { sendGAEvent } from '@next/third-parties/google';
 
 export default function CTAstyling () {
     const router = useRouter()
@@ -24,18 +23,21 @@ export default function CTAstyling () {
       if (pageLoadTime) {
           const currentTime = Date.now();
           const durationMs = currentTime - pageLoadTime;
-          timeToClickSeconds = Math.round(durationMs / 1000); // Convert milliseconds to seconds
-          console.log(`Time to click: ${timeToClickSeconds} seconds`); // For debugging
+          timeToClickSeconds = Math.round(durationMs / 1000);
       } else {
           console.warn('pageLoadTime was not set, cannot calculate time to click.');
       }      
 
-      sendGAEvent({
-          event: 'click_start_free_styling',
-          page_context: pathname,  
-          user_status: user ? 'authenticated' : 'unauthenticated',
-          time_to_click_seconds: timeToClickSeconds,
-      });    
+      if (typeof window.gtag === 'function') {
+          window.gtag('event', 'click_start_free_styling', {
+              page_context: pathname,
+              user_status: user ? 'authenticated' : 'unauthenticated',
+              time_to_click_seconds: timeToClickSeconds,
+          });
+      } else {
+          console.error('window.gtag is NOT available for direct custom event call!');
+      }
+
     try {
       setIsRedirecting(true);
       localStorage.setItem('from', 'landing-page');

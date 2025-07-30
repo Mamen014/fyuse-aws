@@ -23,7 +23,6 @@ export async function POST(req: NextRequest) {
   const authHeader = req.headers.get("authorization") || "";
   const sessionId = req.headers.get("x-session-id") || "unknown";
   const userId = getUserIdFromAuth(authHeader);
-
   const log = logger.withContext({
     sessionId,
     userId,
@@ -45,7 +44,6 @@ export async function POST(req: NextRequest) {
       where: { user_id: userId },
       select: { gender: true },
     });
-
     if (!profile?.gender) {
       log.warn("Missing gender in profile");
       return NextResponse.json({ error: "Missing gender in profile" }, { status: 400 });
@@ -61,7 +59,6 @@ export async function POST(req: NextRequest) {
         fashion_type: true,
       },
     });
-
     if (!latestPreference?.clothing_category || !latestPreference?.fashion_type) {
       log.warn("Missing style preference data");
       return NextResponse.json({ error: "Style preference not found" }, { status: 400 });
@@ -70,17 +67,24 @@ export async function POST(req: NextRequest) {
     const clothingCategory = latestPreference.clothing_category.toLowerCase();
     const fashionType = latestPreference.fashion_type.toLowerCase();
 
+    const filterValues: Record<string, string> = {
+      gender: `"${gender}"`,
+      clothingCategory: `"${clothingCategory}"`,
+      fashionType: `"${fashionType}"`,
+    };
+
+    if (!gender || !clothingCategory || !fashionType) {
+      log.warn("❗ Incomplete filter values", { gender, clothingCategory, fashionType });
+      return NextResponse.json({ error: "Incomplete filter values" }, { status: 400 });
+    }
+
     const personalizeResponse = await personalizeClient.send(
       new GetRecommendationsCommand({
         campaignArn: CAMPAIGN_ARN,
-        userId: userId,
+        userId,
         filterArn: FILTER_ARN,
-        filterValues: {
-          gender: `"${gender}"`,
-          clothingCategory: `"${clothingCategory}"`,
-          fashionType: `"${fashionType}"`,
-        },
-        numResults: 15,
+        filterValues,
+        numResults: 25,
       })
     );
 
@@ -97,7 +101,7 @@ export async function POST(req: NextRequest) {
       where: { user_id: userId },
       select: { item_id: true, created_at: true, wardrobe: true },
     });
-
+    
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
     const recentFiveSeconds = new Date(Date.now() - 5000);
 
@@ -110,7 +114,7 @@ export async function POST(req: NextRequest) {
         )
         .map(log => log.item_id)
     );
-
+    
     const validRecommendations = recommendedIds.filter(id => !excludedIds.has(id));
 
     if (validRecommendations.length === 0) {
@@ -129,7 +133,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Recommended product not found" }, { status: 404 });
     }
 
-    log.success("Product recommendation successful", {
+    log.info("Product recommendation successful", {
       recommendedItemId: product.item_id,
       brand: product.brand,
     });

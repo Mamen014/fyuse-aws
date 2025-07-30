@@ -2,7 +2,7 @@
 
 'use client'
 
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { Venus, Mars, Wand2, Palette, User } from 'lucide-react';
 import { useAuth } from 'react-oidc-context';
@@ -32,7 +32,7 @@ export default function AIPhotoUpload() {
   const { profile, loading: profileLoading } = useUserProfile();
   const nickname = profile?.nickname;
   const [showRegisterPrompt, setShowRegisterPrompt] = useState(false);
-
+  const pathname = usePathname();
   const sessionId = getOrCreateSessionId();
   const isInitialLoading = authLoading || profileLoading || isPageLoading || !user;
   const userEmail = user?.profile?.email;
@@ -60,6 +60,17 @@ export default function AIPhotoUpload() {
       desc: "You’ll have a chance to review and customize the results before styling begins.",
     },
   ];
+
+  // Helper function to send GA events using window.gtag
+  const trackGAEvent = (eventName, eventParams = {}) => {
+    if (typeof window.gtag === 'function') {
+      window.gtag('event', eventName, {
+        ...eventParams,
+      });
+    } else {
+      console.error('window.gtag is NOT available to track event:', eventName);
+    }
+  };
 
   // Redirect to sign in if not authenticated
   useEffect(() => {
@@ -154,6 +165,10 @@ export default function AIPhotoUpload() {
     if (!fileToUpload || !userEmail) return;
 
     try {
+      trackGAEvent('click_analyze_photo', {
+        page_context: pathname,
+        user_status: user ? 'authenticated' : 'unauthenticated',
+      });         
       setIsAnalyzing(true);
       setShowAIModal(true);
 
@@ -255,6 +270,10 @@ export default function AIPhotoUpload() {
     setIsPageLoading(true);   
     
     try {
+      trackGAEvent('click_accept_analysis', {
+        page_context: pathname,
+        user_status: user ? 'authenticated' : 'unauthenticated',
+      });      
       // Navigate to the next page
       setIsPageLoading(true);
       router.push('style-preferences');
@@ -278,7 +297,10 @@ export default function AIPhotoUpload() {
     setIsSubmitting(true);
     
     try {
-      
+      trackGAEvent('click_customize_manually', {
+        page_context: pathname,
+        user_status: user ? 'authenticated' : 'unauthenticated',
+      });         
       // Navigate to the first step of manual physical attributes
       logActivity('ai_analysis', { selection: "decline" });
       setIsPageLoading(true);
