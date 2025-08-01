@@ -1,0 +1,88 @@
+{
+	"type": "record",
+	"name": "Items",
+	"namespace": "com.amazonaws.personalize.schema",
+	"fields": [
+		{
+			"name": "ITEM_ID",
+			"type": "string"
+		},
+		{
+			"name": "gender",
+			"type": [
+				"null",
+				"string"
+			],
+			"categorical": true
+		},
+		{
+			"name": "fashionType",
+			"type": [
+				"null",
+				"string"
+			],
+			"categorical": true
+		},
+		{
+			"name": "clothFitting",
+			"type": [
+				"null",
+				"string"
+			],
+			"categorical": true
+		},
+		{
+			"name": "clothingCategory",
+			"type": [
+				"null",
+				"string"
+			],
+			"categorical": true
+		},
+		{
+			"name": "clothingType",
+			"type": [
+				"null",
+				"string"
+			],
+			"categorical": true
+		},
+		{
+			"name": "brand",
+			"type": [
+				"null",
+				"string"
+			],
+			"categorical": true
+		},
+		{
+			"name": "color",
+			"type": [
+				"null",
+				"string"
+			]
+		},
+		{
+			"name": "image_url",
+			"type": [
+				"null",
+				"string"
+			]
+		},
+		{
+			"name": "product_link",
+			"type": [
+				"null",
+				"string"
+			]
+		},
+		{
+			"name": "product_name",
+			"type": [
+				"null",
+				"string"
+			]
+		}
+	],
+	"version": "1.0"
+}

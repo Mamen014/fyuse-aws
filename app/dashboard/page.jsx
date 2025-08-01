@@ -131,6 +131,18 @@ export default function DashboardPage() {
     setShowRegisterPrompt(isIncomplete);
   }, [profile]);
 
+  useEffect(() => {
+    if (!profileLoading && !isLoading && user && profile) {
+      const isProfileIncomplete = !profile.city || !profile.occupation || !profile.skin_tone || !profile.body_shape;
+
+      const isStylePrefIncomplete = clothCategory.length === 0 || fashType.length === 0;
+
+      if (isProfileIncomplete || isStylePrefIncomplete) {
+        router.replace("/personalized-styling/physical-appearances");
+      }
+    }
+  }, [profile, clothCategory, fashType, profileLoading, isLoading, user]);
+
   // Show referral modal if applicable
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -225,6 +237,8 @@ export default function DashboardPage() {
         setFashType(fashion_type);
       } catch (err) {
         console.error("Failed to fetch style preferences:", err);
+        setClothCategory([]);
+        setFashType([]);
       }
     };
 

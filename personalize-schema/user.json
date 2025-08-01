@@ -1,0 +1,56 @@
+{
+	"type": "record",
+	"name": "Users",
+	"namespace": "com.amazonaws.personalize.schema",
+	"fields": [
+		{
+			"name": "USER_ID",
+			"type": "string"
+		},
+		{
+			"name": "country",
+			"type": "string",
+			"text": true
+		},
+		{
+			"name": "birthdate",
+			"type": "string"
+		},
+		{
+			"name": "city",
+			"type": "string",
+			"text": true
+		},
+		{
+			"name": "occupation",
+			"type": "string",
+			"text": true
+		},
+		{
+			"name": "gender",
+			"type": "string",
+			"categorical": true
+		},
+		{
+			"name": "skinTone",
+			"type": "string",
+			"categorical": true
+		},
+		{
+			"name": "bodyShape",
+			"type": "string",
+			"categorical": true
+		},
+		{
+			"name": "stylePreference",
+			"type": "string",
+			"categorical": true
+		},
+		{
+			"name": "clothingTypePreference",
+			"type": "string",
+			"categorical": true
+		}
+	],
+	"version": "1.0"
+}
