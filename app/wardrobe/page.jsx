@@ -4,14 +4,14 @@
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "react-oidc-context";
 import Image from "next/image";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 import LoadingModalSpinner from "@/components/ui/LoadingState";
 import Navbar from "@/components/Navbar";
 import { ChevronRight, ShirtIcon } from "lucide-react";
 import ConfirmationModal from "@/components/ConfirmationModal";
 import { useUserProfile } from "../context/UserProfileContext";
 import { getOrCreateSessionId } from "@/lib/session";
+import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
 export default function WardrobePage() {
   const { user, isLoading, signinRedirect } = useAuth();
@@ -19,6 +19,7 @@ export default function WardrobePage() {
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const router = useRouter();
   const { profile, loading: profileLoading } = useUserProfile();
   const userName = profileLoading ? "" : (profile?.nickname || "Guest");
   const userImage = profileLoading ? null : profile?.user_image_url;
@@ -33,6 +34,18 @@ export default function WardrobePage() {
     }
   }, [isLoading, user, signinRedirect]);
 
+  //check profile completeness
+  useEffect(() => {
+    if (!profileLoading && !isLoading && user && profile) {
+      const isProfileIncomplete = !profile.skin_tone || !profile.body_shape;
+
+      if (isProfileIncomplete) {
+        toast.error("Please complete your profile first");
+        setTimeout(() => {
+          router.push('/personalized-styling/physical-appearances')}, 2000);        
+      }
+    }
+  }, [profile, profileLoading, isLoading, user]);
 
   const fetchAllData = useCallback(async () => {
     try {
@@ -144,7 +157,7 @@ export default function WardrobePage() {
   }, [user, token, fetchAllData]);
   
   // If user is not authenticated, show a message prompting them to sign in
-  if (!user) {
+  if (!user && !loading && !isLoading) {
     return (
       <div className="bg-white max-w-md mx-auto h-screen flex flex-col relative">
         <div className="h-16 bg-white border-b border-gray-200 flex items-center justify-center fixed top-0 left-0 right-0 z-10 max-w-md mx-auto">
@@ -152,7 +165,6 @@ export default function WardrobePage() {
         </div>
 
         <div className="p-6 max-w-3xl mx-auto text-foreground mt-20 flex-1">
-          <ToastContainer />
           <p className="text-center text-gray-400">
             🔐 Please sign in to view your profile and liked recommendations.
           </p>
@@ -171,7 +183,6 @@ export default function WardrobePage() {
   return (
     <div className="bg-background max-w-7xl mx-auto h-screen flex flex-col relative px-4 md:px-8">
       <Navbar />
-      <ToastContainer />
 
       <div className="h-16 bg-white border-b border-gray-200 flex items-center justify-center fixed top-0 left-0 right-0 z-10 max-w-md mx-auto">
         <h1 className="text-lg font-semibold text-primary">Your Wardrobe</h1>

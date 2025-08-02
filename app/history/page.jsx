@@ -8,12 +8,17 @@ import LoadingModalSpinner from '@/components/ui/LoadingState';
 import Image from 'next/image';
 import ConfirmationModal from '@/components/ConfirmationModal';
 import { getOrCreateSessionId } from '@/lib/session';
+import { useUserProfile } from "../context/UserProfileContext";
+import toast from 'react-hot-toast';
+import { useRouter } from 'next/navigation';
 
 export default function TryOnHistoryPage() {
+  const router = useRouter();
   const { user, isLoading, signinRedirect } = useAuth();
   const [tryonHistory, setTryonHistory] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const sessionId = getOrCreateSessionId();
+  const { profile, loading: profileLoading } = useUserProfile();
 
   useEffect(() => {
     if (!isLoading && user) {
@@ -45,6 +50,19 @@ export default function TryOnHistoryPage() {
       fetchHistory();
     }
   }, [isLoading, user, sessionId]);
+
+  //check profile completeness
+  useEffect(() => {
+    if (!profileLoading && !isLoading && user && profile) {
+      const isProfileIncomplete = !profile.skin_tone || !profile.body_shape;
+
+      if (isProfileIncomplete) {
+        toast.error("Please complete your profile first");
+        setTimeout(() => {
+          router.push('/personalized-styling/physical-appearances')}, 2000);        
+      }
+    }
+  }, [profile, profileLoading, isLoading, user]);
 
   // Redirect to sign in if not authenticated
   useEffect(() => {
