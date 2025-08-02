@@ -31,7 +31,7 @@ export default function Navbar() {
   const router = useRouter();
   const { user, isLoading } = useAuth();
   const userEmail = user?.profile?.email;
-  const userName = profileLoading ? "" : (profile?.nickname || userEmail.split("@")[0] ||"Guest");
+  const userName = profileLoading ? "" : (profile?.nickname || userEmail?.split("@")[0] ||"Guest");
 
 
   const handleSignOut = () => {

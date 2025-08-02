@@ -144,7 +144,7 @@ export default function DashboardPage() {
           router.push('/personalized-styling/physical-appearances')}, 2000);        
       }
     }
-  }, [profile, profileLoading, isLoading, user]);
+  }, [profile, profileLoading, isLoading, router, user]);
 
   // Show referral modal if applicable
   useEffect(() => {

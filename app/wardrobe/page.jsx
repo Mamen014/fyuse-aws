@@ -45,7 +45,7 @@ export default function WardrobePage() {
           router.push('/personalized-styling/physical-appearances')}, 2000);        
       }
     }
-  }, [profile, profileLoading, isLoading, user]);
+  }, [profile, profileLoading, isLoading, router, user]);
 
   const fetchAllData = useCallback(async () => {
     try {

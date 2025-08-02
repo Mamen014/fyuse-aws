@@ -12,7 +12,6 @@ import Image from 'next/image';
 import 'react-toastify/dist/ReactToastify.css';
 import LoadingModalSpinner from '@/components/ui/LoadingState';
 import PrivacyPolicyModal from '@/components/PrivacyPolicyModal';
-import { useUserProfile } from '@/app/context/UserProfileContext';
 import { getOrCreateSessionId } from "@/lib/session";
 
 export default function AIPhotoUpload() {
@@ -29,10 +28,9 @@ export default function AIPhotoUpload() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isPageLoading, setIsPageLoading] = useState(false);
   const { user, isLoading: authLoading, signinRedirect } = useAuth();
-  const { profile, loading: profileLoading } = useUserProfile();
   const pathname = usePathname();
   const sessionId = getOrCreateSessionId();
-  const isInitialLoading = authLoading || profileLoading || isPageLoading || !user;
+  const isInitialLoading = authLoading || isPageLoading || !user;
   const userEmail = user?.profile?.email;
   const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
   const token = user?.access_token || user?.id_token;

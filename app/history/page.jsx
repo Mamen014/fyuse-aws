@@ -62,7 +62,7 @@ export default function TryOnHistoryPage() {
           router.push('/personalized-styling/physical-appearances')}, 2000);        
       }
     }
-  }, [profile, profileLoading, isLoading, user]);
+  }, [profile, profileLoading, isLoading, router, user]);
 
   // Redirect to sign in if not authenticated
   useEffect(() => {
