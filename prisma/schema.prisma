@@ -15,15 +15,6 @@ model subs_plan {
   profile   Profile @relation(fields: [user_id], references: [user_id])
 }
 
-model style_preference {
-  id                Int      @id @default(autoincrement())
-  user_id           String
-  clothing_category String
-  fashion_type      String
-  timestamp         DateTime?
-  profile           Profile  @relation(fields: [user_id], references: [user_id])
-}
-
 model styling_log {
   id                String   @id @default(uuid()) // Internal primary key
   user_id           String
@@ -69,8 +60,9 @@ model Profile {
   phone_number   String?
   occupation     String?
 
+  clothing_category String?
+  fashion_type      String?
   subs_plan         subs_plan?
-  style_preferences style_preference[]
   styling_logs      styling_log[]
   survey_responses  survey_response[]
 

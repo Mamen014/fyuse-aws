@@ -60,20 +60,12 @@ export default function TryOnHistoryPage() {
         <div className="flex items-center justify-between mb-6 pt-4">
           <h1 className="text-2xl font-bold text-primary">Styling History</h1>
           <button
-            onClick={() => setIsModalOpen(true)}
+            onClick={() => router.push('/personalized-styling/clothing-type')}
             className="bg-primary text-white px-5 py-2.5 rounded-full text-sm font-semibold hover:bg-primary/90 transition"
           >
-            Style Me
+            Discover My Style
           </button>
         </div>
-
-        {isModalOpen && (
-          <ConfirmationModal
-            isOpen={isModalOpen}
-            onClose={() => setIsModalOpen(false)}
-            trackingPage="styling-history"
-          />
-        )}
 
         {isLoading ? (
           <LoadingModalSpinner/>

@@ -256,7 +256,7 @@ export default function AIPhotoUpload() {
     try {
       // Navigate to the next page
       setIsPageLoading(true);
-      router.push('style-preferences');
+      router.push('fashion-type');
     } catch (error) {
       console.error('Error accepting analysis:', error);
       setIsSubmitting(false);
@@ -312,7 +312,7 @@ export default function AIPhotoUpload() {
 
       {/* Progress Bar */}
       <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden mb-6">
-        <div className="h-full bg-primary" style={{ width: '33%' }}></div>
+        <div className="h-full bg-primary" style={{ width: '50%' }}></div>
       </div>
 
       <ToastContainer position="top-center" autoClose={3000} />

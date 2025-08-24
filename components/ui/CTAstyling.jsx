@@ -14,10 +14,10 @@ export default function CTAstyling () {
     e.preventDefault();
     try {
       setIsRedirecting(true);
-      localStorage.setItem('from', 'landing-page');
+      localStorage.setItem('hasRegistered', 'true');
+      localStorage.setItem("from", "landing-page");
       localStorage.setItem('showRegister', 'true');
       localStorage.setItem('seeReferral', 'true');
-      document.cookie = "hasRegistered=true; path=/; max-age=31536000";      
 
       if (!user) {
         setTimeout(() => {
@@ -41,7 +41,7 @@ export default function CTAstyling () {
                 onClick={handleClick}
                 className="inline-block px-6 sm:px-10 py-3 sm:py-4 rounded-full w-full max-w-xs sm:max-w-sm text-lg sm:text-xl font-semibold transition-all duration-300 shadow-xl mt-6 cursor-pointer bg-primary text-primary-foreground hover:bg-primary/90 hover:-translate-y-1 hover:shadow-md"
             >
-                Start Free Styling
+                Discover My Style
             </button>        
         </div>
     );

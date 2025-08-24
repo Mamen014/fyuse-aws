@@ -59,7 +59,7 @@ export default function WardrobePage() {
       const plan = planData.plan || "Basic";
 
       // 2. Fetch Styling History
-      const histRes = await fetch("/api/styling-history", {
+      const histRes = await fetch("/api/wardrobe", {
         method: "GET",
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -169,16 +169,6 @@ export default function WardrobePage() {
                 <p className="text-sm text-muted-foreground">Items you’ve tried!</p>
               </div>
             </div>
-
-            {/* Right: CTA Button */}
-            <div className="mr-4">
-              <button
-                onClick={() => setIsModalOpen(true)}
-                className="bg-primary text-white px-6 py-2 rounded-full text-sm font-semibold hover:bg-primary/90 transition"
-              >
-                Style Me
-              </button>
-            </div>
           </div>
 
           {userImage && (
@@ -192,20 +182,13 @@ export default function WardrobePage() {
                 className="rounded-xl object-cover border border-primary shadow-sm"
               />
             </div>
-          )}
+          )}         
         </div>
 
         <WardrobeSection title="Top" items={tops} onRemove={handleRemoveFromWardrobe} onTrack={track} />
         <WardrobeSection title="Bottom" items={bottoms} onRemove={handleRemoveFromWardrobe} onTrack={track} />
 
-      </div>
-      {isModalOpen && (
-        <ConfirmationModal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          trackingPage="wardrobe"
-        />
-      )}      
+      </div>   
     </div>
     
   );
@@ -255,8 +238,6 @@ function WardrobeSection({ title, items, onRemove, onTrack }) {
                     Remove
                   </button>
                 </div>
-
-
               </div>
             </div>
           ))}

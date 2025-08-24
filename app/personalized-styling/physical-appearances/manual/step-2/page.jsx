@@ -53,7 +53,7 @@ function Step2Content() {
   };
 
   const handleSubmit = () => {
-    router.push('/personalized-styling/style-preferences');
+    router.push('/personalized-styling/fashion-type');
   };
 
   const maleBodyTypeImages = {

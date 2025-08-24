@@ -206,7 +206,7 @@ export default function DashboardPage() {
         try {
           if (!token) throw new Error("Missing token");
 
-          const res = await fetch("/api/styling-history", {
+          const res = await fetch("/api/wardrobe", {
             method: "GET",
             headers: {
               Authorization: `Bearer ${token}`,
@@ -218,7 +218,7 @@ export default function DashboardPage() {
 
           // Sort by timestamp descending and take latest 3
           const sortedTryonItems = data
-          setTryonItems(sortedTryonItems.slice(0, 3));
+          setTryonItems(sortedTryonItems);
 
         } catch (err) {
           console.error("Error fetching history:", err);
@@ -233,6 +233,8 @@ export default function DashboardPage() {
   // Filter recommendations by category
   const tops = tryonItems.filter(item => item.category === "top");
   const bottoms = tryonItems.filter(item => item.category === "bottom");
+  console.log("Tops count:", tops.length);
+  console.log("Bottoms count:", bottoms.length);
 
   // Show loading spinner if data is still being fetched
   if (isLoading || profileLoading  || !user || loading) {
@@ -393,19 +395,30 @@ export default function DashboardPage() {
         {/* CTA Button */}
         <div className="mb-6">
           <button
+<<<<<<< Updated upstream
             onClick={() => setShowConfirmationModal(true)}
+=======
+            onClick={() => {
+              setLoading(true);
+              trackGAEvent('click_start_style_discovery', {
+                page_context: pathname,
+                user_status: user ? 'authenticated' : 'unauthenticated',
+              });          
+              router.push('/personalized-styling/clothing-type');
+            }}
+>>>>>>> Stashed changes
             className="bg-primary text-white font-bold text-lg py-4 w-full rounded-3xl shadow-md hover:bg-primary/90"
           >
-            Start Style Discovery
+            Discover My Style
           </button>
         </div>
       </div>
 
       {/* Styling History & Wardrobe Collection Side by Side on Desktop */}
-      <div className="px-6 mb-8 flex flex-col gap-6 md:flex-row md:items-stretch">
+      <div className="px-6 mb-8 md:items-stretch">
 
         {/* Styling History Section */}
-        <div className="basis-1/2 flex flex-col bg-white shadow-md rounded-3xl border border-gray-100 p-3 h-full min-h-[300px]">
+        {/* <div className="basis-1/2 flex flex-col bg-white shadow-md rounded-3xl border border-gray-100 p-3 h-full min-h-[300px]">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-primary mb-4">Styling History</h2>
             <Link href="/history" className="flex items-center text-sm text-primary font-medium">
@@ -450,10 +463,10 @@ export default function DashboardPage() {
                   </div>
                 ))}
           </div>
-        </div>
+        </div> */}
 
         {/* Wardrobe Collection Section */}
-        <div className="basis-1/2 flex flex-col bg-white shadow-md rounded-3xl border border-gray-100 p-3 h-full min-h-[300px]">
+        <div className="bg-white shadow-md rounded-3xl border border-gray-100 p-3 h-full min-h-[300px]">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-primary mb-2">My Wardrobe</h2>
             <Link href="/wardrobe" className="flex items-center text-sm text-primary font-medium">
@@ -469,9 +482,9 @@ export default function DashboardPage() {
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-bold text-primary">Top</h3>
               </div>
-              <div className="flex gap-3">
+              <div className="flex gap-4 overflow-x-auto sm:overflow-visible">
                 {tops.length > 0
-                  ? tops.slice(0, 3).map((recommendation) => (
+                  ? tops.slice(0, 4).map((recommendation) => (
                       <Link
                         key={recommendation.item_id}
                         href="/wardrobe"
@@ -492,7 +505,7 @@ export default function DashboardPage() {
                         )}
                       </Link>
                     ))
-                  : [0, 1, 2].map((item) => (
+                  : [0, 1, 2, 3].map((item) => (
                       <div
                         key={item}
                         className="flex-1 max-w-[120px] aspect-[3/4] rounded-2xl overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center"
@@ -508,9 +521,9 @@ export default function DashboardPage() {
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-bold text-primary">Bottom</h3>
               </div>
-              <div className="flex gap-3">
+              <div className="flex gap-4 overflow-x-auto sm:overflow-visible">
                 {bottoms.length > 0
-                  ? bottoms.slice(0, 3).map((recommendation) => (
+                  ? bottoms.slice(0, 4).map((recommendation) => (
                       <Link
                         key={recommendation.item_id}
                         href="/wardrobe"
@@ -531,7 +544,7 @@ export default function DashboardPage() {
                         )}
                       </Link>
                     ))
-                  : [0, 1, 2].map((item) => (
+                  : [0, 1, 2, 3].map((item) => (
                       <div
                         key={item}
                         className="flex-1 max-w-[120px] aspect-[3/4] rounded-2xl overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center"
@@ -546,12 +559,15 @@ export default function DashboardPage() {
       </div>
     </div>
 
+<<<<<<< Updated upstream
     <ConfirmationModal
       isOpen={showConfirmationModal}
       onClose={() => setShowConfirmationModal(false)}
       trackingPage="Dashboard"
     />
 
+=======
+>>>>>>> Stashed changes
     {/* Referral Modal */}
     {showReferralModal && (
       <ReferralModal

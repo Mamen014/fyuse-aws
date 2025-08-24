@@ -1,8 +1,6 @@
-// components/Navbar.jsx
-
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -16,27 +14,40 @@ import {
   ChevronRight,
   LayoutGrid,
   HistoryIcon,
-  Shirt
+  Shirt,
 } from "lucide-react";
 import { useAuth } from "react-oidc-context";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation"; // add usePathname
 import LoadingModalSpinner from "./ui/LoadingState.jsx";
 import { useUserProfile } from "@/app/context/UserProfileContext.jsx";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [hasRegistered, setHasRegistered] = useState(false);
 
   const { profile, loading: profileLoading } = useUserProfile();
   const userName = profileLoading ? "" : (profile?.nickname || "Guest");
   const router = useRouter();
+  const pathname = usePathname(); // current route
   const { user, isLoading } = useAuth();
   const userEmail = user?.profile?.email;
+  const userName = profileLoading
+    ? ""
+    : profile?.nickname || userEmail?.split("@")[0] || "Guest";
+
+  // check localStorage flag
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const flag = localStorage.getItem("hasRegistered");
+      setHasRegistered(flag === "true");
+    }
+  }, []);
 
   const handleSignOut = () => {
     sessionStorage.clear();
-    localStorage.removeItem("hasRegistered");
-    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const origin =
+      typeof window !== "undefined" ? window.location.origin : "";
     const logoutUrl = `https://ap-southeast-2imonu7fwb.auth.ap-southeast-2.amazoncognito.com/logout?client_id=4l7l5ebjj2io1vap6qohbl2i7l&logout_uri=${encodeURIComponent(
       origin + "/"
     )}`;
@@ -76,12 +87,13 @@ export default function Navbar() {
 
   return (
     <nav className="fixed top-0 left-0 w-full bg-white z-50 shadow-sm">
-      {loading && <LoadingModalSpinner message="Redirecting..." subMessage="Please wait a moment" />}
+      {loading && (
+        <LoadingModalSpinner/>
+      )}
 
       <div className="h-16 px-4 sm:px-6 flex items-center justify-between max-w-7xl mx-auto">
-
         {/* Left: Hamburger */}
-        <div className="flex justify-start">
+        <div className="flex justify-start w-16 sm:w-20">
           <button
             type="button"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -89,29 +101,44 @@ export default function Navbar() {
             aria-expanded={isMenuOpen}
             aria-label="Toggle menu"
           >
-            {isMenuOpen ? <X className="w-10 h-10 text-gray-700" /> : <Menu className="w-10 h-10 text-gray-700" />}
+            {isMenuOpen ? (
+              <X className="w-10 h-10 text-gray-700" />
+            ) : (
+              <Menu className="w-10 h-10 text-gray-700" />
+            )}
           </button>
         </div>
 
-        {/* Center: Logo */}
-        <div className="flex justify-center min-w-0 overflow-hidden">
-          <Link href="/dashboard">
+        {/* Center: Logo (always truly centered) */}
+        <div className="flex-1 flex justify-center">
+          <Link href="/">
             <Image
-            src="/logo-tb.png"
-            alt="FYUSE Logo"
-            aria-label="Home"
-            width={1920}
-            height={800}
-            priority
-            className="h-12 w-auto max-w-[160px] sm:max-w-[200px]"
-          />
+              src="/logo-tb.png"
+              alt="FYUSE Logo"
+              aria-label="Home"
+              width={1920}
+              height={800}
+              priority
+              className="h-12 w-auto max-w-[160px] sm:max-w-[200px]"
+            />
           </Link>
         </div>
-        {/* Right: Empty div to balance flex layout */}
-        <div className="w-12">
+
+        {/* Right: Dashboard CTA (only if "/" && hasRegistered) */}
+        <div className="flex justify-end w-16 sm:w-20">
+          {pathname === "/" && hasRegistered && (
+            <Link
+              href="/dashboard"
+              className="px-4 py-2 text-primary text-sm font-medium hover:text-primary/80 transition"
+            >
+              Dashboard
+            </Link>
+          )}
         </div>
       </div>
 
+
+      {/* Side Menu */}
       <div
         className={`fixed inset-0 bg-black bg-opacity-50 transition-opacity duration-200 ${
           isMenuOpen ? "opacity-100" : "opacity-0 pointer-events-none"
@@ -143,25 +170,26 @@ export default function Navbar() {
           </div>
         )}
 
-
         <div className="overflow-y-auto h-[calc(100%-160px)] py-4">
           <div className="px-4 pb-2">
-            <p className="px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Menu</p>
+            <p className="px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Menu
+            </p>
           </div>
 
           <div className="px-4 space-y-1">
             {menuItems.map(({ label, icon: Icon, path }) => (
               <button
                 key={label}
-                  onClick={() => {
-                    if (path === window.location.pathname) {
-                      setIsMenuOpen(false);
-                      return;
-                    }
+                onClick={() => {
+                  if (path === window.location.pathname) {
                     setIsMenuOpen(false);
-                    setLoading(true);
-                    router.push(path);
-                  }}
+                    return;
+                  }
+                  setIsMenuOpen(false);
+                  setLoading(true);
+                  router.push(path);
+                }}
                 className="flex items-center gap-3 w-full text-left px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 <Icon className="w-5 h-5 text-gray-500" />

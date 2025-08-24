@@ -12,7 +12,7 @@ export default function AuthCallback() {
 
     const from = localStorage.getItem('from');
     if (from === 'landing-page') {
-      router.replace('personalized-styling/physical-appearances');
+      router.replace('personalized-styling/clothing-type');
       localStorage.removeItem('from');
     } else {
       router.replace('dashboard');
