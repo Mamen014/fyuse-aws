@@ -45,47 +45,29 @@ export async function POST(req: NextRequest) {
       select: { gender: true },
 =======
       where: { user_id: userId },
-      select: {
-        gender: true,
-        clothing_category: true,
-        fashion_type: true,
-      },
->>>>>>> Stashed changes
+      select: { gender: true },
     });
-
     if (!profile?.gender) {
       return NextResponse.json({ error: "Missing gender in profile" }, { status: 400 });
     }
 
     const gender = normalizeGender(profile.gender);
-    const clothingCategory = profile.clothing_category?.toLowerCase() || null;
-    const fashionType = profile.fashion_type?.toLowerCase() || null;    
 
-<<<<<<< Updated upstream
-    // 2. Fetch latest style preference
     const latestPreference = await prisma.style_preference.findFirst({
-      where: { user_id },
+      where: { user_id: userId },
       orderBy: { timestamp: "desc" },
       select: {
         clothing_category: true,
         fashion_type: true,
       },
     });
-
     if (!latestPreference?.clothing_category || !latestPreference?.fashion_type) {
+      log.warn("Missing style preference data");
       return NextResponse.json({ error: "Style preference not found" }, { status: 400 });
     }
 
     const clothingCategory = latestPreference.clothing_category.toLowerCase();
     const fashionType = latestPreference.fashion_type.toLowerCase();
-
-    // 3. Call AWS Personalize
-=======
-
-    if (!gender || !clothingCategory || !fashionType) {
-      log.warn("❗ Incomplete profile data", { gender, clothingCategory, fashionType });
-      return NextResponse.json({ error: "Incomplete profile data" }, { status: 400 });
-    }
 
     const filterValues: Record<string, string> = {
       gender: `"${gender}"`,

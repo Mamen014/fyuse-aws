@@ -233,8 +233,6 @@ export default function DashboardPage() {
   // Filter recommendations by category
   const tops = tryonItems.filter(item => item.category === "top");
   const bottoms = tryonItems.filter(item => item.category === "bottom");
-  console.log("Tops count:", tops.length);
-  console.log("Bottoms count:", bottoms.length);
 
   // Show loading spinner if data is still being fetched
   if (isLoading || profileLoading  || !user || loading) {
@@ -395,9 +393,6 @@ export default function DashboardPage() {
         {/* CTA Button */}
         <div className="mb-6">
           <button
-<<<<<<< Updated upstream
-            onClick={() => setShowConfirmationModal(true)}
-=======
             onClick={() => {
               setLoading(true);
               trackGAEvent('click_start_style_discovery', {
@@ -406,7 +401,6 @@ export default function DashboardPage() {
               });          
               router.push('/personalized-styling/clothing-type');
             }}
->>>>>>> Stashed changes
             className="bg-primary text-white font-bold text-lg py-4 w-full rounded-3xl shadow-md hover:bg-primary/90"
           >
             Discover My Style
@@ -559,15 +553,7 @@ export default function DashboardPage() {
       </div>
     </div>
 
-<<<<<<< Updated upstream
-    <ConfirmationModal
-      isOpen={showConfirmationModal}
-      onClose={() => setShowConfirmationModal(false)}
-      trackingPage="Dashboard"
-    />
-
 =======
->>>>>>> Stashed changes
     {/* Referral Modal */}
     {showReferralModal && (
       <ReferralModal

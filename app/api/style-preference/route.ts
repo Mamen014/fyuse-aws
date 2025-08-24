@@ -20,16 +20,11 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-<<<<<<< Updated upstream
     const latestPreference = await prisma.style_preference.findFirst({
-      where: { user_id },
+      where: { user_id: userId },
       orderBy: {
         timestamp: "desc",
       },
-=======
-    const latestPreference = await prisma.profile.findFirst({
-      where: { user_id: userId }, 
->>>>>>> Stashed changes
       select: {
         clothing_category: true,
         fashion_type: true,

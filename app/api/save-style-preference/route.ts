@@ -33,8 +33,7 @@ export async function POST(req: NextRequest) {
   }
 
   if (!userId) {
-    log.error("Unauthorized: failed to decode user ID from token");
->>>>>>> Stashed changes
+    log.error("Failed to decode user ID from token");
     return NextResponse.json({ error: "Invalid token" }, { status: 401 });
   }
 
@@ -42,63 +41,31 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { clothing_category, fashion_type } = body;
 
-<<<<<<< Updated upstream
     if (!clothing_category || !fashion_type) {
+      log.warn("Missing required fields in request body", {
+        bodyKeys: Object.keys(body),
+      });
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    // Create style preference
     const stylePreference = await prisma.style_preference.create({
       data: {
-        user_id,
+        user_id: userId,
         clothing_category: clothing_category.toLowerCase(),
         fashion_type: fashion_type.toLowerCase(),
         timestamp: new Date(),
       },
     });
 
+    log.info("Style preference saved", {
+      clothing_category,
+      fashion_type,
+      id: stylePreference.id,
+    });
+
     return NextResponse.json(stylePreference, { status: 201 });
   } catch (err) {
-    console.error("Error saving style preference:", err);
-=======
-    if (!clothing_category && !fashion_type) {
-      log.warn("Bad Request: no valid fields provided", { bodyKeys: Object.keys(body) });
-      return NextResponse.json(
-        { error: "At least one of 'clothing_category' or 'fashion_type' must be provided" },
-        { status: 400 }
-      );
-    }
-
-    // Normalize inputs if present
-    const updateData: Record<string, any> = {};
-    if (clothing_category) updateData.clothing_category = clothing_category.toLowerCase();
-    if (fashion_type) updateData.fashion_type = fashion_type.toLowerCase();
-
-    // Defensive upsert
-    const profile = await prisma.profile.upsert({
-      where: { user_id: userId },
-      update: {
-        ...updateData,
-      },
-      create: {
-        user_id: userId,
-        ...updateData,
-      },
-    });
-
-    log.info("Profile style preference updated", {
-      userId,
-      updatedFields: Object.keys(updateData),
-      profileId: profile.user_id,
-    });
-
-    return NextResponse.json(profile, { status: 200 });
-  } catch (err: any) {
-    log.error("Internal server error while saving style preference", {
-      error: err?.message || err,
-      stack: err?.stack,
-    });
->>>>>>> Stashed changes
+    log.error("Error saving style preference", { error: err });
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

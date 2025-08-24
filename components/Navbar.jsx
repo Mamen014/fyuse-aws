@@ -160,8 +160,9 @@ export default function Navbar() {
                 </span>
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="text-base font-semibold text-gray-900 truncate">{userName || "Guest"}</h3>
-                {userEmail && <p className="text-sm text-gray-500 truncate">{userEmail}</p>}
+                <h3 className="text-base font-semibold text-gray-900 truncate">
+                  {userName || "Guest"}
+                </h3>
               </div>
               <div className="px-0 text-red-600">
                 <SignOutButton isInMobileMenu />
