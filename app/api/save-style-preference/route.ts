@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
     const { clothing_category, fashion_type } = body;
 
     // Normalize inputs if present
-    const updateData: Record<string, any> = {};
+    const updateData: Partial<{ clothing_category: string; fashion_type: string }> = {};
     if (clothing_category) updateData.clothing_category = clothing_category.toLowerCase();
     if (fashion_type) updateData.fashion_type = fashion_type.toLowerCase();
 
