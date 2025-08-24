@@ -120,6 +120,7 @@ export default function ClothingTypePage() {
                 alt={label}
                 width={240}
                 height={240}
+                priority={true}
               />
               <span className='text-2xl'>{label}</span>
             </button>

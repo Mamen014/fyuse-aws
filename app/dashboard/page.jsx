@@ -606,7 +606,6 @@ export default function DashboardPage() {
       </div>
     </div>
 
-=======
     {/* Referral Modal */}
     {showReferralModal && (
       <ReferralModal

@@ -25,11 +25,8 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const latestPreference = await prisma.style_preference.findFirst({
+    const latestPreference = await prisma.profile.findUnique({
       where: { user_id: userId },
-      orderBy: {
-        timestamp: "desc",
-      },
       select: {
         clothing_category: true,
         fashion_type: true,

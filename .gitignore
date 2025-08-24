@@ -10,7 +10,7 @@
 /app/unused/style-preferences/index.jsx
 /app/unused
 components/bodyShapes
-
+/personalize-schema
 # dependencies
 /node_modules
 /.pnp

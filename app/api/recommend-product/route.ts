@@ -41,39 +41,27 @@ export async function POST(req: NextRequest) {
 
   try {
     const profile = await prisma.profile.findUnique({
-<<<<<<< HEAD
-<<<<<<< Updated upstream
-      where: { user_id },
-=======
       where: { user_id: userId },
->>>>>>> main
-      select: { gender: true },
-=======
-      where: { user_id: userId },
-      select: { gender: true },
-    });
-    if (!profile?.gender) {
-      log.warn("Missing gender in profile");
-      return NextResponse.json({ error: "Missing gender in profile" }, { status: 400 });
-    }
-
-    const gender = normalizeGender(profile.gender);
-
-    const latestPreference = await prisma.style_preference.findFirst({
-      where: { user_id: userId },
-      orderBy: { timestamp: "desc" },
       select: {
+        gender: true,
         clothing_category: true,
         fashion_type: true,
       },
     });
-    if (!latestPreference?.clothing_category || !latestPreference?.fashion_type) {
-      log.warn("Missing style preference data");
-      return NextResponse.json({ error: "Style preference not found" }, { status: 400 });
+
+    if (!profile) {
+      log.warn("Profile not found for user");
+      return NextResponse.json({ error: "Profile not found" }, { status: 404 });
     }
 
-    const clothingCategory = latestPreference.clothing_category.toLowerCase();
-    const fashionType = latestPreference.fashion_type.toLowerCase();
+    const gender = normalizeGender(profile.gender);
+    const clothingCategory = profile.clothing_category?.toLowerCase() || null;
+    const fashionType = profile.fashion_type?.toLowerCase() || null;
+
+    if (!gender || !clothingCategory || !fashionType) {
+      log.warn("❗ Incomplete profile data", { gender, clothingCategory, fashionType });
+      return NextResponse.json({ error: "Incomplete profile data" }, { status: 400 });
+    }
 
     const filterValues: Record<string, string> = {
       gender: `"${gender}"`,
@@ -81,15 +69,7 @@ export async function POST(req: NextRequest) {
       fashionType: `"${fashionType}"`,
     };
 
-    if (!gender || !clothingCategory || !fashionType) {
-      log.warn("❗ Incomplete filter values", { gender, clothingCategory, fashionType });
-      return NextResponse.json({ error: "Incomplete filter values" }, { status: 400 });
-    }
-
-<<<<<<< HEAD
->>>>>>> Stashed changes
-=======
->>>>>>> main
+    // 🔹 Call Personalize with filters
     const personalizeResponse = await personalizeClient.send(
       new GetRecommendationsCommand({
         campaignArn: CAMPAIGN_ARN,
@@ -109,11 +89,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: "No recommendations found" }, { status: 200 });
     }
 
+    // 🔹 Exclude duplicates and wardrobe items
     const previousLogs = await prisma.styling_log.findMany({
       where: { user_id: userId },
       select: { item_id: true, created_at: true, wardrobe: true },
     });
-    
+
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
     const recentFiveSeconds = new Date(Date.now() - 5000);
 
@@ -126,7 +107,7 @@ export async function POST(req: NextRequest) {
         )
         .map(log => log.item_id)
     );
-    
+
     const validRecommendations = recommendedIds.filter(id => !excludedIds.has(id));
 
     if (validRecommendations.length === 0) {
