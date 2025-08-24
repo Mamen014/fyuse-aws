@@ -4,7 +4,7 @@ import LoadingModalSpinner from "./ui/LoadingState";
 import { useRouter } from "next/navigation";
 import { capitalizeWords } from "@/lib/utils";
 import { useAuth } from "react-oidc-context";
-
+import { getOrCreateSessionId } from "@/lib/session";
 
 type Props = {
   isOpen: boolean;
@@ -28,19 +28,50 @@ type StyledItem = {
 export default function ConfirmationModal({ isOpen, onClose, trackingPage }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
+  const [sessionId] = useState(() => getOrCreateSessionId());
   const [navigating, setNavigating] = useState(false);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [latestItem, setLatestItem] = useState<StyledItem | null>(null);
   const { user } = useAuth();
-  const userEmail = user?.profile?.email;
-  const token = user?.access_token || user?.id_token;
-  const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
-  
+  const token = user?.access_token || user?.id_token; 
 
-  
   const handleClose = () => onClose?.();
 
+  // Track user actions
+  const logActivity = async (
+    action: string,
+    selection: string
+  ) => {
+    if (!token || !sessionId) return;
+
+    try {
+      const res = await fetch("/api/log-activity", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+          "x-session-id": sessionId,
+        },
+        body: JSON.stringify({
+          action,
+          page: trackingPage,
+          selection,
+          timestamp: new Date().toISOString(),
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        console.warn("⚠️ Failed to log activity:", err.message);
+      }
+    } catch (error) {
+      console.error("❌ Activity log error:", error);
+    }
+  };
+
   const handleNavigate = async (path: string) => {
+    if (navigating) return;
+
     const trackingMap: Record<string, string> = {
       "/personalized-styling/result": "styling",
       "/personalized-styling/physical-appearances": "reupload",
@@ -49,7 +80,9 @@ export default function ConfirmationModal({ isOpen, onClose, trackingPage }: Pro
 
     const selection = trackingMap[path];
     if (selection) {
-      track("confirmation_modal_navigate", { selection });
+      logActivity("confirmation_modal_navigate", selection).catch((err) => {
+        console.warn("Logging failed:", err);
+      });
     }
 
     setNavigating(true); // Show loading state
@@ -58,22 +91,6 @@ export default function ConfirmationModal({ isOpen, onClose, trackingPage }: Pro
     setTimeout(() => {
       router.push(path);
     }, 100);
-  };
-
-  // Track user actions
-  const track = async (action: string, metadata = {}) => {
-    if (!userEmail) return;
-    await fetch(`${API_BASE_URL}/trackevent`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        userEmail,
-        action,
-        timestamp: new Date().toISOString(),
-        page: trackingPage,
-        ...metadata,
-      }),
-    }).catch(console.error);
   };
 
   useEffect(() => {

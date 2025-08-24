@@ -1,17 +1,17 @@
 // /app/wardrobe/page.jsx
 
 "use client";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "react-oidc-context";
 import Image from "next/image";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 import LoadingModalSpinner from "@/components/ui/LoadingState";
 import Navbar from "@/components/Navbar";
 import { ChevronRight, ShirtIcon } from "lucide-react";
 import ConfirmationModal from "@/components/ConfirmationModal";
 import { useUserProfile } from "../context/UserProfileContext";
-import axios from "axios";
+import { getOrCreateSessionId } from "@/lib/session";
+import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
 export default function WardrobePage() {
   const { user, isLoading, signinRedirect } = useAuth();
@@ -19,12 +19,12 @@ export default function WardrobePage() {
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const router = useRouter();
   const { profile, loading: profileLoading } = useUserProfile();
   const userName = profileLoading ? "" : (profile?.nickname || "Guest");
   const userImage = profileLoading ? null : profile?.user_image_url;
-  const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
-  const userEmail = user?.profile?.email;
   const token = user?.id_token || user?.access_token;
+  const sessionId = getOrCreateSessionId();
 
   // Redirect to sign in if not authenticated
   useEffect(() => {
@@ -34,19 +34,28 @@ export default function WardrobePage() {
     }
   }, [isLoading, user, signinRedirect]);
 
-  // Fetch all user data
+  //check profile completeness
   useEffect(() => {
-    if (!user || !token) return;
-    setLoading(true);
-    fetchAllData();
-  }, [user, token]);
+    if (!profileLoading && !isLoading && user && profile) {
+      const isProfileIncomplete = !profile.skin_tone || !profile.body_shape;
 
-  const fetchAllData = async () => {
+      if (isProfileIncomplete) {
+        toast.error("Please complete your profile first");
+        setTimeout(() => {
+          router.push('/personalized-styling/physical-appearances')}, 2000);        
+      }
+    }
+  }, [profile, profileLoading, isLoading, router, user]);
+
+  const fetchAllData = useCallback(async () => {
     try {
       // 1. Fetch Subscription Plan
       const planRes = await fetch("/api/subscription-status", {
         method: "GET",
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { 
+          "x-session-id": sessionId,
+          Authorization: `Bearer ${token}`,
+        },
       });
 
       if (planRes.status === 429) {
@@ -61,7 +70,10 @@ export default function WardrobePage() {
       // 2. Fetch Styling History
       const histRes = await fetch("/api/wardrobe", {
         method: "GET",
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          "x-session-id": sessionId,
+        },
       });
 
       if (histRes.status === 429) {
@@ -84,7 +96,35 @@ export default function WardrobePage() {
     } finally {
       setLoading(false);
     }
-  };  
+  },[token, sessionId]);
+
+  const logActivity = async (
+    action,
+    { selection, page } = {}
+  ) => {
+    try {
+      const res = await fetch("/api/log-activity", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+          "x-session-id": sessionId,
+        },
+        body: JSON.stringify({
+          action,
+          selection,
+          page: page || window.location.pathname,
+          timestamp: new Date().toISOString(),
+        }),
+      });
+
+      if (!res.ok) {
+        console.warn("⚠️ Failed to log activity:", await res.json());
+      }
+    } catch (error) {
+      console.error("❌ Activity log error:", error);
+    }
+  };
 
   // Remove item from wardrobe
   const handleRemoveFromWardrobe = async (itemId, logId) => {
@@ -92,6 +132,7 @@ export default function WardrobePage() {
       const res = await fetch("/api/remove-from-wardrobe", {
         method: "PATCH",
         headers: {
+          "x-session-id": sessionId,
           "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json",
         },
@@ -100,7 +141,7 @@ export default function WardrobePage() {
 
       if (!res.ok) throw new Error("Failed to remove item");
       toast.success("Item removed from wardrobe.");
-      track("remove_item", { selection: itemId });
+      logActivity("remove_item", { selection: itemId });
       fetchAllData();
     } catch (err) {
       console.error("Failed to remove from wardrobe:", err);
@@ -108,20 +149,15 @@ export default function WardrobePage() {
     }
   };
 
-  // Track user actions
-  const track = async (action, metadata = {}) => {
-    if (!userEmail) return;
-    await axios.post(`${API_BASE_URL}/trackevent`, {
-      userEmail,
-      action,
-      timestamp: new Date().toISOString(),
-      page: 'wardrobe',
-      ...metadata,
-    }).catch(console.error);
-  };
-
+  // Fetch all user data
+  useEffect(() => {
+    if (!user || !token) return;
+    setLoading(true);
+    fetchAllData();
+  }, [user, token, fetchAllData]);
+  
   // If user is not authenticated, show a message prompting them to sign in
-  if (!user) {
+  if (!user && !loading && !isLoading) {
     return (
       <div className="bg-white max-w-md mx-auto h-screen flex flex-col relative">
         <div className="h-16 bg-white border-b border-gray-200 flex items-center justify-center fixed top-0 left-0 right-0 z-10 max-w-md mx-auto">
@@ -129,7 +165,6 @@ export default function WardrobePage() {
         </div>
 
         <div className="p-6 max-w-3xl mx-auto text-foreground mt-20 flex-1">
-          <ToastContainer />
           <p className="text-center text-gray-400">
             🔐 Please sign in to view your profile and liked recommendations.
           </p>
@@ -148,7 +183,6 @@ export default function WardrobePage() {
   return (
     <div className="bg-background max-w-7xl mx-auto h-screen flex flex-col relative px-4 md:px-8">
       <Navbar />
-      <ToastContainer />
 
       <div className="h-16 bg-white border-b border-gray-200 flex items-center justify-center fixed top-0 left-0 right-0 z-10 max-w-md mx-auto">
         <h1 className="text-lg font-semibold text-primary">Your Wardrobe</h1>
@@ -185,8 +219,8 @@ export default function WardrobePage() {
           )}         
         </div>
 
-        <WardrobeSection title="Top" items={tops} onRemove={handleRemoveFromWardrobe} onTrack={track} />
-        <WardrobeSection title="Bottom" items={bottoms} onRemove={handleRemoveFromWardrobe} onTrack={track} />
+        <WardrobeSection title="Top" items={tops} onRemove={handleRemoveFromWardrobe} onTrack={logActivity} />
+        <WardrobeSection title="Bottom" items={bottoms} onRemove={handleRemoveFromWardrobe} onTrack={logActivity} />
 
       </div>   
     </div>

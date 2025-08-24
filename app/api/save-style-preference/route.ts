@@ -1,12 +1,15 @@
-// api/save-style-preference/route.ts
+// app/api/save-style-preference/route.ts
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { jwtDecode } from "jwt-decode";
+import { logger } from "@/lib/logger";
+import { getUserIdFromAuth } from "@/lib/session";
 
 export async function POST(req: NextRequest) {
-  const authHeader = req.headers.get("authorization");
+  const authHeader = req.headers.get("authorization") || "";
+  const sessionId = req.headers.get("x-session-id") || "unknown";
 
+<<<<<<< HEAD
 <<<<<<< Updated upstream
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -32,6 +35,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+=======
+  const userId = getUserIdFromAuth(authHeader);
+  const log = logger.withContext({
+    sessionId,
+    userId,
+    routeName: "save-style-preference",
+  });
+
+  if (!authHeader.startsWith("Bearer ")) {
+    log.error("Missing or malformed Authorization header");
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+>>>>>>> main
   if (!userId) {
     log.error("Failed to decode user ID from token");
     return NextResponse.json({ error: "Invalid token" }, { status: 401 });

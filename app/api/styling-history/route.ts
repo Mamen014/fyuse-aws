@@ -2,7 +2,8 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { jwtDecode } from "jwt-decode";
+import { logger } from "@/lib/logger";
+import { getUserIdFromAuth } from "@/lib/session";
 
 type ProductMeta = {
   image: string;
@@ -15,27 +16,31 @@ type ProductMeta = {
   clothType: string;
 };
 
-export async function GET(req: NextRequest) {
-  const authHeader = req.headers.get("authorization");
+export async function GET(request: NextRequest) {
+  const authHeader = request.headers.get("authorization") || "";
+  const sessionId = request.headers.get("x-session-id") || "unknown";
 
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+  const userId = getUserIdFromAuth(authHeader);
+  const log = logger.withContext({
+    sessionId,
+    userId,
+    routeName: "styling-history",
+  });
+
+  if (!authHeader.startsWith("Bearer ")) {
+    log.error("Authorization header missing or malformed");
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const token = authHeader.replace("Bearer ", "");
-  let user_id: string;
-
-  try {
-    const decoded = jwtDecode<{ sub: string }>(token);
-    user_id = decoded.sub;
-  } catch (err) {
+  if (!userId) {
+    log.error("Failed to extract user ID from token");
     return NextResponse.json({ error: "Invalid token" }, { status: 401 });
   }
 
   try {
     const logs = await prisma.styling_log.findMany({
       where: {
-        user_id,
+        user_id: userId,
         status: "succeed",
         wardrobe: true,
       },
@@ -49,6 +54,8 @@ export async function GET(req: NextRequest) {
         status: true,
       },
     });
+
+    log.info(`Fetched ${logs.length} styling logs`);
 
     const itemIds = logs.map(log => log.item_id);
 
@@ -66,6 +73,8 @@ export async function GET(req: NextRequest) {
         color: true,
       },
     });
+
+    log.info(`Fetched ${products.length} associated products`);
 
     const productMap: Record<string, ProductMeta> = Object.fromEntries(
       products.map(p => [
@@ -103,9 +112,11 @@ export async function GET(req: NextRequest) {
       };
     });
 
+    log.info("Responded with styling history data");
+
     return NextResponse.json(result);
   } catch (err) {
-    console.error("Error fetching styling history:", err);
+    log.error("Failed to fetch styling history");
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

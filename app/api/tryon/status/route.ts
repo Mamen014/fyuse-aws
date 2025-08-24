@@ -2,41 +2,43 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { jwtDecode } from "jwt-decode";
+import { logger } from "@/lib/logger";
+import { getUserIdFromAuth } from "@/lib/session";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const logId = searchParams.get("log_id");
-  if (!logId) {
-    return NextResponse.json({ error: "Missing log_id" }, { status: 400 });
-  }
 
-  const log = await prisma.styling_log.findUnique({
-    where: {
-      id: logId,
-    },
+  const authHeader = req.headers.get("authorization") || "";
+  const sessionId = req.headers.get("x-session-id") || "unknown";
+  const userId = getUserIdFromAuth(authHeader);
+
+  const log = logger.withContext({
+    sessionId,
+    userId,
+    routeName: "tryon-status",
   });
 
-  const authHeader = req.headers.get("authorization");
-  if (!authHeader?.startsWith("Bearer ")) {
+  if (!authHeader.startsWith("Bearer ")) {
+    log.warn("Authorization header missing or malformed");
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const token = authHeader.replace("Bearer ", "");
-  let user_id: string;
-
-  try {
-    const decoded = jwtDecode<{ sub: string }>(token);
-    user_id = decoded.sub;
-  } catch {
+  if (!userId) {
+    log.error("Failed to decode user ID from token");
     return NextResponse.json({ error: "Invalid token" }, { status: 401 });
   }
 
+  if (!logId) {
+    log.warn("Missing log_id in query parameters");
+    return NextResponse.json({ error: "Missing log_id" }, { status: 400 });
+  }
+
   try {
-    const log = await prisma.styling_log.findFirst({
+    const record = await prisma.styling_log.findFirst({
       where: {
         id: logId,
-        user_id,
+        user_id: userId,
       },
       select: {
         status: true,
@@ -45,17 +47,19 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    if (!log) {
+    if (!record) {
+      log.warn("Task not found or unauthorized access attempt", { logId });
       return NextResponse.json({ error: "Task not found or not authorized" }, { status: 404 });
     }
 
+    log.info("Status successfully retrieved", { status: record.status });
     return NextResponse.json({
-      status: log.status,
-      styling_image_url: log.styling_image_url,
-      updated_at: log.updated_at,
+      status: record.status,
+      styling_image_url: record.styling_image_url,
+      updated_at: record.updated_at,
     });
   } catch (err) {
-    console.error("❌ Error fetching status:", err);
+    log.error("Error fetching try-on status", { error: err instanceof Error ? err.message : err });
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

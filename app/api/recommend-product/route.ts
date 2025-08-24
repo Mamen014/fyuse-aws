@@ -1,7 +1,6 @@
-// app/api/recommend-product/route.ts
-
 import { NextRequest, NextResponse } from "next/server";
-import { jwtDecode } from "jwt-decode";
+import { logger } from "@/lib/logger";
+import { getUserIdFromAuth } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import {
   PersonalizeRuntimeClient,
@@ -21,33 +20,40 @@ function normalizeGender(input: string | null) {
 }
 
 export async function POST(req: NextRequest) {
-  const authHeader = req.headers.get("authorization");
+  const authHeader = req.headers.get("authorization") || "";
+  const sessionId = req.headers.get("x-session-id") || "unknown";
+  const userId = getUserIdFromAuth(authHeader);
+  const log = logger.withContext({
+    sessionId,
+    userId,
+    routeName: "recommend-product",
+  });
 
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+  if (!authHeader.startsWith("Bearer ")) {
+    log.warn("Authorization header missing or malformed");
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const token = authHeader.replace("Bearer ", "");
-  let user_id: string;
-
-  try {
-    const decoded = jwtDecode<{ sub: string }>(token);
-    user_id = decoded.sub;
-  } catch {
+  if (!userId) {
+    log.error("Failed to decode user ID from token");
     return NextResponse.json({ error: "Invalid token" }, { status: 401 });
   }
 
   try {
-    // 1. Fetch gender from profile
     const profile = await prisma.profile.findUnique({
+<<<<<<< HEAD
 <<<<<<< Updated upstream
       where: { user_id },
+=======
+      where: { user_id: userId },
+>>>>>>> main
       select: { gender: true },
 =======
       where: { user_id: userId },
       select: { gender: true },
     });
     if (!profile?.gender) {
+      log.warn("Missing gender in profile");
       return NextResponse.json({ error: "Missing gender in profile" }, { status: 400 });
     }
 
@@ -80,18 +86,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Incomplete filter values" }, { status: 400 });
     }
 
+<<<<<<< HEAD
 >>>>>>> Stashed changes
+=======
+>>>>>>> main
     const personalizeResponse = await personalizeClient.send(
       new GetRecommendationsCommand({
         campaignArn: CAMPAIGN_ARN,
-        userId: user_id,
+        userId,
         filterArn: FILTER_ARN,
-        filterValues: {
-          gender: `"${gender}"`,
-          clothingCategory: `"${clothingCategory}"`,
-          fashionType: `"${fashionType}"`,
-        },
-        numResults: 15,
+        filterValues,
+        numResults: 25,
       })
     );
 
@@ -100,57 +105,51 @@ export async function POST(req: NextRequest) {
       .filter((id): id is string => typeof id === "string");
 
     if (recommendedIds.length === 0) {
+      log.info("No recommendations returned by Personalize");
       return NextResponse.json({ message: "No recommendations found" }, { status: 200 });
     }
 
-    // 4. Filter out items in styling_log within 30 days and wardrobe=true
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
     const previousLogs = await prisma.styling_log.findMany({
-      where: {
-        user_id,
-      },
-      select: { 
-        item_id: true,
-        created_at: true,
-        wardrobe: true,
-     },
+      where: { user_id: userId },
+      select: { item_id: true, created_at: true, wardrobe: true },
     });
+    
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
     const recentFiveSeconds = new Date(Date.now() - 5000);
+
     const excludedIds = new Set(
       previousLogs
-        .filter((log: { created_at: Date | null; wardrobe: boolean | null; item_id: string }) => {
-        const isRecent = log.created_at && log.created_at > thirtyDaysAgo;
-        const isRecentDup = log.created_at && log.created_at > recentFiveSeconds;
-        const isStillInWardrobe = log.wardrobe === true;
-        return isRecent || isStillInWardrobe || isRecentDup;
-        })
-        .map((log: { item_id: string }) => log.item_id)
-      );
-
-    const validRecommendations = recommendedIds.filter((id) => !excludedIds.has(id));
+        .filter(log =>
+          (log.created_at && log.created_at > thirtyDaysAgo) ||
+          (log.created_at && log.created_at > recentFiveSeconds) ||
+          log.wardrobe === true
+        )
+        .map(log => log.item_id)
+    );
+    
+    const validRecommendations = recommendedIds.filter(id => !excludedIds.has(id));
 
     if (validRecommendations.length === 0) {
+      log.info("Filtered out all recommendations due to duplicates or wardrobe");
       return NextResponse.json({ message: "No new recommendations available" }, { status: 200 });
     }
 
     const topRecommendedId = validRecommendations[0];
 
-    if (!topRecommendedId) {
-      return NextResponse.json({ error: "Recommended item ID missing" }, { status: 400 });
-    }
-
-    // 5. Fetch product detail
     const product = await prisma.product_data.findUnique({
       where: { item_id: topRecommendedId },
     });
 
     if (!product) {
+      log.error("Recommended product not found in DB", { itemId: topRecommendedId });
       return NextResponse.json({ error: "Recommended product not found" }, { status: 404 });
     }
 
-    // 6. Return product
+    log.info("Product recommendation successful", {
+      recommendedItemId: product.item_id,
+      brand: product.brand,
+    });
+
     return NextResponse.json({
       productId: product.item_id,
       productName: product.product_name,
@@ -159,7 +158,7 @@ export async function POST(req: NextRequest) {
       productLink: product.product_link,
     });
   } catch (err) {
-    console.error("Failed to retrieve recommendation item:", err);
+    log.error("Unexpected failure in recommendation logic", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

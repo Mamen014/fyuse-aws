@@ -2,18 +2,17 @@
 
 'use client'
 
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { Venus, Mars, Wand2, Palette, User } from 'lucide-react';
 import { useAuth } from 'react-oidc-context';
 import { motion } from "framer-motion";
 import { ToastContainer, toast } from 'react-toastify';
 import Image from 'next/image';
-import axios from 'axios';
 import 'react-toastify/dist/ReactToastify.css';
 import LoadingModalSpinner from '@/components/ui/LoadingState';
 import PrivacyPolicyModal from '@/components/PrivacyPolicyModal';
-import { useUserProfile } from '@/app/context/UserProfileContext';
+import { getOrCreateSessionId } from "@/lib/session";
 
 export default function AIPhotoUpload() {
   const router = useRouter();
@@ -29,11 +28,9 @@ export default function AIPhotoUpload() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isPageLoading, setIsPageLoading] = useState(false);
   const { user, isLoading: authLoading, signinRedirect } = useAuth();
-  const { profile, loading: profileLoading } = useUserProfile();
-  const nickname = profile?.nickname;
-  const [showRegisterPrompt, setShowRegisterPrompt] = useState(false);
-
-  const isInitialLoading = authLoading || profileLoading || isPageLoading || !user;
+  const pathname = usePathname();
+  const sessionId = getOrCreateSessionId();
+  const isInitialLoading = authLoading || isPageLoading || !user;
   const userEmail = user?.profile?.email;
   const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
   const token = user?.access_token || user?.id_token;
@@ -60,6 +57,17 @@ export default function AIPhotoUpload() {
     },
   ];
 
+  // Helper function to send GA events using window.gtag
+  const trackGAEvent = (eventName, eventParams = {}) => {
+    if (typeof window.gtag === 'function') {
+      window.gtag('event', eventName, {
+        ...eventParams,
+      });
+    } else {
+      console.error('window.gtag is NOT available to track event:', eventName);
+    }
+  };
+
   // Redirect to sign in if not authenticated
   useEffect(() => {
     if (!authLoading && !user) {
@@ -67,18 +75,6 @@ export default function AIPhotoUpload() {
       return;
     }
   }, [authLoading, user, signinRedirect]);
-
-  useEffect (() => {
-    if (!isInitialLoading) {
-      if (!nickname) {
-        console.log("nickname:", nickname);
-        setShowRegisterPrompt(true);
-      } else {
-        setShowRegisterPrompt(false);
-      }
-    }
-
-  }, [profile]);
 
   useEffect(() => {
     if (!authLoading) {
@@ -154,6 +150,10 @@ export default function AIPhotoUpload() {
     if (!fileToUpload || !userEmail) return;
 
     try {
+      trackGAEvent('click_analyze_photo', {
+        page_context: pathname,
+        user_status: user ? 'authenticated' : 'unauthenticated',
+      });         
       setIsAnalyzing(true);
       setShowAIModal(true);
 
@@ -174,7 +174,7 @@ export default function AIPhotoUpload() {
       };
 
       // Fire off both requests, but wait for analyzerTest first
-      const analyzerPromise = fetch(`${API_BASE_URL}/analyzerTest`, {
+      const analyzerPromise = fetch(`${API_BASE_URL}/analyzer`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -183,6 +183,7 @@ export default function AIPhotoUpload() {
       const uploadPromise = fetch(`/api/upload-image`, {
         method: 'POST',
         headers: {
+          "x-session-id": sessionId,
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
@@ -214,7 +215,7 @@ export default function AIPhotoUpload() {
         throw new Error('Upload failed: No image URL returned');
       }
 
-      track('upload_photo', { selection: uploadData.user_image_url });
+      logActivity('upload_photo', { selection: uploadData.user_image_url });
 
       // Save to backend
       try {
@@ -249,11 +250,15 @@ export default function AIPhotoUpload() {
   // Accept AI analysis
   const handleAcceptAnalysis = async () => {
     if (isSubmitting) return;
-    track('ai_analysis', { selection: "accept" });
+    logActivity('ai_analysis', { selection: "accept" });
     setIsSubmitting(true);
     setIsPageLoading(true);   
     
     try {
+      trackGAEvent('click_accept_analysis', {
+        page_context: pathname,
+        user_status: user ? 'authenticated' : 'unauthenticated',
+      });      
       // Navigate to the next page
       setIsPageLoading(true);
       router.push('fashion-type');
@@ -267,10 +272,7 @@ export default function AIPhotoUpload() {
   // Show loading spinner
   if (isInitialLoading) {
     return (
-    <LoadingModalSpinner 
-      message="Uploading..." 
-      subMessage="Please wait" 
-    />
+    <LoadingModalSpinner />
     );
   }
 
@@ -280,9 +282,12 @@ export default function AIPhotoUpload() {
     setIsSubmitting(true);
     
     try {
-      
+      trackGAEvent('click_customize_manually', {
+        page_context: pathname,
+        user_status: user ? 'authenticated' : 'unauthenticated',
+      });         
       // Navigate to the first step of manual physical attributes
-      track('ai_analysis', { selection: "decline" });
+      logActivity('ai_analysis', { selection: "decline" });
       setIsPageLoading(true);
       router.push('physical-appearances/manual/step-1');
     } catch (error) {
@@ -292,18 +297,31 @@ export default function AIPhotoUpload() {
   };
 
   // Tracker for user activity
-  const track = async (action, metadata = {}) => {
-    if (!userEmail) return;
+  const logActivity = async (
+    action,
+    { selection, page } = {}
+  ) => {
     try {
-      await axios.post(`${API_BASE_URL}/trackevent`, {
-        userEmail,
-        action,
-        timestamp: new Date().toISOString(),
-        page: 'physical_appearance',
-        ...metadata,
+      const res = await fetch("/api/log-activity", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+          "x-session-id": sessionId,
+        },
+        body: JSON.stringify({
+          action,
+          selection,
+          page: page || window.location.pathname,
+          timestamp: new Date().toISOString(),
+        }),
       });
-    } catch (err) {
-      console.error('Tracking failed:', err.message);
+
+      if (!res.ok) {
+        console.warn("⚠️ Failed to log activity:", await res.json());
+      }
+    } catch (error) {
+      console.error("❌ Activity log error:", error);
     }
   };
 
@@ -384,7 +402,7 @@ export default function AIPhotoUpload() {
                   <div className="mt-auto">
                     <button
                       onClick={() => {
-                        track("button_click", {selection: "upload_guidence"});
+                        logActivity("button_click", {selection: "upload_guidence"});
                         setIsUserPhotoGuidanceOpen(true)}}
                       className="underline text-[16px] text-blue-400 cursor-pointer"
                     >
@@ -492,39 +510,7 @@ export default function AIPhotoUpload() {
           onClose={() => setIsPrivacyModalOpen(false)}
         />
       )}
-
-      {showRegisterPrompt && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 px-4">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl text-center">
-            <h2 className="text-xl font-bold mb-4 text-primary">Want More Personalized Styles?</h2>
-            <p className="text-sm text-gray-700 mb-6">
-              Tell us a little about yourself — so we can tailor outfit ideas that fit your lifestyle better.
-            </p>
-            <div className="flex justify-center gap-4">
-              <button
-                onClick={() => {
-                  localStorage.setItem("registerFrom", "physical-appearances");
-                  track('register', {selection: 'true'});
-                  setIsPageLoading(true);
-                  router.push('/register');
-                }}
-                className="px-5 py-2 bg-primary text-white rounded-lg hover:bg-[#0a1b56] transition"
-              >
-                Continue
-              </button>
-              <button
-                onClick={() => {
-                  track('register', {selection: 'false'})
-                  setShowRegisterPrompt(false);
-                }}
-                className="px-5 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition"
-              >
-                Maybe Later
-              </button>
-            </div>
-          </div>
-        </div>
-      )} 
+      
       {/* AI Analysis Modal */}
       {showAIModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">

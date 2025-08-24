@@ -1,3 +1,5 @@
+// middleware.ts
+
 import { NextResponse, NextRequest } from "next/server";
 import { Redis } from "@upstash/redis";
 import { Ratelimit } from "@upstash/ratelimit";
@@ -26,6 +28,9 @@ export async function middleware(req: NextRequest) {
   if (pathname === "/api/contact") {
     return NextResponse.next();
   }
+  if (pathname === "/api/metrics-analyze") {
+    return NextResponse.next();
+  }  
   // 2. Require Bearer token
   const authHeader = req.headers.get("authorization");
   if (!authHeader || !authHeader.startsWith("Bearer ")) {

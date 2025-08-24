@@ -5,6 +5,7 @@ import { useAuth } from "react-oidc-context";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import LoadingModalSpinner from "@/components/ui/LoadingState";
+import { getOrCreateSessionId } from "@/lib/session"; // keep this
 
 export default function PricingPlans({ onClose, sourcePage = "Unknown" }) {
   const router = useRouter();
@@ -12,6 +13,36 @@ export default function PricingPlans({ onClose, sourcePage = "Unknown" }) {
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [selectedPremiumPlan, setSelectedPremiumPlan] = useState(null);
   const [showThankYou, setShowThankYou] = useState(false);
+  const [sessionId] = useState(() => getOrCreateSessionId());
+  const token = user?.access_token || user?.id_token;
+
+  const logActivity = async (action, selection) => {
+    if (!token || !sessionId) return;
+
+    try {
+      const res = await fetch("/api/log-activity", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+          "x-session-id": sessionId,
+        },
+        body: JSON.stringify({
+          action,
+          page: sourcePage,
+          selection,
+          timestamp: new Date().toISOString(),
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        console.warn("⚠️ Failed to log activity:", err.message);
+      }
+    } catch (error) {
+      console.error("❌ Activity log error:", error);
+    }
+  };
 
   const plans = [
     {
@@ -47,24 +78,8 @@ export default function PricingPlans({ onClose, sourcePage = "Unknown" }) {
   ];
 
   const handlePlanSelect = (planName) => {
-    try {
-      const email = user?.profile?.email; // fixed reference
-      if (email) {
-        fetch(`${process.env.NEXT_PUBLIC_FYUSEAPI}/trackevent`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            userEmail: email,
-            action: "selected_pricing_plan",
-            selection: planName,
-            timestamp: new Date().toISOString(),
-            page: sourcePage,
-          }),
-        });
-      }
-    } catch (error) {
-      console.error("Tracking error:", error.message);
-    }
+    // Fire-and-forget tracking
+    logActivity("selected_pricing_plan", planName).catch(() => {});
 
     if (planName === "Basic") {
       setIsRedirecting(true);
@@ -89,13 +104,12 @@ export default function PricingPlans({ onClose, sourcePage = "Unknown" }) {
     <>
       {isRedirecting && <LoadingModalSpinner />}
 
-      {/* Pricing Modal */}
       {!showThankYou && (
         <div
           className="fixed inset-0 z-50 bg-black bg-opacity-70 flex justify-center items-center overflow-y-auto"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
-              if (onClose) onClose(); // close when backdrop is clicked
+              if (onClose) onClose();
             }
           }}
         >
@@ -139,7 +153,6 @@ export default function PricingPlans({ onClose, sourcePage = "Unknown" }) {
         </div>
       )}
 
-      {/* Thank You Modal */}
       {showThankYou && (
         <div className="fixed inset-0 z-60 bg-black bg-opacity-70 flex justify-center items-center">
           <div className="bg-background text-primary p-8 rounded-3xl shadow-2xl max-w-lg w-full mx-4 text-center">

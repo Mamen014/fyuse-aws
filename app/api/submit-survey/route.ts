@@ -1,23 +1,26 @@
-// app/api/submit-survey/route.ts
-
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { jwtDecode } from "jwt-decode";
+import { logger } from "@/lib/logger";
+import { getUserIdFromAuth } from "@/lib/session";
 
 export async function POST(req: Request) {
-  const authHeader = req.headers.get("authorization");
+  const authHeader = req.headers.get("authorization") || "";
+  const sessionId = req.headers.get("x-session-id") || "unknown";
+  const userId = getUserIdFromAuth(authHeader);
 
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+  const log = logger.withContext({
+    sessionId,
+    userId,
+    routeName: "submit-survey",
+  });
+
+  if (!authHeader.startsWith("Bearer ")) {
+    log.warn("Authorization header missing or malformed");
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const token = authHeader.replace("Bearer ", "");
-  let user_id: string;
-
-  try {
-    const decoded = jwtDecode<{ sub: string }>(token);
-    user_id = decoded.sub;
-  } catch (err) {
+  if (!userId) {
+    log.error("Failed to decode user ID from token");
     return NextResponse.json({ error: "Invalid token" }, { status: 401 });
   }
 
@@ -41,9 +44,11 @@ export async function POST(req: Request) {
       email,
     } = body;
 
+    log.info("Creating new survey response");
+
     await prisma.survey_response.create({
       data: {
-        user_id,
+        user_id: userId,
         stylingSatisfaction,
         styleMatch,
         bodyShape,
@@ -61,14 +66,17 @@ export async function POST(req: Request) {
       },
     });
 
+    log.info("Updating profile to dismiss survey prompt");
+
     await prisma.profile.update({
-      where: { user_id },
+      where: { user_id: userId },
       data: { survey_prompt_dismissed: true },
     });
 
+    log.info("Survey submitted successfully");
     return NextResponse.json({ success: true });
   } catch (err) {
-    console.error('[SubmitSurvey]', err);
+    log.error("Failed to submit survey", err);
     return NextResponse.json({ error: 'Failed to submit survey' }, { status: 500 });
   }
 }

@@ -5,7 +5,7 @@
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import Image from 'next/image';
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "react-oidc-context";
 import Navbar from "@/components/Navbar";
 import LoadingModalSpinner from "@/components/ui/LoadingState";
@@ -13,14 +13,15 @@ import { useUserProfile } from "../context/UserProfileContext";
 import ReferralModal from "@/components/ReferralModal";
 import ConfirmationModal from "@/components/ConfirmationModal";
 import SurveyPromptModal from "@/components/SurveyPromptModal";
+import { getOrCreateSessionId } from "@/lib/session";
 import { ChevronRight, Shirt, MapPin, BriefcaseBusiness, CreditCard } from "lucide-react";
 import axios from "axios";
+import { sendGAEvent } from "@next/third-parties/google";
+import toast from "react-hot-toast";
 
 export default function DashboardPage() {
   const router = useRouter();
   const { user, isLoading, signinRedirect } = useAuth();
-  const userEmail = user?.profile?.email;
-  const API_BASE_URL = process.env.NEXT_PUBLIC_FYUSEAPI;
   const token = useMemo(() => {
     if (!user) return null;
     return user.access_token || user.id_token;
@@ -28,7 +29,8 @@ export default function DashboardPage() {
   
   const { profile, loading: profileLoading, refetchProfile } = useUserProfile();
   const nickname = profile?.nickname || "";
-  
+  const sessionId = getOrCreateSessionId();
+  const pathname = usePathname();
   const [tryOnCount, setTryOnCount] = useState(0);
   const [subscriptionPlan, setSubscriptionPlan] = useState(null);  
   const [clothCategory, setClothCategory] = useState([]);
@@ -41,6 +43,17 @@ export default function DashboardPage() {
   const [showSurveyPrompt, setShowSurveyPrompt] = useState(false);
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
 
+  // Helper function to send GA events using window.gtag
+  const trackGAEvent = (eventName, eventParams = {}) => {
+    if (typeof window.gtag === 'function') {
+      window.gtag('event', eventName, {
+        ...eventParams,
+      });
+    } else {
+      console.error('window.gtag is NOT available to track event:', eventName);
+    }
+  };
+
   // Utility for display
   function capitalizeWords(str) {
     if (!str) return '';
@@ -52,15 +65,32 @@ export default function DashboardPage() {
   }
 
   // Track user actions
-  const track = async (action, metadata = {}) => {
-    if (!userEmail) return;
-    await axios.post(`${API_BASE_URL}/trackevent`, {
-      userEmail,
-      action,
-      timestamp: new Date().toISOString(),
-      page: 'dashboard',
-      ...metadata,
-    }).catch(console.error);
+  const logActivity = async (
+    action,
+    { selection, page } = {}
+  ) => {
+    try {
+      const res = await fetch("/api/log-activity", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+          "x-session-id": sessionId,
+        },
+        body: JSON.stringify({
+          action,
+          selection,
+          page: page || window.location.pathname,
+          timestamp: new Date().toISOString(),
+        }),
+      });
+
+      if (!res.ok) {
+        console.warn("⚠️ Failed to log activity:", await res.json());
+      }
+    } catch (error) {
+      console.error("❌ Activity log error:", error);
+    }
   };
 
   // Fetch survey prompt if user is authenticated
@@ -75,6 +105,7 @@ export default function DashboardPage() {
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
+            "x-session-id": sessionId,
           },
         });
         if (!res.ok) throw new Error(`Failed to fetch survey prompt: ${res.status}`);
@@ -90,8 +121,9 @@ export default function DashboardPage() {
     catch (error) {
       console.error("Error in fetching data:", error);
     }
-  }, [user, token]);
+  }, [user, token, isLoading, sessionId]);
 
+  //showregister prompt if hasn't registered
   useEffect(() => {
     if (!profile) return;
 
@@ -100,6 +132,19 @@ export default function DashboardPage() {
 
     setShowRegisterPrompt(isIncomplete);
   }, [profile]);
+
+  //check profile completeness
+  useEffect(() => {
+    if (!profileLoading && !isLoading && user && profile) {
+      const isProfileIncomplete = !profile.skin_tone || !profile.body_shape;
+
+      if (isProfileIncomplete) {
+        toast.error("Please complete your profile first");
+        setTimeout(() => {
+          router.push('/personalized-styling/physical-appearances')}, 2000);        
+      }
+    }
+  }, [profile, profileLoading, isLoading, router, user]);
 
   // Show referral modal if applicable
   useEffect(() => {
@@ -127,7 +172,10 @@ export default function DashboardPage() {
 
         // Fetch user subs data
         const resPlan = await axios.get("/api/subscription-status", { 
-          headers: { Authorization: `Bearer ${token}` },           
+          headers: { 
+            "x-session-id": sessionId,
+            Authorization: `Bearer ${token}`, 
+          },           
         });
 
         // Plan data
@@ -142,37 +190,36 @@ export default function DashboardPage() {
     };
 
     fetchData();
-  }, [user, token]);
+  }, [user, token, sessionId]);
 
   // Set profile data
   useEffect(() => {
     if (!profile || !subscriptionPlan) return;
 
-    const items = [
-      {
-        label: "Profile",
-        items: [
-          { icon: MapPin, label: "City", value: profile.city || "Not Set" },
-          { icon: BriefcaseBusiness, label: "Occupation", value: profile.occupation || "Not Set" },
-        ],
-      },
-      {
+    const items = [];
+
+    items.push({
+      label: "Profile",
+      items: [
+        { icon: MapPin, label: "City", value: profile.city || "Not Set" },
+        { icon: BriefcaseBusiness, label: "Occupation", value: profile.occupation || "Not Set" },
+      ],
+    });
+
+    const monthlyStatusItems = [
+      { icon: Shirt, label: "Styling", value: `${tryOnCount}x` },
+      { icon: CreditCard, label: "Plan", value: `${subscriptionPlan}` },
+    ].filter(item => item.value !== "Not Set" && item.value !== "" && item.value !== "Category");
+
+    if (monthlyStatusItems.length > 0) {
+      items.push({
         label: "Monthly Status",
-        items: [
-          { icon: Shirt, label: "Styling", value: `${tryOnCount}x` },
-          { icon: CreditCard, label: "Plan", value: `${subscriptionPlan}` },
-        ],
-      },
-    ].filter((section) =>
-      section.items.some(
-        (item) =>
-          item.value !== "Not Set" &&
-          item.value !== "" &&
-          item.value !== "Category"
-      )
-    );
+        items: monthlyStatusItems,
+      });
+    }
 
     setProfileItems(items);
+
   }, [profile, tryOnCount, subscriptionPlan]);
 
   // Fetch user style preference
@@ -184,6 +231,7 @@ export default function DashboardPage() {
         const res = await axios.get("/api/style-preference", {
           headers: {
             Authorization: `Bearer ${token}`,
+            "x-session-id": sessionId,
           },
         });
         const { clothing_category, fashion_type } = res.data;
@@ -197,7 +245,7 @@ export default function DashboardPage() {
     if (user) {
       fetchStylePref();
     }
-  }, [user, token]);
+  }, [user, token, sessionId]);
 
   // Fetch user history
   useEffect(() => {
@@ -210,6 +258,7 @@ export default function DashboardPage() {
             method: "GET",
             headers: {
               Authorization: `Bearer ${token}`,
+              "x-session-id": sessionId,
             },
           });
 
@@ -228,7 +277,7 @@ export default function DashboardPage() {
 
       fetchHistory();
     }
-  }, [isLoading, user, token]);
+  }, [isLoading, user, token, sessionId]);
 
   // Filter recommendations by category
   const tops = tryonItems.filter(item => item.category === "top");
@@ -264,6 +313,10 @@ export default function DashboardPage() {
                 <button
                   onClick={() => {
                     localStorage.setItem("registerFrom", "dashboard");
+                    trackGAEvent('click_setup_profile', {
+                      page_context: pathname,
+                      user_status: user ? 'authenticated' : 'unauthenticated',
+                    });                    
                     setLoading(true);
                     router.push("/register");
                   }}
@@ -283,7 +336,7 @@ export default function DashboardPage() {
             {/* Profile Card */}
             {(() => {
               const section = profileItems.find((s) => s.label === "Profile");
-              if (!section) return null;
+              if (!section) return;
 
               const itemMap = {};
               section.items.forEach((item) => {
@@ -307,8 +360,8 @@ export default function DashboardPage() {
                           height={64}
                           className="rounded-md object-contain mt-4"
                         />
-                      ) : <span className="text-gray-400">-</span>}
-                      <span className="text-sm font-medium text-gray-900 mt-5">
+                      ) : <span className="text-primary">-</span>}
+                      <span className="text-sm font-medium text-primary mt-5">
                         {capitalizeWords(profile?.skin_tone)}
                       </span>
                     </div>
@@ -324,8 +377,8 @@ export default function DashboardPage() {
                           priority
                           className="rounded-md object-contain"
                         />
-                      ) : <span className="text-gray-400">-</span>}
-                      <span className="text-sm font-medium text-gray-900 mt-1">
+                      ) : <span className="text-primary">-</span>}
+                      <span className="text-sm font-medium text-primary mt-1">
                         {capitalizeWords(profile?.body_shape)}
                       </span>
                     </div>
@@ -336,13 +389,13 @@ export default function DashboardPage() {
                         <div className="bg-gray-50 rounded-xl p-3 flex items-center justify-center gap-2 flex-1">
                           <MapPin className="w-6 h-6 text-primary" />
                           <div>
-                            <p className="text-sm font-medium text-gray-700">{profile?.city}</p>
+                            <p className="text-sm font-medium text-primary">{capitalizeWords(profile?.city || "Not Set")}</p>
                           </div>
                         </div> 
                         <div className="bg-gray-50 rounded-xl p-3 flex items-center justify-center gap-2 flex-1">
                           <BriefcaseBusiness className="w-6 h-6 text-primary" />
                           <div>
-                            <p className="text-sm font-medium text-gray-700">{profile?.occupation}</p>
+                            <p className="text-sm font-medium text-primary">{capitalizeWords(profile?.occupation || "Not Set")}</p>
                           </div>
                         </div>                                            
                   </div>
@@ -379,7 +432,7 @@ export default function DashboardPage() {
                       <PlanIcon className="w-10 h-10 text-primary" />
                       <div>
                         <p className="text-sm text-primary/60 mb-1">Current Plan</p>
-                        <p className="text-xl font-bold text-primary">{planItem?.value || "Loading..."}</p>
+                        <p className="text-xl font-bold text-primary">{capitalizeWords(planItem?.value || "Loading...")}</p>
                       </div>
                     </div>
                   </div>
@@ -438,7 +491,7 @@ export default function DashboardPage() {
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
-                        <Shirt className="w-10 h-10 text-gray-400" />
+                        <Shirt className="w-10 h-10 text-primary" />
                       </div>
                     )}
                   </Link>
@@ -448,10 +501,10 @@ export default function DashboardPage() {
                     key={item}
                     className="min-w-36 h-48 rounded-3xl overflow-hidden flex-shrink-0 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center relative"
                   >
-                    <Shirt className="w-10 h-10 text-gray-400" />
+                    <Shirt className="w-10 h-10 text-primary" />
                     <div className="absolute bottom-3 left-3 right-3">
                       <div className="bg-white/80 backdrop-blur-sm rounded-xl px-3 py-1.5">
-                        <p className="text-xs font-medium text-gray-600">Try something new</p>
+                        <p className="text-xs font-medium text-primary">Try something new</p>
                       </div>
                     </div>
                   </div>
@@ -494,7 +547,7 @@ export default function DashboardPage() {
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
-                            <Shirt className="w-8 h-8 text-gray-400" />
+                            <Shirt className="w-8 h-8 text-primary" />
                           </div>
                         )}
                       </Link>
@@ -504,7 +557,7 @@ export default function DashboardPage() {
                         key={item}
                         className="flex-1 max-w-[120px] aspect-[3/4] rounded-2xl overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center"
                       >
-                        <Shirt className="w-8 h-8 text-gray-400" />
+                        <Shirt className="w-8 h-8 text-primary" />
                       </div>
                     ))}
               </div>
@@ -533,7 +586,7 @@ export default function DashboardPage() {
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
-                            <Shirt className="w-8 h-8 text-gray-400" />
+                            <Shirt className="w-8 h-8 text-primary" />
                           </div>
                         )}
                       </Link>
@@ -543,7 +596,7 @@ export default function DashboardPage() {
                         key={item}
                         className="flex-1 max-w-[120px] aspect-[3/4] rounded-2xl overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center"
                       >
-                        <Shirt className="w-8 h-8 text-gray-400" />
+                        <Shirt className="w-8 h-8 text-primary" />
                       </div>
                     ))}
               </div>
@@ -559,7 +612,7 @@ export default function DashboardPage() {
       <ReferralModal
         isOpen={showReferralModal}
         handleTrack={(selectedOption) => {
-          track("referral_selection", { selection: selectedOption }); 
+          logActivity("referral_selection", { selection: selectedOption }); 
           localStorage.removeItem("seeReferral");
           setShowReferralModal(false);
         }}
@@ -573,11 +626,11 @@ export default function DashboardPage() {
         isOpen={showSurveyPrompt}
         token={token}
         onClose={() => {
-          track("survey_prompt", { selection: "declined" });
+          logActivity("survey_prompt", { selection: "declined" });
           setShowSurveyPrompt(false);
         }}
         onSubmit={() => {
-          track("survey_prompt", { selection: "accepted" });
+          logActivity("survey_prompt", { selection: "accepted" });
           setShowSurveyPrompt(false);
           router.push("/survey");
         }}
