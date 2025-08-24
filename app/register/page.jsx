@@ -275,7 +275,7 @@ export default function RegisterAI() {
 
     try {
       // ✅ Send API request
-      fetch("/api/register-profile", {
+      const response = await fetch("/api/register-profile", {
         method: "POST",
         headers: {
           "x-session-id": sessionId,
@@ -284,6 +284,10 @@ export default function RegisterAI() {
         },
         body: JSON.stringify(lowercasedPayload),
       });
+
+      if (!response.ok) {
+        throw new Error(`Request failed: ${response.status}`);
+      }
 
       // ✅ Redirect based on register source
       const registerFrom = localStorage.getItem("registerFrom");

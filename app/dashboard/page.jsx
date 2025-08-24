@@ -27,7 +27,7 @@ export default function DashboardPage() {
     return user.access_token || user.id_token;
   }, [user]);
   
-  const { profile, loading: profileLoading, refetchProfile } = useUserProfile();
+  const { profile, loading: profileLoading, refreshUserProfile } = useUserProfile();
   const nickname = profile?.nickname || "";
   const sessionId = getOrCreateSessionId();
   const pathname = usePathname();
@@ -42,6 +42,13 @@ export default function DashboardPage() {
   const [showReferralModal, setShowReferralModal] = useState(false);
   const [showSurveyPrompt, setShowSurveyPrompt] = useState(false);
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
+
+  useEffect(() => {
+    if (!loading) {
+      refreshUserProfile();
+    }
+    
+  }, [refreshUserProfile]);
 
   // Helper function to send GA events using window.gtag
   const trackGAEvent = (eventName, eventParams = {}) => {
@@ -141,7 +148,7 @@ export default function DashboardPage() {
       if (isProfileIncomplete) {
         toast.error("Please complete your profile first");
         setTimeout(() => {
-          router.push('/personalized-styling/physical-appearances')}, 2000);        
+          router.push('/personalized-styling/clothing-type')}, 2000);        
       }
     }
   }, [profile, profileLoading, isLoading, router, user]);

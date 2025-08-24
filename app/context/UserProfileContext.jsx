@@ -9,17 +9,17 @@ import { getOrCreateSessionId } from "@/lib/session";
 const UserProfileContext = createContext(null);
 
 export const UserProfileProvider = ({ children }) => {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const token = user?.id_token || user?.access_token;
 
   const fetchProfile = useCallback(async () => {
-    if (!token) return;
+    if (!token) return null;
     const sessionId = getOrCreateSessionId();
-    setLoading(true);
     try {
+      setLoading(true);
       const res = await fetch("/api/user-profile", {
         method: "GET",
         headers: {
@@ -30,22 +30,29 @@ export const UserProfileProvider = ({ children }) => {
       if (!res.ok) throw new Error(`Status ${res.status}`);
       const data = await res.json();
       setProfile(data);
+      return data;
     } catch (err) {
       console.error("Failed to fetch user profile:", err);
-      setProfile(null); // ensure it's explicitly null on failure
+      setProfile(null);
+      return null;
     } finally {
       setLoading(false);
     }
   }, [token]);
 
+  // Fetch once when token is ready and profile is still null
   useEffect(() => {
-    if (token && !profile) {
+    if (token && !isLoading && profile === null) {
       fetchProfile();
     }
-  }, [token, profile, fetchProfile]);
+  }, [isLoading, token, profile, fetchProfile]);
+
+  const refreshUserProfile = useCallback(() => {
+    return fetchProfile();
+  }, [fetchProfile]);
 
   return (
-    <UserProfileContext.Provider value={{ profile, loading, refetchProfile: fetchProfile }}>
+    <UserProfileContext.Provider value={{ profile, loading, refreshUserProfile }}>
       {children}
     </UserProfileContext.Provider>
   );

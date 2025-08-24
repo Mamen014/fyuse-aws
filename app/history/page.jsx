@@ -59,7 +59,7 @@ export default function TryOnHistoryPage() {
       if (isProfileIncomplete) {
         toast.error("Please complete your profile first");
         setTimeout(() => {
-          router.push('/personalized-styling/physical-appearances')}, 2000);        
+          router.push('/personalized-styling/clothing-type')}, 2000);        
       }
     }
   }, [profile, profileLoading, isLoading, router, user]);

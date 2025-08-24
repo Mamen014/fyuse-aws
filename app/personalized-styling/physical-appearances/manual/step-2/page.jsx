@@ -61,7 +61,7 @@ function Step2Content() {
   const maleBodyTypeImages = {
     'trapezoid': '/images/body-shape/male/trapezoid.png',
     'triangle': '/images/body-shape/male/triangle.png',
-    'inverted triangle': '/images/body-shape/male/inverted-triangle.png',
+    'inverted triangle': '/images/body-shape/male/inverted triangle.png',
     'rectangle': '/images/body-shape/male/rectangle.png',
     'round': '/images/body-shape/male/round.png',
   };
