@@ -31,7 +31,6 @@ export default function Navbar() {
   const pathname = usePathname(); // current route
   const { user, isLoading } = useAuth();
   const userEmail = user?.profile?.email;
-<<<<<<< HEAD
   const userName = profileLoading
     ? ""
     : profile?.nickname || userEmail?.split("@")[0] || "Guest";
@@ -43,10 +42,6 @@ export default function Navbar() {
       setHasRegistered(flag === "true");
     }
   }, []);
-=======
-  const userName = profileLoading ? "" : (profile?.nickname || userEmail?.split("@")[0] ||"Guest");
-
->>>>>>> main
 
   const handleSignOut = () => {
     sessionStorage.clear();
@@ -164,13 +159,9 @@ export default function Navbar() {
                 </span>
               </div>
               <div className="flex-1 min-w-0">
-<<<<<<< HEAD
                 <h3 className="text-base font-semibold text-gray-900 truncate">
                   {userName || "Guest"}
                 </h3>
-=======
-                <h3 className="text-base font-semibold text-gray-900 truncate">{userName || "Guest"}</h3>
->>>>>>> main
               </div>
               <div className="px-0 text-red-600">
                 <SignOutButton isInMobileMenu />
