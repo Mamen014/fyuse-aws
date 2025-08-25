@@ -458,46 +458,144 @@ export default function AIPhotoUpload() {
       </main>
 
       {isUserPhotoGuidanceOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 px-4">
-          <div className="bg-white rounded-2xl p-6 w-[90%] max-w-3xl shadow-xl relative overflow-y-auto">
-            
-            {/* Close Button */}
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 px-4"
+          onClick={() => setIsUserPhotoGuidanceOpen(false)} // click outside closes
+        >
+          <div
+            className="bg-white rounded-2xl p-3 w-[95%] max-w-2xl shadow-2xl relative max-h-[90vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()} // prevent closing when clicking inside
+          >
+            {/* Close Button (moved to left) */}
             <button
               onClick={() => setIsUserPhotoGuidanceOpen(false)}
-              className="absolute top-4 right-4 w-8 h-8 font-bold rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center"
+              className="absolute top-4 left-4 w-8 h-8 font-bold rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center"
             >
-              X
+              ✕
             </button>
 
-            {/* Title */}
-            <h2 className="text-xl font-bold text-center text-gray-800 mb-6">
-              Example Photos Guide
-            </h2>
+            <div className="overflow-y-auto pr-2">
+              {/* Title */}
+              <h2 className="text-2xl font-bold text-center text-primary mb-2">
+                Upload Photo Guide
+              </h2>
+              <p className="text-center text-primary/80 mb-6">
+                Follow these examples to ensure accurate try-on results
+              </p>
 
-            {/* Side-by-Side Images, scrollable if too wide */}
-            <div className="flex flex-row gap-6 overflow-x-auto">
-              {/* Good Example */}
-              <div className="flex flex-col items-center min-w-[45%]">
-                <Image
-                  src="/examples/user/good.png"
-                  alt="Good example"
-                  width={200}
-                  height={300}
-                  className="rounded-xl object-cover max-w-full h-auto"
-                />
-                <p className="text-green-600 font-medium mt-2">Good Example</p>
-              </div>
+              {/* Sections */}
+              <div className="space-y-10">
+                {/* Pose Complexity */}
+                <div>
+                  <div className="flex flex-row gap-3 overflow-x-auto">
+                    <div className="flex flex-col items-center min-w-[45%]">
+                      <div className="w-40 h-60 relative rounded-xl overflow-hidden">
+                        <Image
+                          src="/examples/pose_complexity-good.jpg"
+                          alt="Good pose example"
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                      <p className="text-green-600 font-medium mt-2">Simple Pose (Good)</p>
+                    </div>
+                    <div className="flex flex-col items-center min-w-[45%]">
+                      <div className="w-40 h-60 relative rounded-xl overflow-hidden">
+                        <Image
+                          src="/examples/pose_complexity-bad.jpg"
+                          alt="Bad pose example"
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                      <p className="text-red-600 font-medium mt-2">Complex Pose (Bad)</p>
+                    </div>
+                  </div>
+                </div>
 
-              {/* Bad Example */}
-              <div className="flex flex-col items-center min-w-[45%]">
-                <Image
-                  src="/examples/user/bad.png"
-                  alt="Bad example"
-                  width={200}
-                  height={300}
-                  className="rounded-xl object-cover max-w-full h-auto"
-                />
-                <p className="text-red-600 font-medium mt-2">Bad Example</p>
+                {/* Distance */}
+                <div>
+                  <div className="flex flex-row gap-6 overflow-x-auto">
+                    <div className="flex flex-col items-center min-w-[45%]">
+                      <div className="w-40 h-60 relative rounded-xl overflow-hidden">
+                        <Image
+                          src="/examples/distance-good.jpg"
+                          alt="Good distance example"
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                      <p className="text-green-600 font-medium mt-2">~2 Meters (Good)</p>
+                    </div>
+                    <div className="flex flex-col items-center min-w-[45%]">
+                      <div className="w-40 h-60 relative rounded-xl overflow-hidden">
+                        <Image
+                          src="/examples/distance-bad.jpg"
+                          alt="Bad distance example"
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                      <p className="text-red-600 font-medium mt-2">Too Far (Bad)</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Face Exposure */}
+                <div>
+                  <div className="flex flex-row gap-6 overflow-x-auto">
+                    <div className="flex flex-col items-center min-w-[45%]">
+                      <div className="w-40 h-60 relative rounded-xl overflow-hidden">
+                        <Image
+                          src="/examples/pose_complexity-good.jpg"
+                          alt="Good face exposure example"
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                      <p className="text-green-600 font-medium mt-2">Uncovered Face (Good)</p>
+                    </div>
+                    <div className="flex flex-col items-center min-w-[45%]">
+                      <div className="w-40 h-60 relative rounded-xl overflow-hidden">
+                        <Image
+                          src="/examples/face_exposure-bad.jpg"
+                          alt="Bad face exposure example"
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                      <p className="text-red-600 font-medium mt-2">Face Covered (Bad)</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Lighting */}
+                <div>
+                  <div className="flex flex-row gap-6 overflow-x-auto">
+                    <div className="flex flex-col items-center min-w-[45%]">
+                      <div className="w-40 h-60 relative rounded-xl overflow-hidden">
+                        <Image
+                          src="/examples/distance-good.jpg"
+                          alt="Good lighting example"
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                      <p className="text-green-600 font-medium mt-2">Well-Lit (Good)</p>
+                    </div>
+                    <div className="flex flex-col items-center min-w-[45%]">
+                      <div className="w-40 h-60 relative rounded-xl overflow-hidden">
+                        <Image
+                          src="/examples/lighting-bad.jpg"
+                          alt="Bad lighting example"
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                      <p className="text-red-600 font-medium mt-2">Too Dark (Bad)</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

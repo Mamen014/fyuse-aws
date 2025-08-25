@@ -23,8 +23,8 @@ const raleway = Raleway({
 });
 
 export const metadata = {
-  title: "FYUSE",
-  description: "For You Style",
+  title: "FYUSE | For You Style",
+  description: "Personalized outfit recommendations powered by AI-driven virtual try-on technology, tailored to users’ body profiles and style preferences.",
 };
 
 export default function RootLayout({ children }) {
